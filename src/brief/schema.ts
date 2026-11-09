@@ -159,7 +159,23 @@ export const talkingHeadBrief = base.extend({
     .default([]),
 });
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief]);
+/** Stages each 3D procedure animates, in order. Briefs must give one step per stage. */
+export const PROCEDURE_STAGES = {
+  implant: ["gap", "implant", "abutment", "crown"],
+  crown: ["damaged", "prepare", "crown"],
+} as const;
+
+/** 3D procedure explainer (illustration): procedural models, one step card per stage. */
+export const procedureBrief = base.extend({
+  type: z.literal("procedure"),
+  procedure: z.enum(["implant", "crown"]),
+  steps: z.array(z.object({ title: line(26), subline: line(56) })).min(3).max(4),
+  seconds_per_step: z.number().min(2).max(6).default(3.4),
+  takeaway: line(60).optional(),
+});
+export type ProcedureBrief = z.infer<typeof procedureBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

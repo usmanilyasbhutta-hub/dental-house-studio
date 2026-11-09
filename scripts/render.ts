@@ -17,12 +17,14 @@ export async function render(path: string, opts: { still?: number; safeZones?: b
   const serveUrl = await bundle({ entryPoint: resolve("src/index.ts"), publicDir: resolve("public") });
   const inputProps = { brief, showSafeZones: !!opts.safeZones };
   const browserExecutable = process.env.REMOTION_BROWSER || undefined;
-  const composition = await selectComposition({ serveUrl, id: "Video", inputProps, browserExecutable });
+  // software WebGL (SwiftShader via ANGLE): 3D templates render the same on any machine, GPU or not
+  const chromiumOptions = { gl: "swangle" as const };
+  const composition = await selectComposition({ serveUrl, id: "Video", inputProps, browserExecutable, chromiumOptions });
 
   if (opts.still !== undefined) {
     mkdirSync(`qc/${brief.id}`, { recursive: true });
     const output = `qc/${brief.id}/still-${opts.still}${opts.safeZones ? "-safe" : ""}.png`;
-    await renderStill({ composition, serveUrl, output, frame: opts.still, inputProps, browserExecutable });
+    await renderStill({ composition, serveUrl, output, frame: opts.still, inputProps, browserExecutable, chromiumOptions });
     console.log(`still → ${output}`);
     return output;
   }
@@ -33,7 +35,7 @@ export async function render(path: string, opts: { still?: number; safeZones?: b
   let last = -1;
   await renderMedia({
     composition, serveUrl, codec: "h264", pixelFormat: "yuv420p", crf: 18, audioBitrate: "192k",
-    outputLocation: raw, inputProps, browserExecutable,
+    outputLocation: raw, inputProps, browserExecutable, chromiumOptions,
     onProgress: ({ progress }) => {
       const p = Math.floor(progress * 10);
       if (p !== last) { last = p; process.stdout.write(`${p * 10}% `); }

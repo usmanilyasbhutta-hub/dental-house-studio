@@ -1,0 +1,18 @@
+# EXAMPLE 3D procedure explainer (illustration, not to scale). demo: true -> watermarked.
+id: procedure-crown
+type: procedure
+title: What a dental crown does
+demo: true
+theme: brand
+fx: { transition: none, sfx: subtle }
+tone: calm
+procedure: crown            # stages: damaged → prepare → crown
+hook: { lines: ["What is", "a crown?"], accent: crown }
+steps:
+  - { title: "Weak tooth", subline: "Large decay or a crack can weaken a tooth." }
+  - { title: "Tooth prepared", subline: "The tooth is shaped to make room for a crown." }
+  - { title: "Crown cemented", subline: "A custom crown covers and protects the tooth." }
+takeaway: Ask us if a crown is right for your tooth.
+label: Crowns
+cta: Book a consultation
+music: audio/pad-calm.mp3

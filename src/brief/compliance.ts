@@ -1,4 +1,5 @@
 import { clinic } from "../brand";
+import { PROCEDURE_STAGES } from "./schema";
 import type { Brief } from "./schema";
 
 export type Finding = { level: "error" | "warning"; rule: string; message: string };
@@ -20,6 +21,7 @@ function allText(b: Brief): string[] {
   if (b.type === "offer") t.push(b.offer.headline, b.offer.detail, b.offer.terms, b.offer.price ?? "", ...b.points);
   if (b.type === "education") t.push(b.takeaway, ...b.steps.flatMap((s) => [s.title, s.subline]));
   if (b.type === "case") t.push(b.treatment, b.timeline ?? "", ...b.notes);
+  if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
   return t.filter(Boolean);
@@ -95,6 +97,11 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)
       warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
+  }
+
+  if (b.type === "procedure") {
+    const n = PROCEDURE_STAGES[b.procedure].length;
+    if (b.steps.length !== n) err("steps", `${b.procedure} animates ${n} stages (${PROCEDURE_STAGES[b.procedure].join(", ")}); give exactly ${n} steps`);
   }
 
   if (!b.demo && !b.review.approved_by)

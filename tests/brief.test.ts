@@ -25,6 +25,14 @@ describe("example briefs", () => {
   }
 });
 
+describe("YAML comma guard", () => {
+  it("flags unquoted commas inside flow maps", async () => {
+    const { findCommaSplits } = await import("../src/brief/load");
+    expect(findCommaSplits(parse('steps: [{ title: A, subline: After healing, a connector is attached. }]'))).toHaveLength(1);
+    expect(findCommaSplits(parse('steps: [{ title: A, subline: "After healing, a connector is attached." }]'))).toEqual([]);
+  });
+});
+
 describe("schema", () => {
   it("rejects hook lines that are too long to read", () => {
     const raw = parse(readFileSync("briefs/examples/offer-implant-consult.yaml", "utf8"));

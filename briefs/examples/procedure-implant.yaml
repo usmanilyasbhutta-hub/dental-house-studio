@@ -1,0 +1,19 @@
+# EXAMPLE 3D procedure explainer (illustration, not to scale). demo: true -> watermarked.
+id: procedure-implant
+type: procedure
+title: How a dental implant works
+demo: true
+theme: brand
+fx: { transition: none, sfx: subtle }
+tone: calm
+procedure: implant          # stages: gap → implant → abutment → crown
+hook: { lines: ["How an implant", "replaces a tooth"], accent: implant }
+steps:
+  - { title: "Missing tooth", subline: "A gap can let nearby teeth drift over time." }
+  - { title: "Implant placed", subline: "A titanium post is placed in the jawbone." }
+  - { title: "Abutment", subline: "After healing, a connector is attached." }
+  - { title: "Crown fitted", subline: "A custom crown completes the tooth." }
+takeaway: Ask us whether an implant suits you.
+label: Implants
+cta: Book an implant consult
+music: audio/pad-calm.mp3

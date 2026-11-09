@@ -23,6 +23,7 @@ export function sceneCount(b: Brief): number {
     case "case":
       return 7;
     case "talking-head":
+    case "procedure":
       return 1;
   }
 }
@@ -41,6 +42,8 @@ function rawSeconds(b: Brief): number {
       const s = scenes.education;
       return s.hook + s.step * 3 + s.takeaway + s.sources + s.end;
     }
+    case "procedure":
+      return 2 + b.steps.length * b.seconds_per_step + (b.takeaway ? 2.6 : 0) + scenes.offer.end; // 2 s hook
     case "talking-head":
       return segmentsOf(b).reduce((n, g) => n + g.end - g.start, 0) + scenes["talking-head"].end;
     case "case": {
