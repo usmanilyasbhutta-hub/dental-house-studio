@@ -12,6 +12,7 @@ Pick the tool by the request, then follow CLAUDE.md (brief → validate → stil
 | "Show how an implant / crown works" | brief `type: procedure` (`procedure: implant\|crown`) | `src/templates/Procedure.tsx`, models in `src/three/dental.tsx` |
 | New procedure (root canal, filling, bridge, aligners, extraction, veneer) | add a stage list to `PROCEDURE_STAGES` + a `<XStages>` component composing `Tooth`, `Crown`, `Implant`… | load skills `threejs-skills:threejs-geometry`, `threejs-skills:threejs-materials`, `threejs-skills:threejs-animation` first |
 | Explain a photo (point at gum line, gap, shade) | brief `type: photo-layout`, `layout: annotate` (+ `loupe`) | `src/templates/PhotoLayout.tsx` |
+| "Layout like the Class II video": traced outlines, hatch/colour zones, edge labels with hairline leaders, chapters | brief `type: anatomy-map` (scenes → regions; `units: px` lets you trace in photo pixels) | `src/templates/AnatomyMap.tsx`, example `briefs/examples/anatomy-map.yaml` |
 | Before/after, comparison, 2–4 photos | `layout: split` / `grid` | same |
 | Carousel / static post | any brief → `npm run still -- <brief> --frame N` (one PNG per key frame) | `scripts/render.ts` |
 | Doctor explains on camera | `type: talking-head` | docs/talking-head.md |
@@ -24,6 +25,12 @@ Pick the tool by the request, then follow CLAUDE.md (brief → validate → stil
 - Photos: contain-fit only; never retouch, warp, sparkle, glow or light-leak a clinical photo. Annotations (lines, labels, loupe) are fine.
 - Patient photos need `clinical: true` and consent (the validator enforces it).
 - Quote YAML text containing commas inside `{ }` (the validator rejects comma splits).
+
+## Tracing regions for an anatomy map
+Read the photo (Read tool), note its pixel size, and trace each area with 6–14 points in photo pixels (`units: px`).
+The template smooths them with a Catmull-Rom curve. Then render stills at each region's beat with `--safe-zones` and check the
+outlines sit on the anatomy; adjust points and re-render. Styles: `outline`, `hatch` (cavity/prep), `fill` + `color` 1–6
+(cusps/zones), `ridge` (open line with ticks: marginal ridge, margin). At most 4 labels per scene; anchors are the four corners.
 
 ## 3D notes (Remotion + three.js)
 - Drive every motion from `useCurrentFrame()` → props. Never `useFrame`/clock: renders must be deterministic.

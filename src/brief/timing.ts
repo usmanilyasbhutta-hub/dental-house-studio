@@ -25,6 +25,7 @@ export function sceneCount(b: Brief): number {
     case "talking-head":
     case "procedure":
     case "photo-layout":
+    case "anatomy-map":
       return 1;
   }
 }
@@ -43,6 +44,8 @@ function rawSeconds(b: Brief): number {
       const s = scenes.education;
       return s.hook + s.step * 3 + s.takeaway + s.sources + s.end;
     }
+    case "anatomy-map":
+      return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
     case "photo-layout":
       return 1.6 + Math.max(b.annotations.length, b.layout === "annotate" ? 0 : b.photos.length) * 1.3 + (b.loupe ? 1.6 : 0) + 2.4 + scenes.offer.end;
     case "procedure":
@@ -57,3 +60,8 @@ function rawSeconds(b: Brief): number {
 }
 
 export const sec = (s: number, fps: number) => Math.round(s * fps);
+
+/** Anatomy map: title beat + one beat per region + hold, per scene; scenes cross-fade by MAP_XFADE seconds. */
+export const MAP_XFADE = 0.8;
+export const mapSceneSeconds = (b: Extract<Brief, { type: "anatomy-map" }>) =>
+  b.scenes.map((sc) => 1.4 + sc.regions.length * b.seconds_per_region + 1.4);

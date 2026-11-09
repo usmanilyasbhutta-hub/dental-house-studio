@@ -18,6 +18,8 @@ export interface Theme {
   rule: string; // bars, rules, progress
   muted: string; // small print, crop marks
   stripe: string; // thin bar under the rule bar
+  /** Translucent zone colours for anatomy maps (harmonised with the theme). */
+  map: [string, string, string, string, string, string];
   end: { top: string; bottom: string; text: string; accent: string; muted: string; pill: string; pillText: string };
 }
 
@@ -31,6 +33,7 @@ export const themes: Record<ThemeName, Theme> = {
     rule: colors.bronze,
     muted: colors.mist,
     stripe: colors.slate,
+    map: ["#D9A866", "#E08E7B", "#7FB38F", "#6F8FC9", "#C487B3", "#E8C35A"],
     end: { top: colors.white, bottom: colors.mist, text: colors.slate, accent: colors.bronze, muted: colors.bronzeDark, pill: colors.slate, pillText: colors.white },
   },
   editorial: {
@@ -42,6 +45,7 @@ export const themes: Record<ThemeName, Theme> = {
     rule: "#D8A48F",
     muted: "#C9C3B6",
     stripe: "#F3F1E6",
+    map: ["#D8A48F", "#9DB8A6", "#E3C27A", "#9AA9C2", "#C9A2B4", "#B9C98F"],
     end: { top: "#F3F1E6", bottom: "#E4DED0", text: "#24352E", accent: "#B4775F", muted: "#4A5A52", pill: "#24352E", pillText: "#F3F1E6" },
   },
 };

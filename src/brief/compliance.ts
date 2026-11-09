@@ -21,6 +21,8 @@ function allText(b: Brief): string[] {
   if (b.type === "offer") t.push(b.offer.headline, b.offer.detail, b.offer.terms, b.offer.price ?? "", ...b.points);
   if (b.type === "education") t.push(b.takeaway, ...b.steps.flatMap((s) => [s.title, s.subline]));
   if (b.type === "case") t.push(b.treatment, b.timeline ?? "", ...b.notes);
+  if (b.type === "anatomy-map")
+    t.push(...b.scenes.flatMap((sc) => [sc.title.text, ...sc.regions.flatMap((r) => (r.label ? [r.label.bold, r.label.text ?? ""] : []))]));
   if (b.type === "photo-layout") t.push(...b.annotations.map((a) => a.label), ...b.photos.map((p) => p.label ?? ""), b.caption ?? "");
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
@@ -98,6 +100,25 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)
       warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
+  }
+
+  if (b.type === "anatomy-map") {
+    for (const sc of b.scenes) {
+      if (!env.fileExists(`public/${sc.photo}`)) err("assets", `missing image public/${sc.photo}`);
+      if (sc.title.bold && !sc.title.text.includes(sc.title.bold)) warn("title", `bold "${sc.title.bold}" is not in "${sc.title.text}"`);
+      if (sc.units === "percent")
+        for (const r of sc.regions) if (r.points.some(([x, y]) => x < 0 || x > 100 || y < 0 || y > 100)) err("regions", "percent points must be 0–100");
+      const anchors = sc.regions.filter((r) => r.label).map((r) => r.anchor);
+      if (anchors.length > 4) warn("labels", `${anchors.length} labels in one scene: earlier ones dim, but keep it readable (≤ 4)`);
+    }
+    if (b.clinical && !b.demo) {
+      if (!b.consent) err("consent", "patient photos need written consent (consent.file)");
+      else {
+        if (!env.fileExists(b.consent.file)) err("consent", `consent file not found: ${b.consent.file}`);
+        if (b.consent.file.startsWith("public/")) err("consent", "consent forms must never be inside public/");
+        if (!b.consent.scope.includes("social-media")) err("consent", "consent scope does not cover social media");
+      }
+    }
   }
 
   if (b.type === "photo-layout") {

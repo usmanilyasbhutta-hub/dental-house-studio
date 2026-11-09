@@ -5,17 +5,18 @@ import { ThemeContext, themes } from "../../theme";
 import { FxContext } from "../../fx/context";
 import { Backdrop } from "./Backdrop";
 import { EndCard } from "./EndCard";
-import { DemoWatermark, Hud } from "./Hud";
+import { DemoWatermark, Hud, MinimalBug } from "./Hud";
 import { SafeZones } from "./SafeZones";
 
 export type QcProps = { showSafeZones?: boolean };
 
 /** Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays. */
-export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: number; children: React.ReactNode } & QcProps> = ({
+export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: number; chrome?: "full" | "minimal"; children: React.ReactNode } & QcProps> = ({
   brief,
   endSeconds,
   showSafeZones,
   musicVolume = 0.9,
+  chrome = "full",
   children,
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
@@ -29,7 +30,7 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: n
       <Sequence durationInFrames={bodyFrames}>
         <Backdrop broll={brief.broll[0]} />
         {children}
-        <Hud label={brief.label} total={bodyFrames} />
+        {chrome === "full" ? <Hud label={brief.label} total={bodyFrames} /> : <MinimalBug />}
       </Sequence>
       <Sequence from={bodyFrames}>
         <EndCard cta={brief.cta} note={brief.disclaimer} />

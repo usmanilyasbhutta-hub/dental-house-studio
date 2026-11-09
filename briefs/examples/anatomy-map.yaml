@@ -1,0 +1,57 @@
+# EXAMPLE anatomy map (layout of reference "I"): synthetic molar illustrations, not a patient.
+# Points are photo pixels (units: px) of the 1200×1500 images in public/cases/demo-molar/.
+id: anatomy-map
+type: anatomy-map
+title: Class II restoration, anatomy map
+demo: true
+theme: brand
+fx: { transition: none, sfx: subtle }
+tone: calm
+label: Restorations
+hook: { lines: ["A Class II", "restoration"], accent: restoration }
+seconds_per_region: 2
+scenes:
+  - photo: cases/demo-molar/before.jpg
+    units: px
+    title: { text: "A Class II restoration is on the way", bold: "Class II" }
+    regions:
+      - points: [[470, 470], [520, 410], [595, 398], [680, 410], [722, 470], [690, 530], [595, 545], [500, 530]]
+        style: outline
+        label: { bold: Buccal, text: pit }
+        anchor: top-left
+      - points: [[330, 640], [420, 600], [560, 620], [700, 590], [850, 600], [960, 610], [975, 720], [965, 860], [900, 890], [760, 900], [640, 930], [500, 910], [370, 880], [320, 780]]
+        style: hatch
+        label: { bold: Class II, text: cavity }
+        anchor: bottom-right
+      - points: [[968, 560], [985, 680], [985, 800], [962, 905]]
+        closed: false
+        style: ridge
+        label: { bold: Marginal, text: ridge }
+        anchor: top-right
+  - photo: cases/demo-molar/after.jpg
+    units: px
+    title: { text: "The final anatomy map", bold: "anatomy" }
+    regions:
+      - points: [[610, 470], [612, 650], [800, 600], [920, 640], [955, 520], [880, 390], [700, 350]]
+        style: fill
+        color: 4
+        label: { bold: Mesiobuccal, text: cusp }
+        anchor: top-right
+      - points: [[600, 470], [608, 650], [420, 620], [330, 660], [262, 520], [340, 390], [520, 350]]
+        style: fill
+        color: 3
+        label: { bold: Distobuccal, text: cusp }
+        anchor: top-left
+      - points: [[612, 650], [800, 600], [920, 640], [958, 800], [830, 1000], [760, 900], [600, 760]]
+        style: fill
+        color: 2
+      - points: [[608, 650], [420, 620], [330, 660], [262, 820], [400, 990], [450, 900], [600, 760]]
+        style: fill
+        color: 1
+      - points: [[600, 760], [760, 900], [830, 1000], [700, 1085], [600, 1045], [500, 1085], [400, 990], [450, 900]]
+        style: fill
+        color: 6
+        label: { bold: Distal, text: cusp }
+        anchor: bottom-left
+cta: Book a check-up
+music: audio/pad-calm.mp3

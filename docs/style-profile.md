@@ -61,7 +61,7 @@ Videos and frames stay in `references/` (gitignored). This file holds descriptio
 
 1. **TalkingHead** (from C/D): doctor footage (cut-out or framed), Roman-Urdu word-by-word captions with highlighted keywords, chapter numerals, icon/graphic inserts, auto skin grade. *Most of your content is this.* Needs: the raw recording + transcript (Descript can transcribe; local Whisper is blocked here).
 2. **ClinicTour / Promo** (from A/B): the v0.1 Offer template plus footage slots (`broll:`), split screen, logo-wall pan.
-3. **AnatomyMap** (from I): intraoral photo + animated line callouts and colour zones. Great for education *and* for cases, because it explains without editing the photo.
+3. **AnatomyMap** (from I): intraoral photo + animated line callouts and colour zones. Great for education *and* for cases, because it explains without editing the photo. ✅ built (`type: anatomy-map`).
 4. **ProcedureSteps** (from H/J): ordered clinical photos/clips with product callouts and a step counter.
 5. **Celebration / Culture** (from E): Urdu Nastaliq captions, cream/gold, for Iqbal Day, Eid, Independence Day and patient milestones. Needs an Urdu font (Noto Nastaliq Urdu).
 6. FX library: glow outline, light sweep, sparkle word, 2.5D photo move (from E/F/G).

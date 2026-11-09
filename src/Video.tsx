@@ -3,6 +3,7 @@ import type { Brief, Word } from "./brief/schema";
 import { TalkingHead } from "./templates/TalkingHead";
 import { Procedure } from "./templates/Procedure";
 import { PhotoLayout, type PhotoSize } from "./templates/PhotoLayout";
+import { AnatomyMap } from "./templates/AnatomyMap";
 import { ClinicalCase } from "./templates/ClinicalCase";
 import { Education } from "./templates/Education";
 import { Offer } from "./templates/Offer";
@@ -19,6 +20,8 @@ export const Video: React.FC<VideoProps> = ({ brief, words, sizes, showSafeZones
       return <Education brief={brief} showSafeZones={showSafeZones} />;
     case "case":
       return <ClinicalCase brief={brief} showSafeZones={showSafeZones} />;
+    case "anatomy-map":
+      return <AnatomyMap brief={brief} sizes={sizes} showSafeZones={showSafeZones} />;
     case "photo-layout":
       return <PhotoLayout brief={brief} sizes={sizes} showSafeZones={showSafeZones} />;
     case "procedure":

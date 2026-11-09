@@ -17,6 +17,7 @@ project skill `.claude/skills/dental-animation/SKILL.md`.
 |---|---|
 | `procedure` | 3D illustration of a treatment, step by step (implant, crown; more can be added) |
 | `photo-layout` | annotate (pins, circles, arrows, loupe), split (2), grid (2–4) |
+| `anatomy-map` | reference-"I" layout: full-frame photo, traced outlines that draw on, hatch / colour zones / ridge ticks, two-weight edge labels with curved hairline leaders, chapters that cross-fade (e.g. preparation → final anatomy) |
 | `education`, `talking-head`, `case`, `offer` | see README |
 
 Examples: `briefs/examples/procedure-*.yaml`, `briefs/examples/photo-*.yaml`.

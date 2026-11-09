@@ -207,7 +207,42 @@ export const photoLayoutBrief = base.extend({
 });
 export type PhotoLayoutBrief = z.infer<typeof photoLayoutBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief]);
+/** Anatomy-map layout (reference style "I"): full-frame photo, traced outlines, hatch/colour zones, edge labels with leaders. */
+export const mapRegion = z.object({
+  /** Outline points: photo pixels (units: px) or % of the photo (units: percent). Smoothed into a curve. */
+  points: z.array(z.tuple([z.number(), z.number()])).min(2),
+  closed: z.boolean().default(true),
+  /** outline = traced line; hatch = fine grid inside; fill = translucent colour zone; ridge = tick marks along the line */
+  style: z.enum(["outline", "hatch", "fill", "ridge"]).default("outline"),
+  /** Palette slot 1–6 for fills (brand-harmonised map colours). */
+  color: z.number().int().min(1).max(6).optional(),
+  label: z.object({ bold: line(20), text: line(26).optional() }).optional(),
+  /** Where the label sits; a curved leader runs from it to the outline. */
+  anchor: z.enum(["top-left", "top-right", "bottom-left", "bottom-right"]).default("top-left"),
+});
+export const anatomyMapBrief = base.extend({
+  type: z.literal("anatomy-map"),
+  scenes: z
+    .array(
+      z.object({
+        photo: publicAsset,
+        units: z.enum(["px", "percent"]).default("percent"),
+        /** Small elegant title: `bold` is the emphasised word(s) inside `text`. */
+        title: z.object({ text: line(48), bold: z.string().optional() }),
+        regions: z.array(mapRegion).min(1).max(8),
+      }),
+    )
+    .min(1)
+    .max(3),
+  seconds_per_region: z.number().min(1.2).max(4).default(2),
+  clinical: z.boolean().default(false),
+  consent: z
+    .object({ file: z.string(), signed_on: isoDate, scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1) })
+    .optional(),
+});
+export type AnatomyMapBrief = z.infer<typeof anatomyMapBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

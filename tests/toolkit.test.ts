@@ -47,3 +47,26 @@ describe("photo-layout briefs", () => {
     expect(brief.safeParse(raw).success).toBe(false);
   });
 });
+
+describe("anatomy-map briefs", () => {
+  it("example is valid; duration = scenes − cross-fades + end card", async () => {
+    const b = load("briefs/examples/anatomy-map.yaml");
+    expect(errs(b)).toEqual([]);
+    // scene 1: 1.4 + 3×2 + 1.4 = 8.8; scene 2: 1.4 + 5×2 + 1.4 = 12.8; minus 0.8 cross-fade; plus 4.5 end card
+    expect(durationSeconds(b)).toBeCloseTo(8.8 + 12.8 - 0.8 + 4.5);
+  });
+  it("percent points must stay inside the photo", () => {
+    const b = load("briefs/examples/anatomy-map.yaml");
+    if (b.type !== "anatomy-map") throw new Error("type");
+    const bad = { ...b, scenes: [{ ...b.scenes[0], units: "percent" as const }] } as typeof b;
+    expect(errs(bad).map((e) => e.rule)).toContain("regions");
+  });
+  it("smoothPath makes closed and open Bézier curves through every point", async () => {
+    const { smoothPath } = await import("../src/templates/AnatomyMap");
+    const closed = smoothPath([[0, 0], [10, 0], [10, 10], [0, 10]], true);
+    expect(closed.startsWith("M 0.0 0.0")).toBe(true);
+    expect(closed.endsWith("Z")).toBe(true);
+    expect(closed.match(/C /g)).toHaveLength(4);
+    expect(smoothPath([[0, 0], [10, 5], [20, 0]], false).match(/C /g)).toHaveLength(2);
+  });
+});

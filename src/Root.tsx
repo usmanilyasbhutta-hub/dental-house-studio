@@ -20,7 +20,8 @@ const calc = async ({ props }: { props: VideoProps }) => {
     if (!res.ok) throw new Error(`Missing ${footagePaths(b.id).words}: run npm run prep -- <brief> first`);
     words = (await res.json()) as Word[];
   }
-  const sizes = b.type === "photo-layout" ? (props.sizes ?? (await photoSizes(b.photos.map((p) => p.src)))) : props.sizes;
+  const srcs = b.type === "photo-layout" ? b.photos.map((p) => p.src) : b.type === "anatomy-map" ? b.scenes.map((s) => s.photo) : null;
+  const sizes = srcs ? (props.sizes ?? (await photoSizes(srcs))) : props.sizes;
   return { durationInFrames: Math.round(durationSeconds(b) * video.fps), props: { ...props, brief: b, words, sizes } };
 };
 

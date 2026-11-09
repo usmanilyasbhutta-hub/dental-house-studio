@@ -2,6 +2,7 @@ import React from "react";
 import { useTheme } from "../../theme";
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { mono } from "./text";
+import { clinic } from "../../brand";
 
 /** Persistent HUD until the end card: progress bar, logo bug, label, crop marks, business-card bars. */
 export const Hud: React.FC<{ label: string; total: number }> = ({ label, total }) => {
@@ -34,5 +35,14 @@ export const DemoWatermark: React.FC = () => (
     <div style={{ ...mono(46, "#ff5a4f"), transform: "rotate(-24deg)", border: "4px solid #ff5a4f", padding: "16px 34px", opacity: 0.4 }}>
       Demo · not for publishing
     </div>
+  </AbsoluteFill>
+);
+
+/** Minimal chrome for photo-led layouts: small logo bug + handle, nothing else. */
+export const MinimalBug: React.FC = () => (
+  <AbsoluteFill style={{ pointerEvents: "none" }}>
+    <AbsoluteFill style={{ height: 240, background: "linear-gradient(180deg, rgba(0,0,0,0.28), transparent)" }} />
+    <Img src={staticFile("brand/logo-white.png")} style={{ position: "absolute", top: 100, left: 64, width: 190, opacity: 0.95 }} />
+    <div style={{ position: "absolute", top: 128, right: 150, ...mono(22, "#F7F8F6"), textTransform: "none", letterSpacing: "0.06em", opacity: 0.9 }}>{clinic.instagram}</div>
   </AbsoluteFill>
 );
