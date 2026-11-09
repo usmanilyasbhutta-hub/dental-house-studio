@@ -24,7 +24,9 @@ export function calloutTimes(b: TalkingHeadBrief, words: Word[]) {
     hits.push({ start: words[j].start, c });
     i = j + 1;
   }
-  return hits.map((h, k) => ({ ...h, end: Math.min(hits[k + 1]?.start ?? h.start + 2.6, h.start + 2.6) }));
+  // a callout never outlives its chapter
+  const nextChapter = (t: number) => Math.min(...b.chapters.map((c) => c.at).filter((a) => a > t + 0.01), Infinity);
+  return hits.map((h, k) => ({ ...h, end: Math.min(hits[k + 1]?.start ?? h.start + 2.6, h.start + 2.6, nextChapter(h.start)) }));
 }
 
 /** Group words into caption lines: break on punctuation, pauses or length. */
@@ -109,9 +111,9 @@ const BigWord: React.FC<{ text: string }> = ({ text }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const p = prog(frame, 0, fps * 0.35);
-  const size = fitSize([text], 880, 300, 150);
+  const size = fitSize([text], 860, 245, 140);
   return (
-    <AbsoluteFill style={{ alignItems: "center", paddingTop: 430, paddingRight: video.safe.right - video.safe.left }}>
+    <AbsoluteFill style={{ alignItems: "center", paddingTop: 468, paddingRight: video.safe.right - video.safe.left }}>
       <div style={{ ...headline(size, t.accent), opacity: 0.92 * p, transform: `translateY(${(1 - p) * 60}px) scale(${0.94 + 0.06 * p})`, textAlign: "center", width: 920 }}>
         {text}
       </div>
@@ -207,7 +209,7 @@ const Captions: React.FC<{ words: Word[] }> = ({ words }) => {
         const active = sec >= w.start && sec < w.end + 0.05;
         const said = sec >= w.start;
         return (
-          <span key={i} style={{ color: active ? t.accent : t.text, opacity: said ? 1 : 0.62, display: "inline-block", marginRight: "0.26em", transform: active ? "scale(1.06)" : undefined }}>
+          <span key={i} style={{ color: active ? t.accent : t.text, opacity: said ? 1 : 0.62, display: "inline-block", margin: "0 0.15em", transform: active ? "scale(1.06)" : undefined }}>
             {w.text}
           </span>
         );

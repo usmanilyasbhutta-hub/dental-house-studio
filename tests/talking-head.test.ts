@@ -36,11 +36,12 @@ describe("captions and callouts", () => {
     for (const c of chunks) expect(c.map((x) => x.text).join(" ").length).toBeLessThanOrEqual(30);
   });
   it("callouts trigger on the spoken word, in order", () => {
-    const b = { callouts: [{ on: "floss", big: "Floss" }, { on: "C", big: "Vit C" }, { on: "missing", big: "X" }, { on: "twice", big: "2×" }] } as unknown as TalkingHeadBrief;
+    const b = { chapters: [{ at: 0 }, { at: 1.4 }], callouts: [{ on: "floss", big: "Floss" }, { on: "C", big: "Vit C" }, { on: "missing", big: "X" }, { on: "twice", big: "2×" }] } as unknown as TalkingHeadBrief;
     const hits = calloutTimes(b, words);
     expect(hits.map((h) => h.c.big)).toEqual(["Floss", "Vit C", "2×"]);
     expect(hits[0].start).toBeCloseTo(0.5);
     for (const h of hits) expect(h.end).toBeGreaterThan(h.start);
+    expect(hits[0].end).toBeLessThanOrEqual(1.4); // clipped at the next chapter
   });
 });
 

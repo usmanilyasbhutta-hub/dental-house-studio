@@ -36,11 +36,11 @@ export const EndCard: React.FC<{ cta: string; tagline?: string; note?: string }>
         {clinic.doctors.map((d) => (
           <div key={d} style={{ ...mono(23, e.text), letterSpacing: "0.06em", marginTop: 8 }}>{d}</div>
         ))}
-        <div style={{ ...mono(24, e.muted), letterSpacing: "0.03em", marginTop: 22, maxWidth: 820, lineHeight: 1.5, textTransform: "none" }}>
+        <div style={{ ...mono(24, e.muted), letterSpacing: "0.03em", marginTop: 22, maxWidth: 740, lineHeight: 1.5, textTransform: "none" }}>
           {clinic.address}
         </div>
         {note ? (
-          <div style={{ ...mono(22, e.text), letterSpacing: "0.02em", marginTop: 26, maxWidth: 820, lineHeight: 1.45, textTransform: "none", opacity: 0.85 }}>{note}</div>
+          <div style={{ ...mono(22, e.text), letterSpacing: "0.02em", marginTop: 26, maxWidth: 740, lineHeight: 1.45, textTransform: "none", opacity: 0.85 }}>{note}</div>
         ) : null}
       </div>
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>

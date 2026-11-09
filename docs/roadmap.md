@@ -8,7 +8,8 @@
 | 3 | Slash commands `/new-video` `/make` `/review` `/publish-prep` + reviewer agents | ✅ v0.1 |
 | 4 | Hooks: typecheck/validate on edit, block committing patient material; CI | ✅ v0.1 |
 | 4b | Reference analysis script + style profile from 14 reference videos | ✅ v0.2 |
-| 4c | New templates from the style profile: TalkingHead (Roman-Urdu word captions), footage Promo, AnatomyMap, ProcedureSteps, Celebration (Urdu Nastaliq) | ⏭ next |
+| 4c | TalkingHead template + footage pipeline (cut-out, grade, word captions), first test run reviewed | ✅ v0.3 |
+| 4d | Multi-segment trim · footage Promo · AnatomyMap · ProcedureSteps · Celebration (Urdu Nastaliq) | ⏭ next |
 | 5 | Make 3 **real** videos; turn every correction into a rule (CLAUDE.md / compliance.ts) | ⏭ next |
 | 6 | Clinic b-roll (logo wall, treatment rooms) via `broll:`, real music bed | ⏭ |
 | 7 | Voiceover + burned-in captions (remotion-captions skill), Roman-Urdu, then Urdu Nastaliq font | ⏭ |
