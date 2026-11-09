@@ -51,4 +51,5 @@ light leak, draw-on circle/arrow/underline, punch zoom, shake, glitch, confetti)
 `brand/source/` holds the original logo JPEGs. `npm run brand:assets` rebuilds the transparent and white PNGs and copies the fonts. Music in `public/audio/` is originally synthesised (`scripts/demo_assets.py`).
 
 ## Licensing note
-Remotion is free for individuals and small companies; larger companies need a company license. Check [remotion.pro](https://remotion.pro) against your team size.
+Remotion (and `@remotion/*` packages) is free for individuals and companies of up to 3 employees; above that a company
+licence is required ([remotion.pro](https://remotion.pro)). The clinic has two doctors (Nov 2026); count all staff when checking.

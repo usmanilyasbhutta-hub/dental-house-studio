@@ -1,0 +1,35 @@
+# Anatomy map of a real case: fractured upper central incisors (11, 21).
+# DRAFT: demo: true (watermarked) until written consent is on file. Photos are in public/cases/fracture-11-21/ (gitignored).
+# Wording is descriptive only; the dentist confirms diagnosis words before publishing.
+id: map-fracture-11-21
+type: anatomy-map
+title: Chipped front teeth, anatomy map
+demo: true
+clinical: true
+theme: brand
+fx: { transition: none, sfx: subtle }
+tone: calm
+label: Front teeth
+hook: { lines: ["Chipped", "front teeth"], accent: Chipped }
+seconds_per_region: 2.2
+scenes:
+  - photo: cases/fracture-11-21/front.jpg
+    units: px
+    focus: { x: 700, y: 430, w: 900, h: 520 }
+    title: { text: "Two chipped front teeth", bold: "chipped" }
+    regions:
+      - points: [[810, 600], [830, 545], [900, 520], [980, 525], [1050, 560], [1095, 640], [1080, 690], [1055, 715], [1050, 800], [1025, 860], [1010, 885], [900, 890], [845, 875], [810, 820], [800, 700]]
+        style: outline
+        label: { bold: "11", text: "fractured corner" }
+        anchor: top-left
+      - points: [[1165, 670], [1190, 575], [1240, 525], [1350, 512], [1440, 532], [1490, 590], [1500, 700], [1490, 820], [1450, 865], [1300, 875], [1205, 860], [1190, 800], [1175, 720]]
+        style: outline
+        label: { bold: "21", text: "fractured corner" }
+        anchor: top-right
+      - points: [[1055, 715], [1085, 695], [1130, 690], [1165, 700], [1175, 720], [1190, 800], [1205, 860], [1110, 872], [1020, 885], [1025, 860], [1050, 800]]
+        style: hatch
+        label: { bold: "Missing", text: "tooth structure" }
+        anchor: bottom-right
+cta: Book a check-up
+disclaimer: "Patient photo shared with written consent. Treatment depends on examination."
+music: audio/pad-calm.mp3

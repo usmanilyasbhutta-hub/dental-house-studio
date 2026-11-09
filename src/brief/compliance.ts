@@ -111,6 +111,9 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       const anchors = sc.regions.filter((r) => r.label).map((r) => r.anchor);
       if (anchors.length > 4) warn("labels", `${anchors.length} labels in one scene: earlier ones dim, but keep it readable (≤ 4)`);
     }
+    const foci = b.scenes.filter((sc) => sc.focus).map((sc) => JSON.stringify(sc.focus));
+    if (foci.length && (foci.length !== b.scenes.length || new Set(foci).size > 1))
+      err("focus", "all chapters must use the same focus box (before/after must be framed identically)");
     if (b.clinical && !b.demo) {
       if (!b.consent) err("consent", "patient photos need written consent (consent.file)");
       else {

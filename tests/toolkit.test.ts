@@ -70,3 +70,15 @@ describe("anatomy-map briefs", () => {
     expect(smoothPath([[0, 0], [10, 5], [20, 0]], false).match(/C /g)).toHaveLength(2);
   });
 });
+
+describe("anatomy-map focus", () => {
+  it("chapters must share one focus box", () => {
+    const b = load("briefs/examples/anatomy-map.yaml");
+    if (b.type !== "anatomy-map") throw new Error("type");
+    const f = { x: 0, y: 0, w: 100, h: 100 };
+    const mixed = { ...b, scenes: [{ ...b.scenes[0], focus: f }, { ...b.scenes[1] }] } as typeof b;
+    expect(errs(mixed).map((e) => e.rule)).toContain("focus");
+    const same = { ...b, scenes: [{ ...b.scenes[0], focus: f }, { ...b.scenes[1], focus: { ...f } }] } as typeof b;
+    expect(errs(same)).toEqual([]);
+  });
+});

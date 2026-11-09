@@ -227,6 +227,11 @@ export const anatomyMapBrief = base.extend({
       z.object({
         photo: publicAsset,
         units: z.enum(["px", "percent"]).default("percent"),
+        /**
+         * Optional uniform zoom onto an area of interest (photo px). Never warps or edits the photo; the zoomed photo is
+         * centred on this box and the rest of the frame shows the photo / blurred fill. Before/after chapters must share it.
+         */
+        focus: z.object({ x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive() }).optional(),
         /** Small elegant title: `bold` is the emphasised word(s) inside `text`. */
         title: z.object({ text: line(48), bold: z.string().optional() }),
         regions: z.array(mapRegion).min(1).max(8),

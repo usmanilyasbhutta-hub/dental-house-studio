@@ -16,10 +16,18 @@ type Rect = { x: number; y: number; w: number; h: number };
 const INK = "#F7F8F6"; // white line work, as in the reference style
 const TITLE_BEAT = 1.4;
 
-/** Photo contain-fit to the full frame (never cropped); the frame around it is a blurred copy. */
-const photoRect = (s: PhotoSize): Rect => {
-  const k = Math.min(video.width / s.w, video.height / s.h);
-  return { x: (video.width - s.w * k) / 2, y: (video.height - s.h * k) / 2, w: s.w * k, h: s.h * k };
+/**
+ * Photo placement: contain-fit to the full frame (never cropped), or a uniform zoom centred on `focus`
+ * (photo px). Either way the photo is unwarped; the frame around it is a blurred copy.
+ */
+const photoRect = (s: PhotoSize, focus?: { x: number; y: number; w: number; h: number }): Rect => {
+  if (!focus) {
+    const k = Math.min(video.width / s.w, video.height / s.h);
+    return { x: (video.width - s.w * k) / 2, y: (video.height - s.h * k) / 2, w: s.w * k, h: s.h * k };
+  }
+  const k = Math.min(video.width / focus.w, (video.height * 0.6) / focus.h);
+  const cx = video.width / 2, cy = video.height * 0.47;
+  return { x: cx - (focus.x + focus.w / 2) * k, y: cy - (focus.y + focus.h / 2) * k, w: s.w * k, h: s.h * k };
 };
 
 /** Catmull-Rom spline → cubic Bézier path (organic outlines from a few points). */
@@ -83,7 +91,7 @@ const MapScene: React.FC<{
 }> = ({ scene, size, per, fadeIn, dur, fadeOut }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const r = photoRect(size);
+  const r = photoRect(size, scene.focus);
   const toPx = ([x, y]: [number, number]): [number, number] =>
     scene.units === "px" ? [r.x + (x / size.w) * r.w, r.y + (y / size.h) * r.h] : [r.x + (x / 100) * r.w, r.y + (y / 100) * r.h];
   const beat = Math.round(TITLE_BEAT * fps);

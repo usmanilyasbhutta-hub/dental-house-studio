@@ -1,6 +1,10 @@
 # Effects library
 
-All effects are free: plain Remotion code (`src/fx/`), Remotion's official free packages
+**Licence:** Remotion and its packages (including `@remotion/transitions`) are under the Remotion License: free for
+individuals and companies of up to 3 employees; larger companies need a company licence. The owner reports the clinic has
+two doctors (Nov 2026). Count **all** employees (assistants, reception), and buy a company licence if the total goes above 3.
+
+The effects themselves are free: plain Remotion code (`src/fx/`), Remotion's official free packages
 (`@remotion/transitions`, `@remotion/noise`, `@remotion/paths`, `@remotion/shapes`, `@remotion/motion-blur`),
 and sound effects generated in code (`scripts/make_sfx.py`, procedural-foley principles). No stock footage,
 no licensed sounds, no paid plugins.
