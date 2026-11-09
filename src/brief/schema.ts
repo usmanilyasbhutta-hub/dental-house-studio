@@ -23,11 +23,17 @@ const hook = z.object({
 const base = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/, "lowercase-slug"),
   title: line(80),
-  language: z.enum(["en", "roman-ur"]).default("en"),
+  /**
+   * Caption language. Default "as-spoken": captions follow whatever is spoken (English, Urdu or mixed),
+   * word for word. Owner decision, Nov 2026.
+   */
+  language: z.enum(["as-spoken", "en", "ur", "roman-ur"]).default("as-spoken"),
   hook,
   cta: line(32).default("Book your consultation"),
   /** Small mono label in the HUD. */
   label: line(24).default("Consult first"),
+  /** Visual family: brand = slate/bronze (default), editorial = cream/deep green for doctor-led education. */
+  theme: z.enum(["brand", "editorial"]).default("brand"),
   /** Tone controls motion: calm = no glitch cuts. */
   tone: z.enum(["calm", "contemporary"]).default("calm"),
   music: publicAsset.optional(),

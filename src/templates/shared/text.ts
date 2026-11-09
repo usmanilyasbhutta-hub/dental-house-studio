@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
-import { colors, fonts } from "../../brand";
+import { fonts } from "../../brand";
 
-export const headline = (size: number, color: string = colors.white): CSSProperties => ({
+export const headline = (size: number, color?: string): CSSProperties => ({
   fontFamily: fonts.headline,
   fontWeight: 700,
   fontSize: size,
@@ -11,7 +11,7 @@ export const headline = (size: number, color: string = colors.white): CSSPropert
   color,
 });
 
-export const serif = (size: number, color: string = colors.bronzeLight): CSSProperties => ({
+export const serif = (size: number, color?: string): CSSProperties => ({
   fontFamily: fonts.accent,
   fontStyle: "italic",
   fontWeight: 400,
@@ -20,7 +20,7 @@ export const serif = (size: number, color: string = colors.bronzeLight): CSSProp
   color,
 });
 
-export const mono = (size: number, color: string = colors.mist): CSSProperties => ({
+export const mono = (size: number, color?: string): CSSProperties => ({
   fontFamily: fonts.mono,
   fontWeight: 500,
   fontSize: size,

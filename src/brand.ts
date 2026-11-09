@@ -21,6 +21,10 @@ export const clinic = {
   name: "Dental House",
   city: "Sialkot",
   phone: "0323-7560160",
+  /** Same number takes WhatsApp bookings (confirmed by the owner, Nov 2026). */
+  whatsapp: true,
+  /** Read from Instagram's own end-card overlay on the clinic's reels; owner confirmed the account. */
+  instagram: "@dentalhousesktt",
   doctors: [
     "Dr. Usman Ilyas Bhutta (BDS, RDS, C. Implant)",
     "Dr. Ayesha Sarfraz (BDS, RDS)",

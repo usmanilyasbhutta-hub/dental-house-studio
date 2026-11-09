@@ -4,7 +4,7 @@ Built from 14 reference videos (Nov 2026): the clinic's own reels made with Clau
 and Instagram videos the owner likes. Measured with `scripts/analyze_reference.py`; frames reviewed by eye.
 Videos and frames stay in `references/` (gitignored). This file holds descriptions and numbers only.
 
-> **Status: draft.** Items marked ❓ need the owner's decision. Rules marked ✅ are already applied in the pipeline.
+> Rules marked ✅ are applied in the pipeline.
 
 ## 1. What was analysed
 
@@ -66,13 +66,21 @@ Videos and frames stay in `references/` (gitignored). This file holds descriptio
 5. **Celebration / Culture** (from E): Urdu Nastaliq captions, cream/gold, for Iqbal Day, Eid, Independence Day and patient milestones. Needs an Urdu font (Noto Nastaliq Urdu).
 6. FX library: glow outline, light sweep, sparkle word, 2.5D photo move (from E/F/G).
 
-## 6. Decisions needed ❓
+## 6. Decisions (owner, Nov 2026) ✅
 
-1. **One visual family or two?** Recommendation: keep **slate/bronze** as the master brand (logo colours, used in A/B), and allow a **"clinical-education" variant** (cream + deep green, as in D) for talking-head education. Retire black/mint neon (C), because it doesn't match the logo.
-2. **Instagram handle:** your videos show `@dentalhouseskt`. Confirm it, and I'll add it to `src/brand.ts` (currently not allowed on screen because it's unconfirmed).
-3. **WhatsApp:** is 0323-7560160 also the WhatsApp booking number?
-4. **Captions language default:** Roman Urdu speech with English keywords (as in C/D)?
-5. **Liked videos from other clinics** (H, I, J, K) are style references only. We never reuse their footage, logos or music.
+1. **Two visual families, one brand.** `theme: brand` (slate/bronze, the logo colours) is the master look for promos, offers and cases.
+   `theme: editorial` (cream + deep green, rose accent) is for doctor-led education. **Black/mint neon is retired.** ✅ in `src/theme.ts`.
+2. **Instagram: @dentalhousesktt** (two Ts). Read from Instagram's own end-card overlay on the clinic's reel and from reel C. ✅ on every end card.
+   The compliance check rejects any other handle, including the typo `@dentalhouseskt`.
+3. **0323-7560160 is also the WhatsApp booking number.** ✅ End card shows "Call / WhatsApp".
+4. **Captions follow whatever is spoken** (English, Urdu or mixed), word for word. ✅ `language: as-spoken` is the default.
+   Urdu script needs a Nastaliq font (planned with the Celebration template).
+5. Liked videos from other clinics (H, I, J, K) are style references only: never reuse their footage, logos or music.
+
+## Reference L (added later): Bleeding Gums, earlier published version
+Talking head, single take (51.6 s, 576×1024, −20 LUFS). Burned-in "DENTAL HOUSE / Bleeding Gums" title and doctor names in red outlined
+type over the clinic wall; Instagram handle overlay. Not the raw recording. Shows the starting point: the later versions (C, D) improved it.
+Issues: too long for the content (51 s), low resolution, too quiet (−20 LUFS), red skin cast, static framing, text style off-brand.
 
 ## 7. How this profile keeps improving
 Drop new videos into `references/inbox/`, then run `python3 scripts/analyze_reference.py references/inbox/*` and ask Claude to update this file.

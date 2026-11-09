@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useVideoConfig } from "remotion";
 import type { Brief } from "../../brief/schema";
+import { ThemeContext, themes } from "../../theme";
 import { Backdrop } from "./Backdrop";
 import { EndCard } from "./EndCard";
 import { DemoWatermark, Hud } from "./Hud";
@@ -18,8 +19,10 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; children: React
   const { fps, durationInFrames } = useVideoConfig();
   const endFrames = Math.round(endSeconds * fps);
   const bodyFrames = durationInFrames - endFrames;
+  const theme = themes[brief.theme];
   return (
-    <AbsoluteFill>
+    <ThemeContext.Provider value={theme}>
+    <AbsoluteFill style={{ color: theme.text }}>
       <Sequence durationInFrames={bodyFrames}>
         <Backdrop broll={brief.broll[0]} />
         {children}
@@ -37,5 +40,6 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; children: React
       {brief.demo ? <DemoWatermark /> : null}
       {showSafeZones ? <SafeZones /> : null}
     </AbsoluteFill>
+    </ThemeContext.Provider>
   );
 };

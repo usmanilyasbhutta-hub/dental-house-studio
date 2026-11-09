@@ -1,3 +1,4 @@
+import { clinic } from "../brand";
 import type { Brief } from "./schema";
 
 export type Finding = { level: "error" | "warning"; rule: string; message: string };
@@ -11,7 +12,8 @@ export const BANNED = [
 
 const PATIENT_ID = /\bDH-\d{2,}\b/i; // Dental Align patient IDs
 const PHONE = /(\+?92|0)3\d{2}[-\s]?\d{7}/g;
-const CLINIC_PHONE = "03237560160";
+const CLINIC_PHONE = clinic.phone.replace(/\D/g, "");
+const HANDLE = /@[a-z0-9._]{3,30}/gi;
 
 function allText(b: Brief): string[] {
   const t = [b.title, ...b.hook.lines, b.cta, b.label];
@@ -43,6 +45,10 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
         err("contact", `unknown phone number "${m}"; only the clinic number is allowed`);
     }
   }
+
+  for (const text of allText(b))
+    for (const h of text.match(HANDLE) ?? [])
+      if (h.toLowerCase() !== clinic.instagram) err("contact", `unknown handle "${h}"; only ${clinic.instagram} is allowed`);
 
   if (b.hook.accent && !b.hook.lines.join(" ").toLowerCase().includes(b.hook.accent.toLowerCase()))
     warn("hook", `accent word "${b.hook.accent}" is not in the hook lines`);

@@ -1,6 +1,7 @@
 import React from "react";
+import { useTheme } from "../theme";
 import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from "remotion";
-import { colors, video } from "../brand";
+import { video } from "../brand";
 import type { OfferBrief } from "../brief/schema";
 import { scenes, sec } from "../brief/timing";
 import { KineticHeadline } from "./shared/Headline";
@@ -13,10 +14,10 @@ const s = scenes.offer;
 
 export const Offer: React.FC<{ brief: OfferBrief } & QcProps> = ({ brief, showSafeZones }) => {
   const { fps } = useVideoConfig();
-  let t = 0;
+  let cursor = 0;
   const at = (d: number) => {
-    const from = sec(t, fps);
-    t += d;
+    const from = sec(cursor, fps);
+    cursor += d;
     return { from, durationInFrames: sec(d, fps) };
   };
   return (
@@ -51,6 +52,7 @@ const Center: React.FC<{ dur: number; children: React.ReactNode }> = ({ dur, chi
 };
 
 const Reveal: React.FC<{ brief: OfferBrief; dur: number }> = ({ brief, dur }) => {
+  const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const a = prog(frame, 0, fps * 0.5);
@@ -58,31 +60,32 @@ const Reveal: React.FC<{ brief: OfferBrief; dur: number }> = ({ brief, dur }) =>
   const c = prog(frame, fps * 0.7, fps * 0.6);
   return (
     <Center dur={dur}>
-      <div style={{ ...mono(30, colors.bronzeLight), opacity: a }}>Limited offer</div>
+      <div style={{ ...mono(30, t.accent), opacity: a }}>Limited offer</div>
       <div style={{ ...headline(fitSize([brief.offer.headline], 850, 140)), marginTop: 26, opacity: a, transform: `translateY(${(1 - a) * 40}px)` }}>
         {brief.offer.headline}
       </div>
       {brief.offer.price ? (
-        <div style={{ ...headline(fitSize([brief.offer.price], 850, 170), colors.bronzeLight), marginTop: 18, opacity: b, transform: `scale(${0.9 + 0.1 * b})`, transformOrigin: "left" }}>
+        <div style={{ ...headline(fitSize([brief.offer.price], 850, 170), t.accent), marginTop: 18, opacity: b, transform: `scale(${0.9 + 0.1 * b})`, transformOrigin: "left" }}>
           {brief.offer.price}
         </div>
       ) : null}
-      <div style={{ height: 6, width: 300 * b, background: colors.bronze, margin: "34px 0" }} />
-      <div style={{ ...serif(60), opacity: c, maxWidth: 850 }}>{brief.offer.detail}</div>
+      <div style={{ height: 6, width: 300 * b, background: t.rule, margin: "34px 0" }} />
+      <div style={{ ...serif(60, t.accent), opacity: c, maxWidth: 850 }}>{brief.offer.detail}</div>
     </Center>
   );
 };
 
 const Terms: React.FC<{ brief: OfferBrief; dur: number }> = ({ brief, dur }) => {
+  const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const a = prog(frame, 0, fps * 0.5);
   const until = new Date(`${brief.offer.valid_until}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
   return (
     <Center dur={dur}>
-      <div style={{ ...mono(30, colors.bronzeLight), opacity: a }}>Valid until</div>
+      <div style={{ ...mono(30, t.accent), opacity: a }}>Valid until</div>
       <div style={{ ...headline(110), marginTop: 18, opacity: a }}>{until}</div>
-      <div style={{ ...mono(30, colors.mist), marginTop: 46, opacity: a, textTransform: "none", letterSpacing: "0.04em", lineHeight: 1.5, maxWidth: 820 }}>
+      <div style={{ ...mono(30, t.muted), marginTop: 46, opacity: a, textTransform: "none", letterSpacing: "0.04em", lineHeight: 1.5, maxWidth: 820 }}>
         {brief.offer.terms}
       </div>
     </Center>

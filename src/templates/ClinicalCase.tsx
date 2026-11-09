@@ -1,6 +1,7 @@
 import React from "react";
+import { useTheme } from "../theme";
 import { AbsoluteFill, Img, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { colors, video } from "../brand";
+import { video } from "../brand";
 import type { CaseBrief } from "../brief/schema";
 import { scenes, sec } from "../brief/timing";
 import { KineticHeadline } from "./shared/Headline";
@@ -17,17 +18,18 @@ const CARD = { w: 900, h: 1100, top: 380 };
  */
 export const ClinicalCase: React.FC<{ brief: CaseBrief } & QcProps> = ({ brief, showSafeZones }) => {
   const { fps } = useVideoConfig();
-  let t = 0;
+  const t = useTheme();
+  let cursor = 0;
   const at = (d: number) => {
-    const from = sec(t, fps);
-    t += d;
+    const from = sec(cursor, fps);
+    cursor += d;
     return { from, durationInFrames: sec(d, fps) };
   };
   return (
     <Shell brief={brief} endSeconds={s.end} showSafeZones={showSafeZones}>
       <Sequence {...at(s.hook)}>
         <Fade dur={sec(s.hook, fps)}>
-          <div style={{ ...mono(30, colors.bronzeLight), marginBottom: 30 }}>Clinical case · {brief.treatment}</div>
+          <div style={{ ...mono(30, t.accent), marginBottom: 30 }}>Clinical case · {brief.treatment}</div>
           <KineticHeadline lines={brief.hook.lines} accent={brief.hook.accent} />
         </Fade>
       </Sequence>
@@ -45,8 +47,8 @@ export const ClinicalCase: React.FC<{ brief: CaseBrief } & QcProps> = ({ brief, 
       </Sequence>
       <Sequence {...at(s.disclaimer)}>
         <Fade dur={sec(s.disclaimer, fps)}>
-          <div style={serif(76, colors.white)}>Every smile is different.</div>
-          <div style={{ ...mono(28, colors.mist), textTransform: "none", letterSpacing: "0.03em", lineHeight: 1.55, marginTop: 36, maxWidth: 820 }}>
+          <div style={serif(76, t.text)}>Every smile is different.</div>
+          <div style={{ ...mono(28, t.muted), textTransform: "none", letterSpacing: "0.03em", lineHeight: 1.55, marginTop: 36, maxWidth: 820 }}>
             Individual results vary. Photos are unedited and shared with the patient's written consent.
           </div>
         </Fade>
@@ -70,9 +72,12 @@ const frameBox: React.CSSProperties = {
 };
 const photo: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" };
 
-const Tag: React.FC<{ text: string; side?: "left" | "right" }> = ({ text, side = "left" }) => (
-  <div style={{ position: "absolute", top: CARD.top - 74, [side]: (video.width - CARD.w) / 2, ...mono(32, colors.bronzeLight) }}>{text}</div>
+const Tag: React.FC<{ text: string; side?: "left" | "right" }> = ({ text, side = "left" }) => {
+  const t = useTheme();
+  return (
+  <div style={{ position: "absolute", top: CARD.top - 74, [side]: (video.width - CARD.w) / 2, ...mono(32, t.accent) }}>{text}</div>
 );
+};
 
 const Photo: React.FC<{ src: string; tag: string; dur: number }> = ({ src, tag, dur }) => {
   const frame = useCurrentFrame();
@@ -87,6 +92,7 @@ const Photo: React.FC<{ src: string; tag: string; dur: number }> = ({ src, tag, 
 };
 
 const Wipe: React.FC<{ before: string; after: string; dur: number }> = ({ before, after, dur }) => {
+  const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   // sweep to the right, peek back, settle on "after"
@@ -103,28 +109,29 @@ const Wipe: React.FC<{ before: string; after: string; dur: number }> = ({ before
       <div style={frameBox}>
         <Img src={staticFile(before)} style={photo} />
         <Img src={staticFile(after)} style={{ ...photo, clipPath: `inset(0 ${(1 - x) * 100}% 0 0)` }} />
-        <div style={{ position: "absolute", top: 0, bottom: 0, left: `${x * 100}%`, width: 6, marginLeft: -3, background: colors.bronzeLight }} />
+        <div style={{ position: "absolute", top: 0, bottom: 0, left: `${x * 100}%`, width: 6, marginLeft: -3, background: t.accent }} />
       </div>
     </AbsoluteFill>
   );
 };
 
 const Notes: React.FC<{ brief: CaseBrief; dur: number }> = ({ brief, dur }) => {
+  const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (
     <Fade dur={dur}>
-      <div style={mono(30, colors.bronzeLight)}>What we did</div>
+      <div style={mono(30, t.accent)}>What we did</div>
       {brief.notes.map((n, i) => {
         const a = prog(frame, fps * (0.15 + i * 0.25), fps * 0.5);
         return (
           <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 28, marginTop: 34, opacity: a, transform: `translateX(${(1 - a) * -40}px)` }}>
-            <div style={{ ...headline(44, colors.bronzeLight) }}>{String(i + 1).padStart(2, "0")}</div>
+            <div style={{ ...headline(44, t.accent) }}>{String(i + 1).padStart(2, "0")}</div>
             <div style={headline(64)}>{n}</div>
           </div>
         );
       })}
-      {brief.timeline ? <div style={{ ...serif(56), marginTop: 50 }}>{brief.timeline}</div> : null}
+      {brief.timeline ? <div style={{ ...serif(56, t.accent), marginTop: 50 }}>{brief.timeline}</div> : null}
     </Fade>
   );
 };

@@ -1,7 +1,7 @@
 // Studio defaults (mirrors briefs/examples/*.yaml; tests keep them in sync).
 import type { CaseBrief, EducationBrief, OfferBrief } from "./brief/schema";
 
-const common = { language: "en" as const, broll: [] as string[], review: {}, demo: true };
+const common = { theme: "brand" as const, language: "as-spoken" as const, broll: [] as string[], review: {}, demo: true };
 
 export const demoOffer: OfferBrief = {
   ...common,
@@ -27,6 +27,7 @@ export const demoEducation: EducationBrief = {
   ...common,
   id: "education-bleeding-gums",
   type: "education",
+  theme: "editorial",
   title: "Bleeding gums, what they mean",
   tone: "calm",
   hook: { lines: ["Gums bleed", "when you brush?", "Don't ignore it."], accent: "ignore" },

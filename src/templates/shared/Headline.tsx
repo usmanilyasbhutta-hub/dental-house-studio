@@ -1,6 +1,6 @@
 import React from "react";
+import { useTheme } from "../../theme";
 import { useCurrentFrame, useVideoConfig } from "remotion";
-import { colors } from "../../brand";
 import { prog } from "./motion";
 import { fitSize, headline, serif } from "./text";
 
@@ -12,6 +12,7 @@ export const KineticHeadline: React.FC<{ lines: string[]; accent?: string; width
   delay = 0,
   max = 150,
 }) => {
+  const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const size = fitSize(lines, width, max);
@@ -22,7 +23,7 @@ export const KineticHeadline: React.FC<{ lines: string[]; accent?: string; width
         const p = prog(frame, delay + i * step, Math.round(fps * 0.55));
         return (
           <div key={i} style={{ overflow: "hidden", paddingBottom: size * 0.06 }}>
-            <div style={{ transform: `translateY(${(1 - p) * 110}%)`, ...headline(size) }}>{renderAccent(l, accent, size)}</div>
+            <div style={{ transform: `translateY(${(1 - p) * 110}%)`, ...headline(size) }}>{renderAccent(l, accent, size, t.accent)}</div>
           </div>
         );
       })}
@@ -30,7 +31,7 @@ export const KineticHeadline: React.FC<{ lines: string[]; accent?: string; width
         style={{
           marginTop: 22,
           height: 8,
-          background: colors.bronze,
+          background: t.rule,
           width: `${prog(frame, delay + lines.length * step, Math.round(fps * 0.6)) * 46}%`,
         }}
       />
@@ -38,14 +39,14 @@ export const KineticHeadline: React.FC<{ lines: string[]; accent?: string; width
   );
 };
 
-function renderAccent(line: string, accent: string | undefined, size: number) {
+function renderAccent(line: string, accent: string | undefined, size: number, accentColor: string) {
   if (!accent) return line;
   const i = line.toLowerCase().indexOf(accent.toLowerCase());
   if (i < 0) return line;
   return (
     <>
       {line.slice(0, i)}
-      <span style={{ ...serif(size * 1.12), textTransform: "none" }}>{line.slice(i, i + accent.length)}</span>
+      <span style={{ ...serif(size * 1.12, accentColor), textTransform: "none" }}>{line.slice(i, i + accent.length)}</span>
       {line.slice(i + accent.length)}
     </>
   );

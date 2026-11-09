@@ -3,6 +3,7 @@ id: education-bleeding-gums
 type: education
 title: Bleeding gums, what they mean
 demo: true
+theme: editorial   # doctor-led education look (cream + deep green)
 tone: calm
 hook:
   lines: ["Gums bleed", "when you brush?", "Don't ignore it."]

@@ -64,6 +64,19 @@ describe("compliance", () => {
     b.offer.terms = "Call 0300-1234567 to book";
     expect(errors(b)[0].rule).toBe("contact");
   });
+  it("allows only the clinic's Instagram handle", () => {
+    const b = clone(demoOffer);
+    b.offer.terms = "Follow @dentalhousesktt for updates";
+    expect(errors(b)).toEqual([]);
+    b.offer.terms = "Follow @dentalhouseskt for updates"; // typo of the real handle
+    expect(errors(b)[0].rule).toBe("contact");
+  });
+  it("defaults to the brand theme and accepts editorial", () => {
+    const { theme: _omit, ...noTheme } = demoOffer;
+    expect(brief.parse(noTheme).theme).toBe("brand");
+    expect(brief.parse(demoEducation).theme).toBe("editorial");
+    expect(brief.safeParse({ ...demoOffer, theme: "neon" }).success).toBe(false);
+  });
   it("blocks expired offers (demo briefs only warn)", () => {
     expect(errors({ ...clone(demoOffer), demo: false }, { ...env, today: "2027-01-01" })[0].rule).toBe("offer");
     expect(errors(demoOffer, { ...env, today: "2027-01-01" })).toEqual([]);
