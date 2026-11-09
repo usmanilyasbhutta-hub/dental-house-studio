@@ -8,3 +8,7 @@ assets/cases/*
 !assets/cases/README.md
 public/cases/*
 !public/cases/demo-case/
+
+# Reference videos (may contain patients) and their analysis frames
+references/*
+!references/README.md
