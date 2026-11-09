@@ -1,4 +1,4 @@
-import type { Brief } from "./schema";
+import { segmentsOf, type Brief } from "./schema";
 
 /** Scene lengths in seconds per template. Single source of truth for duration. */
 export const scenes = {
@@ -19,7 +19,7 @@ export function durationSeconds(b: Brief): number {
       return s.hook + s.step * 3 + s.takeaway + s.sources + s.end;
     }
     case "talking-head":
-      return b.footage.trim.end - b.footage.trim.start + scenes["talking-head"].end;
+      return segmentsOf(b).reduce((n, g) => n + g.end - g.start, 0) + scenes["talking-head"].end;
     case "case": {
       const s = scenes.case;
       return s.hook + s.before + s.wipe + s.after + s.notes + s.disclaimer + s.end;

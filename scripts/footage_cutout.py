@@ -11,25 +11,41 @@ import onnxruntime as ort
 
 cfg = json.loads(sys.argv[1])
 src, out = cfg["source"], cfg["out"]
-t0, t1 = cfg["trim"]["start"], cfg["trim"]["end"]
+segs = cfg["segments"]
 c = cfg["crop"]
 W, H = c["w"], c["h"]
 SCALE = cfg.get("scale", 2)
 OW, OH = W * SCALE // 2 * 2, H * SCALE // 2 * 2
 FPS = 30
 
-# --- decoder: trimmed + cropped raw RGB frames
-dec = subprocess.Popen(
-    ["ffmpeg", "-v", "error", "-ss", str(t0), "-to", str(t1), "-i", src,
-     "-vf", f"fps={FPS},crop={W}:{H}:{c['x']}:{c['y']}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
-    stdout=subprocess.PIPE)
+# --- decoder: each kept range, trimmed + cropped, raw RGB frames back to back
+def decode_all():
+    for g in segs:
+        p = subprocess.Popen(
+            ["ffmpeg", "-v", "error", "-ss", str(g["start"]), "-to", str(g["end"]), "-i", src,
+             "-vf", f"fps={FPS},crop={W}:{H}:{c['x']}:{c['y']}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+            stdout=subprocess.PIPE)
+        while True:
+            buf = p.stdout.read(W * H * 3)
+            if len(buf) < W * H * 3:
+                break
+            yield buf
+        p.wait()
 
-# --- encoder: VP9 with alpha + audio from the same trimmed range
+# --- audio: same ranges joined with 12 ms fades (no clicks at the cuts)
+chains, labels = [], []
+for i, g in enumerate(segs):
+    d = round(g["end"] - g["start"] - 0.012, 3)
+    chains.append(f"[1:a]atrim={g['start']}:{g['end']},asetpts=PTS-STARTPTS,afade=t=in:d=0.012,afade=t=out:st={d}:d=0.012[a{i}]")
+    labels.append(f"[a{i}]")
+afilter = ";".join(chains) + ";" + "".join(labels) + f"concat=n={len(segs)}:v=0:a=1[aout]"
+
+# --- encoder: VP9 (+alpha) with the joined speech
 alpha = cfg["cutout"]
 enc = subprocess.Popen(
     ["ffmpeg", "-v", "error", "-y",
      "-f", "rawvideo", "-pix_fmt", "rgba" if alpha else "rgb24", "-s", f"{OW}x{OH}", "-r", str(FPS), "-i", "-",
-     "-ss", str(t0), "-to", str(t1), "-i", src, "-map", "0:v", "-map", "1:a",
+     "-i", src, "-filter_complex", afilter, "-map", "0:v", "-map", "[aout]",
      "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p" if alpha else "yuv420p", "-b:v", "6M", "-deadline", "good", "-cpu-used", "4",
      "-auto-alt-ref", "0", "-c:a", "libopus", "-b:a", "128k", "-shortest", out],
     stdin=subprocess.PIPE)
@@ -83,11 +99,7 @@ def matte(img):
 
 
 prev, frames, painted = None, 0, 0
-size = W * H * 3
-while True:
-    buf = dec.stdout.read(size)
-    if len(buf) < size:
-        break
+for buf in decode_all():
     img = np.frombuffer(buf, np.uint8).reshape(H, W, 3)
     img, n = paint_out_text(img)
     painted += n > 0

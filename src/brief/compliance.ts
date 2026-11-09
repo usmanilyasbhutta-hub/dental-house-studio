@@ -84,7 +84,13 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
   if (b.type === "talking-head") {
     if (!clinic.doctors.some((d) => d.startsWith(b.speaker.name)))
       err("speaker", `speaker "${b.speaker.name}" is not one of the clinic's doctors in src/brand.ts`);
-    if (b.footage.trim.end <= b.footage.trim.start) err("footage", "trim.end must be after trim.start");
+    if (!b.footage.trim && !b.footage.segments) err("footage", "footage needs trim or segments");
+    const segs = b.footage.segments ?? (b.footage.trim ? [b.footage.trim] : []);
+    segs.forEach((g, i) => {
+      if (g.end <= g.start) err("footage", `segment ${i + 1}: end must be after start`);
+      if (i && g.start < segs[i - 1].end) err("footage", `segment ${i + 1} overlaps the previous one`);
+    });
+    for (const c of b.chapters) if ((c.at === undefined) === (c.on === undefined)) err("chapters", `chapter "${c.title}" needs exactly one of at / on`);
     if (!env.fileExists(b.footage.source)) err("footage", `source footage not found: ${b.footage.source}`);
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)

@@ -11,33 +11,40 @@ speaker:
   role: Dental surgeon · Dental House
 footage:
   source: references/inbox/53084eba-new-upload.mp4
-  trim: { start: 10.70, end: 46.45 }       # drops the 10 s self-intro (shown as name tag instead) and the sign-off
+  # Cut per Dr. Ayesha Sarfraz (Nov 2026): "cut all redundant things". Cut points sit in pauses and were
+  # verified by re-transcribing the cut audio (Descript): no clipped words.
+  segments:
+    - { start: 10.55, end: 25.24 }   # causes + "brush twice a day … be gentle to your gums."  (drops the 10 s intro)
+    - { start: 28.46, end: 29.51 }   # "Floss daily."            (drops "brush softly, gently, carefully")
+    - { start: 43.12, end: 44.84 }   # "Professional round of dental cleaning"  (drops vit C / peroxide / salt + "last but not the least")
+    - { start: 45.45, end: 46.45 }   # "is very important."     (drops "once a year")
   crop: { x: 0, y: 350, w: 576, h: 410 }   # below the burned-in title, above the burned-in names
   remove: [{ x: 30, y: 548, w: 175, h: 95 }]   # old @dentalhousesktt watermark position over the coat
   grade: neutral-skin
   cutout: true
-transcript: references/work/bleeding-gums.roman.srt
+transcript: references/work/bleeding-gums.cut.roman.srt   # transcript of the CUT audio
+transcript_timebase: edit
 hook:
   lines: ["Bleeding gums?", "Here's what helps"]
   accent: Bleeding
 chapters:
-  - { at: 0,     label: "01 · Causes",    title: "Why gums bleed", accent: bleed }
-  - { at: 8.17,  label: "02 · Daily care", title: "What helps",     accent: helps }
-  - { at: 30.95, label: "03 · In clinic", title: "Professional care", accent: care }
+  - { at: 0,           label: "01 · Causes",     title: "Why gums bleed",    accent: bleed }
+  - { on: Is,          label: "02 · Daily care", title: "What helps",        accent: helps }
+  - { on: Professional, label: "03 · In clinic", title: "Professional care", accent: care }
 callouts:
   - { on: hygiene,      big: "01", small: Plaque build-up }
   - { on: hard,         big: "02", small: Brushing too hard }
   - { on: deficiencies, big: "03", small: Vitamin deficiency }
   - { on: hormonal,     big: "04", small: "Hormones, e.g. pregnancy" }
   - { on: twice,        big: "2×", small: Brush twice a day }
-  - { on: gentle,       big: Gentle, small: "Brush softly, gently" }
+  - { on: gentle,       big: Gentle, small: "Be gentle to your gums" }
   - { on: Floss,        big: Floss, small: Floss or interdental brush }
-  - { on: C,            big: Vit C, small: If your diet is low in it }
-  - { on: hydrogen,     big: Ask first, small: "Peroxide rinse: ask dentist" }
-  - { on: salt,         big: See us, small: If bleeding doesn't stop }
   - { on: cleaning,     big: Check-up, small: As often as advised }
 cta: Book a gum check-up
 disclaimer: "General information, not a diagnosis. Bleeding that doesn't stop needs a dental check-up."
+review:
+  approved_by: Dr. Ayesha Sarfraz     # approved the content and asked for redundant parts to be cut (Nov 2026)
+  approved_on: 2026-11-09
 sources:   # checked by clinical-reviewer on PubMed
   - { citation: "Worthington HV et al. Interdental cleaning devices. Cochrane Database Syst Rev 2019;4:CD012018.", pmid: "30968949" }
   - { citation: "Hujoel PP et al. Bleeding tendency and ascorbic acid requirements. Nutr Rev 2021;79(9):964-975.", pmid: "33517432" }

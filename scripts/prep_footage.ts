@@ -2,7 +2,7 @@
 // Builds public/footage/<id>.webm (cut-out speaker + speech) and public/footage/<id>.words.json (word timings).
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { footagePaths, type Word } from "../src/brief/schema";
+import { footagePaths, segmentsOf, type Word } from "../src/brief/schema";
 import { printFindings, validate } from "./lib";
 
 /** SRT (source seconds) → words relative to the trim; time spread inside each cue by character length. */
@@ -41,11 +41,24 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const paths = footagePaths(brief.id);
   mkdirSync("public/footage", { recursive: true });
 
-  const words = srtToWords(readFileSync(brief.transcript, "utf8"), brief.footage.trim.start, brief.footage.trim.end);
+  const srt = readFileSync(brief.transcript, "utf8");
+  const segs = segmentsOf(brief);
+  let words: Word[];
+  if (brief.transcript_timebase === "edit") {
+    words = srtToWords(srt, 0, 1e9);
+  } else {
+    // map each kept source range into edit time
+    words = [];
+    let offset = 0;
+    for (const g of segs) {
+      for (const w of srtToWords(srt, g.start, g.end)) words.push({ ...w, start: +(w.start + offset).toFixed(3), end: +(w.end + offset).toFixed(3) });
+      offset += g.end - g.start;
+    }
+  }
   writeFileSync(`public/${paths.words}`, JSON.stringify(words, null, 1));
   console.log(`words → public/${paths.words} (${words.length})`);
 
-  const cfg = { ...brief.footage, out: `public/${paths.video}` };
+  const cfg = { ...brief.footage, segments: segs, out: `public/${paths.video}` };
   console.log("cut-out + grade + encode (a few minutes)…");
   const res = execFileSync("python3", ["scripts/footage_cutout.py", JSON.stringify(cfg)], { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
   console.log(res.trim().split("\n").pop());

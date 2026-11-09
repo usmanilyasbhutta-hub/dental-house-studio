@@ -57,3 +57,32 @@ describe("talking-head brief", () => {
     expect(b.theme).toBe("brand");
   });
 });
+
+describe("multi-segment cuts", () => {
+  const base = {
+    id: "t", type: "talking-head", title: "Test", hook: { lines: ["Hi"] },
+    speaker: { name: "Dr. Ayesha Sarfraz", role: "Dentist" },
+    footage: { source: "x.mp4", crop: { x: 0, y: 0, w: 10, h: 10 }, segments: [{ start: 10, end: 20 }, { start: 30, end: 32 }, { start: 40, end: 41 }] },
+    transcript: "x.srt", chapters: [{ at: 0, label: "01", title: "Why" }, { on: "floss", label: "02", title: "Floss" }],
+  };
+  it("duration is the sum of kept segments + end card", async () => {
+    const { durationSeconds } = await import("../src/brief/timing");
+    expect(durationSeconds(brief.parse(base))).toBeCloseTo(13 + 4.5);
+  });
+  it("cut times sit at segment joins; chapters resolve from spoken words", async () => {
+    const { cutTimes, chapterTimes } = await import("../src/templates/TalkingHead");
+    const b = brief.parse(base) as TalkingHeadBrief;
+    expect(cutTimes(b)).toEqual([10, 12]);
+    const words = [{ text: "Brush", start: 1, end: 1.5 }, { text: "Floss", start: 10.2, end: 10.6 }];
+    const [c1, c2] = chapterTimes(b, words);
+    expect(c1).toBe(0);
+    expect(c2).toBeCloseTo(10.05);
+  });
+  it("source-timed words are mapped through the cuts", () => {
+    const srt = "1\n00:00:31,000 --> 00:00:31,800\nFloss daily.";
+    const segs = [{ start: 10, end: 20 }, { start: 30, end: 32 }];
+    let offset = 0;
+    const mapped = segs.flatMap((g) => { const w = srtToWords(srt, g.start, g.end).map((x) => ({ ...x, start: x.start + offset })); offset += g.end - g.start; return w; });
+    expect(mapped[0].start).toBeCloseTo(11); // 10 s of segment 1 + 1 s into segment 2
+  });
+});

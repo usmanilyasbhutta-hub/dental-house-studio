@@ -110,8 +110,10 @@ export const talkingHeadBrief = base.extend({
   footage: z.object({
     /** Raw recording (any folder; not bundled). */
     source: z.string(),
-    /** Seconds in the source to keep. */
-    trim: z.object({ start: z.number().min(0), end: z.number().positive() }),
+    /** Seconds in the source to keep (one range)… */
+    trim: z.object({ start: z.number().min(0), end: z.number().positive() }).optional(),
+    /** …or several ranges, joined in order with jump cuts (cut points should sit in pauses; verify by re-transcribing). */
+    segments: z.array(z.object({ start: z.number().min(0), end: z.number().positive() })).min(1).optional(),
     /** Source-pixel rectangle that contains the speaker (drops burned-in text). */
     crop: z.object({ x: z.number().int().min(0), y: z.number().int().min(0), w: z.number().int().positive(), h: z.number().int().positive() }),
     /** Colour correction applied before compositing. */
@@ -121,10 +123,12 @@ export const talkingHeadBrief = base.extend({
     /** Cut the speaker out of the background (needs scripts/prep_footage.py). */
     cutout: z.boolean().default(true),
   }),
-  /** Transcript as SRT with times in SOURCE seconds; converted to word timings by prep_footage. */
+  /** Transcript SRT; converted to word timings by prep_footage. */
   transcript: z.string(),
+  /** "source": SRT of the raw recording (times are mapped through the cuts). "edit": SRT of the cut audio (most accurate). */
+  transcript_timebase: z.enum(["source", "edit"]).default("source"),
   chapters: z
-    .array(z.object({ at: z.number().min(0), label: line(20), title: line(22), accent: z.string().optional() }))
+    .array(z.object({ at: z.number().min(0).optional(), on: z.string().optional(), label: line(20), title: line(22), accent: z.string().optional() }))
     .min(1)
     .max(4),
   /** Giant keyword behind the doctor, triggered when `on` is spoken. */
@@ -140,6 +144,13 @@ export const talkingHeadBrief = base.extend({
 
 export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
+
+/** Kept source ranges, in order. */
+export function segmentsOf(b: TalkingHeadBrief): { start: number; end: number }[] {
+  if (b.footage.segments) return b.footage.segments;
+  if (b.footage.trim) return [b.footage.trim];
+  throw new Error("footage needs trim or segments");
+}
 
 /** Where prep_footage writes its outputs for a talking-head brief (inside public/). */
 export const footagePaths = (id: string) => ({

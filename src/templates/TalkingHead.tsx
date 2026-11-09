@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { video } from "../brand";
-import { footagePaths, type TalkingHeadBrief, type Word } from "../brief/schema";
+import { footagePaths, segmentsOf, type TalkingHeadBrief, type Word } from "../brief/schema";
 import { useTheme } from "../theme";
 import { KineticHeadline } from "./shared/Headline";
 import { prog } from "./shared/motion";
@@ -14,6 +14,24 @@ const CAPTION_TOP = 1400; // caption block sits just above the bottom safe line 
 
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 
+/** Chapter start times (edit seconds): `at`, or when its `on` word is spoken (sequential search). */
+export function chapterTimes(b: TalkingHeadBrief, words: Word[]): number[] {
+  let i = 0;
+  return b.chapters.map((c) => {
+    if (c.at !== undefined) return c.at;
+    const j = words.findIndex((w, k) => k >= i && norm(w.text) === norm(c.on ?? ""));
+    if (j < 0) return Infinity; // word not found: chapter never shows (QC frames reveal it)
+    i = j + 1;
+    return Math.max(0, words[j].start - 0.15);
+  });
+}
+
+/** Edit-time positions of the jump cuts between kept segments. */
+export function cutTimes(b: TalkingHeadBrief): number[] {
+  let t = 0;
+  return segmentsOf(b).map((g) => (t += g.end - g.start)).slice(0, -1);
+}
+
 /** Map each callout to the time its trigger word is spoken (sequential search). */
 export function calloutTimes(b: TalkingHeadBrief, words: Word[]) {
   let i = 0;
@@ -25,7 +43,7 @@ export function calloutTimes(b: TalkingHeadBrief, words: Word[]) {
     i = j + 1;
   }
   // a callout never outlives its chapter
-  const nextChapter = (t: number) => Math.min(...b.chapters.map((c) => c.at).filter((a) => a > t + 0.01), Infinity);
+  const nextChapter = (t: number) => Math.min(...chapterTimes(b, words).filter((a) => a > t + 0.01), Infinity);
   return hits.map((h, k) => ({ ...h, end: Math.min(hits[k + 1]?.start ?? h.start + 2.6, h.start + 2.6, nextChapter(h.start)) }));
 }
 
@@ -52,7 +70,7 @@ export function captionChunks(words: Word[], maxChars = 24) {
 
 export const TalkingHead: React.FC<{ brief: TalkingHeadBrief; words?: Word[] } & QcProps> = ({ brief, words = [], showSafeZones }) => {
   const { fps } = useVideoConfig();
-  const body = Math.round((brief.footage.trim.end - brief.footage.trim.start) * fps);
+  const body = Math.round(segmentsOf(brief).reduce((n, g) => n + g.end - g.start, 0) * fps);
   const callouts = calloutTimes(brief, words);
   return (
     <Shell brief={brief} endSeconds={4.5} showSafeZones={showSafeZones} musicVolume={brief.music_volume}>
@@ -62,7 +80,7 @@ export const TalkingHead: React.FC<{ brief: TalkingHeadBrief; words?: Word[] } &
             <BigWord text={h.c.big} />
           </Sequence>
         ))}
-        <Speaker src={footagePaths(brief.id).video} />
+        <Speaker src={footagePaths(brief.id).video} cuts={cutTimes(brief)} />
         {callouts.map((h, k) =>
           h.c.small ? (
             <Sequence key={k} from={Math.round(h.start * fps)} durationInFrames={Math.max(fps, Math.round((h.end - h.start) * fps))}>
@@ -70,7 +88,7 @@ export const TalkingHead: React.FC<{ brief: TalkingHeadBrief; words?: Word[] } &
             </Sequence>
           ) : null,
         )}
-        <Chapters brief={brief} />
+        <Chapters brief={brief} times={chapterTimes(brief, words)} />
         <Sequence durationInFrames={Math.round(3.4 * fps)}>
           <NameTag name={brief.speaker.name} role={brief.speaker.role} />
         </Sequence>
@@ -80,9 +98,13 @@ export const TalkingHead: React.FC<{ brief: TalkingHeadBrief; words?: Word[] } &
   );
 };
 
-const Speaker: React.FC<{ src: string }> = ({ src }) => {
+const Speaker: React.FC<{ src: string; cuts: number[] }> = ({ src, cuts }) => {
   const t = useTheme();
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  // alternate framing at each jump cut (1.00 / 1.07) so cuts read as deliberate
+  const seg = cuts.filter((c) => frame / fps >= c).length;
+  const zoom = seg % 2 ? 1.07 : 1;
   const a = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
   // Fade the cut-out's own bottom and left edges (the source frame ends there), not the canvas.
   const fade = "linear-gradient(180deg, #000 0%, #000 80%, transparent 99%), linear-gradient(90deg, transparent 0%, #000 9%)";
@@ -90,6 +112,7 @@ const Speaker: React.FC<{ src: string }> = ({ src }) => {
     <div
       style={{
         position: "absolute", left: STAGE.left, top: STAGE.top, width: STAGE.width, opacity: a,
+        transform: `scale(${zoom})`, transformOrigin: "50% 35%",
         WebkitMaskImage: fade, maskImage: fade, WebkitMaskComposite: "source-in", maskComposite: "intersect",
       }}
     >
@@ -134,7 +157,7 @@ const SmallTag: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-const Chapters: React.FC<{ brief: TalkingHeadBrief }> = ({ brief }) => {
+const Chapters: React.FC<{ brief: TalkingHeadBrief; times: number[] }> = ({ brief, times }) => {
   const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -146,9 +169,9 @@ const Chapters: React.FC<{ brief: TalkingHeadBrief }> = ({ brief }) => {
         <KineticHeadline lines={brief.hook.lines} accent={brief.hook.accent} width={850} max={150} />
       </AbsoluteFill>
     );
-  const idx = Math.max(0, brief.chapters.findLastIndex((c) => sec >= Math.max(c.at, HOOK)));
+  const idx = Math.max(0, times.findLastIndex((at) => sec >= Math.max(at, HOOK)));
   const ch = brief.chapters[idx];
-  const start = Math.round(Math.max(ch.at, HOOK) * fps);
+  const start = Math.round(Math.max(times[idx], HOOK) * fps);
   const p = prog(frame, start, fps * 0.5);
   return (
     <AbsoluteFill style={{ paddingLeft: 90, paddingTop: 275 }}>
