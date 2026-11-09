@@ -23,7 +23,7 @@ export const clinic = {
   phone: "0323-7560160",
   /** Same number takes WhatsApp bookings (confirmed by the owner, Nov 2026). */
   whatsapp: true,
-  /** Read from Instagram's own end-card overlay on the clinic's reels; owner confirmed the account. */
+  /** Spelling (two Ts) confirmed by the owner, Nov 2026. */
   instagram: "@dentalhousesktt",
   doctors: [
     "Dr. Usman Ilyas Bhutta (BDS, RDS, C. Implant)",

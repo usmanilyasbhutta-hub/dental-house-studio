@@ -70,7 +70,7 @@ Videos and frames stay in `references/` (gitignored). This file holds descriptio
 
 1. **Two visual families, one brand.** `theme: brand` (slate/bronze, the logo colours) is the master look for promos, offers and cases.
    `theme: editorial` (cream + deep green, rose accent) is for doctor-led education. **Black/mint neon is retired.** ✅ in `src/theme.ts`.
-2. **Instagram: @dentalhousesktt** (two Ts). Read from Instagram's own end-card overlay on the clinic's reel and from reel C. ✅ on every end card.
+2. **Instagram: @dentalhousesktt** (two Ts, spelling confirmed by the owner). ✅ on every end card.
    The compliance check rejects any other handle, including the typo `@dentalhouseskt`.
 3. **0323-7560160 is also the WhatsApp booking number.** ✅ End card shows "Call / WhatsApp".
 4. **Captions follow whatever is spoken** (English, Urdu or mixed), word for word. ✅ `language: as-spoken` is the default.
