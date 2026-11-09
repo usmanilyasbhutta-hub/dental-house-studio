@@ -62,6 +62,11 @@ before using one. Briefs choose `fx.transition` and `fx.sfx`, and talking-head c
 Never put sparkle, glow, shine or light leaks on clinical photos. No `Glitch` or `Shake` in education or clinical videos.
 `npm run gallery` renders every effect for review.
 
+## Animation, photos and footage
+Use the project skill `dental-animation` (`.claude/skills/dental-animation/SKILL.md`): 3D procedure explainers
+(`type: procedure`), photo layouts (`type: photo-layout`: annotate / split / grid, loupe), and the ffmpeg toolkit
+(`npm run ff -- help`). Overview: `docs/animation-toolkit.md`. 3D videos keep the "Illustration · not to scale" label.
+
 ## Style profile
 Read `docs/style-profile.md` before writing a brief or changing a template. It records what the owner likes (real footage, doctor cut-outs,
 kinetic type + serif accent word, numbered structure, Roman-Urdu word captions, annotated clinical close-ups) and the mistakes to avoid

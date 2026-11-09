@@ -8,6 +8,7 @@ import { demoCase, demoEducation, demoOffer } from "./demo-briefs";
 import { loadBrandFonts } from "./templates/shared/fonts";
 import { Video, type VideoProps } from "./Video";
 import { EffectsGallery, galleryFrames } from "./fx/Gallery";
+import { photoSizes } from "./templates/PhotoLayout";
 
 loadBrandFonts();
 
@@ -19,7 +20,8 @@ const calc = async ({ props }: { props: VideoProps }) => {
     if (!res.ok) throw new Error(`Missing ${footagePaths(b.id).words}: run npm run prep -- <brief> first`);
     words = (await res.json()) as Word[];
   }
-  return { durationInFrames: Math.round(durationSeconds(b) * video.fps), props: { ...props, brief: b, words } };
+  const sizes = b.type === "photo-layout" ? (props.sizes ?? (await photoSizes(b.photos.map((p) => p.src)))) : props.sizes;
+  return { durationInFrames: Math.round(durationSeconds(b) * video.fps), props: { ...props, brief: b, words, sizes } };
 };
 
 const common = { component: Video, fps: video.fps, width: video.width, height: video.height, durationInFrames: 1, calculateMetadata: calc };

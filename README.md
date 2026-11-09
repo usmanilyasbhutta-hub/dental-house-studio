@@ -32,6 +32,11 @@ Needs Node 22+, ffmpeg, Python 3 with numpy and pillow (only for `scripts/*.py`)
 
 All examples in `briefs/examples/` are `demo: true` (watermarked). The case example uses a synthetic illustration, not a patient.
 
+## Animation toolkit
+3D procedure explainers (implant, crown: procedural three.js models), photo layouts (annotate with pins, circles, arrows
+and a loupe; split; grid), an ffmpeg toolkit with 13 tested recipes (`npm run ff -- help`) and a Lottie player.
+See `docs/animation-toolkit.md`.
+
 ## Effects
 Free effects library: 8 transitions, 15 effects (shine, highlighter, typewriter, count-up, glow, sparkles, light sweep,
 light leak, draw-on circle/arrow/underline, punch zoom, shake, glitch, confetti) and 7 code-generated sound effects.

@@ -1,0 +1,20 @@
+# EXAMPLE photo layout: annotate one photo (synthetic illustration, not a patient).
+id: photo-annotate
+type: photo-layout
+title: Reading a smile, annotated
+demo: true
+theme: brand
+fx: { transition: none, sfx: subtle }
+tone: calm
+layout: annotate
+label: Know your smile
+hook: { lines: ["What we look at", "in a smile"], accent: smile }
+photos: [{ src: cases/demo-case/before.png }]
+annotations:
+  - { x: 50, y: 56, label: "Gap (diastema)", kind: circle, side: below }
+  - { x: 26, y: 43, label: "Gum line", kind: pin, side: above }
+  - { x: 76, y: 62, label: "Tooth shade", kind: arrow, side: right }
+loupe: { x: 50, y: 56, zoom: 2.4 }
+caption: "Small details guide the right treatment."
+cta: Book a smile check
+music: audio/pad-calm.mp3

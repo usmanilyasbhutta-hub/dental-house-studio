@@ -21,6 +21,7 @@ function allText(b: Brief): string[] {
   if (b.type === "offer") t.push(b.offer.headline, b.offer.detail, b.offer.terms, b.offer.price ?? "", ...b.points);
   if (b.type === "education") t.push(b.takeaway, ...b.steps.flatMap((s) => [s.title, s.subline]));
   if (b.type === "case") t.push(b.treatment, b.timeline ?? "", ...b.notes);
+  if (b.type === "photo-layout") t.push(...b.annotations.map((a) => a.label), ...b.photos.map((p) => p.label ?? ""), b.caption ?? "");
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
@@ -97,6 +98,21 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)
       warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
+  }
+
+  if (b.type === "photo-layout") {
+    for (const ph of b.photos) if (!env.fileExists(`public/${ph.src}`)) err("assets", `missing image public/${ph.src}`);
+    if (b.layout === "split" && b.photos.length !== 2) err("layout", "split needs exactly 2 photos");
+    if (b.layout === "grid" && b.photos.length < 2) err("layout", "grid needs 2–4 photos");
+    if (b.layout !== "annotate" && (b.annotations.length || b.loupe)) warn("layout", "annotations/loupe are only drawn in the annotate layout");
+    if (b.clinical && !b.demo) {
+      if (!b.consent) err("consent", "patient photos need written consent (consent.file)");
+      else {
+        if (!env.fileExists(b.consent.file)) err("consent", `consent file not found: ${b.consent.file}`);
+        if (b.consent.file.startsWith("public/")) err("consent", "consent forms must never be inside public/");
+        if (!b.consent.scope.includes("social-media")) err("consent", "consent scope does not cover social media");
+      }
+    }
   }
 
   if (b.type === "procedure") {

@@ -24,6 +24,7 @@ export function sceneCount(b: Brief): number {
       return 7;
     case "talking-head":
     case "procedure":
+    case "photo-layout":
       return 1;
   }
 }
@@ -42,6 +43,8 @@ function rawSeconds(b: Brief): number {
       const s = scenes.education;
       return s.hook + s.step * 3 + s.takeaway + s.sources + s.end;
     }
+    case "photo-layout":
+      return 1.6 + Math.max(b.annotations.length, b.layout === "annotate" ? 0 : b.photos.length) * 1.3 + (b.loupe ? 1.6 : 0) + 2.4 + scenes.offer.end;
     case "procedure":
       return 2 + b.steps.length * b.seconds_per_step + (b.takeaway ? 2.6 : 0) + scenes.offer.end; // 2 s hook
     case "talking-head":

@@ -1,0 +1,17 @@
+# EXAMPLE photo layout: split comparison (synthetic illustrations, not a patient).
+id: photo-split
+type: photo-layout
+title: Before and after, split layout
+demo: true
+theme: brand
+fx: { transition: none, sfx: subtle }
+tone: calm
+layout: split
+label: Real results
+hook: { lines: ["One visit,", "one confident smile"], accent: confident }
+photos:
+  - { src: cases/demo-case/before.png, label: Before }
+  - { src: cases/demo-case/after.png, label: After }
+caption: "Individual results vary. Unedited photos."
+cta: Ask about bonding
+music: audio/pad-calm.mp3

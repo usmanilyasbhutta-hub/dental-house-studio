@@ -175,7 +175,39 @@ export const procedureBrief = base.extend({
 });
 export type ProcedureBrief = z.infer<typeof procedureBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief]);
+const pct = z.number().min(0).max(100);
+
+/** Photo layouts: annotate one photo, or arrange 2–4 photos (education, cases, clinic, products). */
+export const photoLayoutBrief = base.extend({
+  type: z.literal("photo-layout"),
+  layout: z.enum(["annotate", "grid", "split"]),
+  photos: z.array(z.object({ src: publicAsset, label: line(24).optional() })).min(1).max(4),
+  /** annotate: points in % of the photo (0–100), revealed in order. */
+  annotations: z
+    .array(
+      z.object({
+        x: pct,
+        y: pct,
+        label: line(28),
+        kind: z.enum(["pin", "circle", "arrow"]).default("pin"),
+        /** Label side relative to the point. */
+        side: z.enum(["left", "right", "above", "below"]).default("right"),
+      }),
+    )
+    .max(6)
+    .default([]),
+  /** Magnifier on one spot of the (first) photo. */
+  loupe: z.object({ x: pct, y: pct, zoom: z.number().min(1.5).max(4).default(2.4) }).optional(),
+  caption: line(70).optional(),
+  /** Patient photo? Then consent rules apply exactly as for clinical cases. */
+  clinical: z.boolean().default(false),
+  consent: z
+    .object({ file: z.string(), signed_on: isoDate, scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1) })
+    .optional(),
+});
+export type PhotoLayoutBrief = z.infer<typeof photoLayoutBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */
