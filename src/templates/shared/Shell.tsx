@@ -30,7 +30,7 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: n
         <Hud label={brief.label} total={bodyFrames} />
       </Sequence>
       <Sequence from={bodyFrames}>
-        <EndCard cta={brief.cta} />
+        <EndCard cta={brief.cta} note={brief.disclaimer} />
       </Sequence>
       {brief.music ? (
         <Audio

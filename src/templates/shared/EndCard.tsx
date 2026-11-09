@@ -6,7 +6,7 @@ import { prog } from "./motion";
 import { headline, mono, serif } from "./text";
 
 /** Light end card: logo mask-wipe, tagline, CTA pill with pulsing ring, phone/WhatsApp, handle, doctors, address. */
-export const EndCard: React.FC<{ cta: string; tagline?: string }> = ({ cta, tagline = "Your smile has a home." }) => {
+export const EndCard: React.FC<{ cta: string; tagline?: string; note?: string }> = ({ cta, tagline = "Your smile has a home.", note }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const e = useTheme().end;
@@ -22,7 +22,7 @@ export const EndCard: React.FC<{ cta: string; tagline?: string }> = ({ cta, tagl
         <div
           style={{
             position: "absolute", inset: 0, borderRadius: 999, border: `4px solid ${e.accent}`,
-            transform: `scale(${1 + pulse * 0.18})`, opacity: interpolate(pulse, [0, 1], [0.8, 0]),
+            transform: `scale(${1 + pulse * 0.1})`, opacity: interpolate(pulse, [0, 1], [0.8, 0]),
           }}
         />
         <div style={{ ...headline(52, e.pillText), background: e.pill, borderRadius: 999, padding: "26px 60px", letterSpacing: "0.04em" }}>
@@ -36,9 +36,12 @@ export const EndCard: React.FC<{ cta: string; tagline?: string }> = ({ cta, tagl
         {clinic.doctors.map((d) => (
           <div key={d} style={{ ...mono(23, e.text), letterSpacing: "0.06em", marginTop: 8 }}>{d}</div>
         ))}
-        <div style={{ ...mono(21, e.muted), letterSpacing: "0.04em", marginTop: 22, maxWidth: 820, lineHeight: 1.5, textTransform: "none" }}>
+        <div style={{ ...mono(24, e.muted), letterSpacing: "0.03em", marginTop: 22, maxWidth: 820, lineHeight: 1.5, textTransform: "none" }}>
           {clinic.address}
         </div>
+        {note ? (
+          <div style={{ ...mono(22, e.text), letterSpacing: "0.02em", marginTop: 26, maxWidth: 820, lineHeight: 1.45, textTransform: "none", opacity: 0.85 }}>{note}</div>
+        ) : null}
       </div>
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
         <div style={{ height: 14, background: e.accent }} />

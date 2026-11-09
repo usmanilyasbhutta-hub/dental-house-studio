@@ -69,6 +69,8 @@ def grade(img):
     f[..., 2] *= 1.05
     hsv = cv2.cvtColor(np.clip(f, 0, 255).astype(np.uint8), cv2.COLOR_RGB2HSV).astype(np.float32)
     hsv[..., 1] *= 0.86
+    red = (hsv[..., 0] < 12) | (hsv[..., 0] > 168)  # OpenCV hue 0-180: reds/corals
+    hsv[..., 1] = np.where(red, hsv[..., 1] * 0.82, hsv[..., 1])
     hsv[..., 2] = 255 * (hsv[..., 2] / 255) ** 0.94
     return cv2.cvtColor(np.clip(hsv, 0, 255).astype(np.uint8), cv2.COLOR_HSV2RGB)
 
@@ -95,8 +97,14 @@ while True:
     big = cv2.addWeighted(big, 1.35, cv2.GaussianBlur(big, (0, 0), 1.6), -0.35, 0)  # mild unsharp
     if alpha:
         m = matte(seg_in)
-        m = m if prev is None else 0.6 * m + 0.4 * prev  # temporal smoothing (less edge flicker)
+        m = m if prev is None else 0.5 * m + 0.5 * prev  # temporal smoothing (less edge flicker)
         prev = m
+        # keep only the speaker: largest connected region of the matte (drops floating specks / bg patches)
+        n, lab, stats, _ = cv2.connectedComponentsWithStats((m > 0.35).astype(np.uint8), 8)
+        if n > 2:
+            keep = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+            body = cv2.dilate((lab == keep).astype(np.uint8), np.ones((7, 7), np.uint8))
+            m = m * cv2.GaussianBlur(body.astype(np.float32), (0, 0), 2)
         a = cv2.resize(m, (OW, OH), interpolation=cv2.INTER_LINEAR)
         a = np.clip((a - 0.15) / 0.7, 0, 1)  # tighten soft halo
         a = cv2.GaussianBlur(a, (0, 0), 0.8)

@@ -82,24 +82,24 @@ const Speaker: React.FC<{ src: string }> = ({ src }) => {
   const t = useTheme();
   const frame = useCurrentFrame();
   const a = interpolate(frame, [0, 8], [0, 1], { extrapolateRight: "clamp" });
-  const outline = t.text;
+  // Fade the cut-out's own bottom and left edges (the source frame ends there), not the canvas.
+  const fade = "linear-gradient(180deg, #000 0%, #000 80%, transparent 99%), linear-gradient(90deg, transparent 0%, #000 9%)";
   return (
-    <AbsoluteFill
+    <div
       style={{
-        opacity: a,
-        WebkitMaskImage: "linear-gradient(180deg, #000 0%, #000 74%, transparent 97%)",
-        maskImage: "linear-gradient(180deg, #000 0%, #000 74%, transparent 97%)",
+        position: "absolute", left: STAGE.left, top: STAGE.top, width: STAGE.width, opacity: a,
+        WebkitMaskImage: fade, maskImage: fade, WebkitMaskComposite: "source-in", maskComposite: "intersect",
       }}
     >
       <OffthreadVideo
         src={staticFile(src)}
         transparent
         style={{
-          position: "absolute", left: STAGE.left, top: STAGE.top, width: STAGE.width,
-          filter: `drop-shadow(4px 0 0 ${outline}) drop-shadow(-4px 0 0 ${outline}) drop-shadow(0 -4px 0 ${outline}) drop-shadow(0 18px 40px rgba(0,0,0,0.45))`,
+          width: "100%", display: "block",
+          filter: `drop-shadow(2px 0 0 ${t.text}99) drop-shadow(-2px 0 0 ${t.text}99) drop-shadow(0 -2px 0 ${t.text}99) drop-shadow(0 18px 40px rgba(0,0,0,0.45))`,
         }}
       />
-    </AbsoluteFill>
+    </div>
   );
 };
 
@@ -111,7 +111,7 @@ const BigWord: React.FC<{ text: string }> = ({ text }) => {
   const p = prog(frame, 0, fps * 0.35);
   const size = fitSize([text], 880, 300, 150);
   return (
-    <AbsoluteFill style={{ alignItems: "center", paddingTop: 470, paddingRight: video.safe.right - video.safe.left }}>
+    <AbsoluteFill style={{ alignItems: "center", paddingTop: 430, paddingRight: video.safe.right - video.safe.left }}>
       <div style={{ ...headline(size, t.accent), opacity: 0.92 * p, transform: `translateY(${(1 - p) * 60}px) scale(${0.94 + 0.06 * p})`, textAlign: "center", width: 920 }}>
         {text}
       </div>
@@ -175,7 +175,7 @@ const NameTag: React.FC<{ name: string; role: string }> = ({ name, role }) => {
   const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const p = prog(frame, 6, fps * 0.4) * interpolate(frame, [fps * 3.0, fps * 3.4], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const p = prog(frame, 0, 6) * interpolate(frame, [fps * 3.0, fps * 3.4], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <div style={{ position: "absolute", left: 80, top: 1225, opacity: p, transform: `translateX(${(1 - p) * -30}px)` }}>
       <div style={{ background: t.text, padding: "12px 22px 14px", borderRadius: 12, borderLeft: `8px solid ${t.accent}`, boxShadow: "0 10px 30px rgba(0,0,0,0.35)" }}>
@@ -207,7 +207,7 @@ const Captions: React.FC<{ words: Word[] }> = ({ words }) => {
         const active = sec >= w.start && sec < w.end + 0.05;
         const said = sec >= w.start;
         return (
-          <span key={i} style={{ color: active ? t.accent : t.text, opacity: said ? 1 : 0.42, display: "inline-block", marginRight: "0.26em", transform: active ? "scale(1.06)" : undefined }}>
+          <span key={i} style={{ color: active ? t.accent : t.text, opacity: said ? 1 : 0.62, display: "inline-block", marginRight: "0.26em", transform: active ? "scale(1.06)" : undefined }}>
             {w.text}
           </span>
         );

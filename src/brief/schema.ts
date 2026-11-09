@@ -39,6 +39,8 @@ const base = z.object({
   music: publicAsset.optional(),
   /** Optional clinic b-roll photos/videos (inside public/). */
   broll: z.array(publicAsset).max(6).default([]),
+  /** Short note printed on the end card, e.g. "General information, not a diagnosis." */
+  disclaimer: z.string().max(110).optional(),
   /** Demo briefs are watermarked and may skip consent; never publish them. */
   demo: z.boolean().default(false),
   review: z
