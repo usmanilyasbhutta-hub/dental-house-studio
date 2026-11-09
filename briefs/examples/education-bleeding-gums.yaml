@@ -1,0 +1,25 @@
+# EXAMPLE education brief. Every claim must be backed by `sources` (checked by the clinical-reviewer agent).
+id: education-bleeding-gums
+type: education
+title: Bleeding gums, what they mean
+demo: true
+tone: calm
+hook:
+  lines: ["Gums bleed", "when you brush?", "Don't ignore it."]
+  accent: ignore
+steps:
+  - title: Bleeding is a signal
+    subline: Gums that bleed when you brush are usually inflamed.
+  - title: It is very common
+    subline: Severe gum disease affects about 1 in 10 adults.
+  - title: Brush the gumline
+    subline: Twice daily. Powered brushes remove a bit more plaque.
+takeaway: Healthy gums don't bleed. Get them checked early.
+sources:
+  - citation: Kassebaum NJ et al. Global burden of severe periodontitis 1990-2010. J Dent Res 2014;93(11):1045-53.
+    pmid: "25261053"
+  - citation: Yaacob M et al. Powered versus manual toothbrushing for oral health. Cochrane Database Syst Rev 2014;(6):CD002281.
+    pmid: "24934383"
+cta: Book a gum check-up
+label: Healthy gums
+music: audio/pad-calm.mp3

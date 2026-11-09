@@ -1,0 +1,10 @@
+node_modules/
+out/
+qc/
+.DS_Store
+*.log
+# Patient material never goes into git
+assets/cases/*
+!assets/cases/README.md
+public/cases/*
+!public/cases/demo-case/

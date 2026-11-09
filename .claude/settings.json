@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run validate:*)",
+      "Bash(npm run make:*)",
+      "Bash(npm run still:*)",
+      "Bash(npm run render:*)",
+      "Bash(npm run qc:*)",
+      "Bash(npm run check)",
+      "Bash(npm run typecheck)",
+      "Bash(npm test)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vitest:*)",
+      "Bash(ffprobe:*)"
+    ],
+    "deny": [
+      "Read(./assets/cases/**/consent*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/after-edit.sh", "timeout": 120 }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-bash.sh" }]
+      }
+    ]
+  }
+}

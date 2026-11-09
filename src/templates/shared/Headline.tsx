@@ -1,0 +1,52 @@
+import React from "react";
+import { useCurrentFrame, useVideoConfig } from "remotion";
+import { colors } from "../../brand";
+import { prog } from "./motion";
+import { fitSize, headline, serif } from "./text";
+
+/** Kinetic multi-line headline: masked slide-up per line, one serif accent word, bronze strike rule. */
+export const KineticHeadline: React.FC<{ lines: string[]; accent?: string; width?: number; delay?: number; max?: number }> = ({
+  lines,
+  accent,
+  width = 880,
+  delay = 0,
+  max = 150,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const size = fitSize(lines, width, max);
+  const step = Math.round(fps * 0.16);
+  return (
+    <div style={{ width }}>
+      {lines.map((l, i) => {
+        const p = prog(frame, delay + i * step, Math.round(fps * 0.55));
+        return (
+          <div key={i} style={{ overflow: "hidden", paddingBottom: size * 0.06 }}>
+            <div style={{ transform: `translateY(${(1 - p) * 110}%)`, ...headline(size) }}>{renderAccent(l, accent, size)}</div>
+          </div>
+        );
+      })}
+      <div
+        style={{
+          marginTop: 22,
+          height: 8,
+          background: colors.bronze,
+          width: `${prog(frame, delay + lines.length * step, Math.round(fps * 0.6)) * 46}%`,
+        }}
+      />
+    </div>
+  );
+};
+
+function renderAccent(line: string, accent: string | undefined, size: number) {
+  if (!accent) return line;
+  const i = line.toLowerCase().indexOf(accent.toLowerCase());
+  if (i < 0) return line;
+  return (
+    <>
+      {line.slice(0, i)}
+      <span style={{ ...serif(size * 1.12), textTransform: "none" }}>{line.slice(i, i + accent.length)}</span>
+      {line.slice(i + accent.length)}
+    </>
+  );
+}

@@ -1,0 +1,22 @@
+# EXAMPLE offer brief. demo: true -> watermarked; replace with a real offer and set demo: false.
+id: offer-implant-consult
+type: offer
+title: Implant consultation, example offer
+demo: true
+tone: contemporary
+hook:
+  lines: ["Missing a tooth?", "Let's talk", "about implants"]
+  accent: implants
+offer:
+  headline: Implant consultation
+  price: Free
+  detail: Includes an OPG X-ray and a written treatment plan.
+  valid_until: 2026-12-31
+  terms: Consultation and OPG only. Treatment priced after examination. One per patient.
+points:
+  - Exam by an implant dentist
+  - OPG X-ray included
+  - Clear written plan & cost
+cta: Book your consultation
+label: Consult first
+music: audio/pad-calm.mp3

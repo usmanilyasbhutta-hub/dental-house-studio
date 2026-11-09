@@ -1,0 +1,39 @@
+{
+  "name": "dental-house-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Brief-driven marketing video pipeline for Dental House Sialkot (Remotion)",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "validate": "tsx scripts/validate.ts",
+    "render": "tsx scripts/render.ts",
+    "still": "tsx scripts/render.ts --still",
+    "qc": "tsx scripts/qc.ts",
+    "make": "tsx scripts/make.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test && npm run validate -- briefs/examples",
+    "brand:assets": "python3 scripts/brand_assets.py && node scripts/copy_fonts.mjs"
+  },
+  "dependencies": {
+    "@fontsource/instrument-serif": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/oswald": "^5.3.0",
+    "@remotion/bundler": "^4.0.541",
+    "@remotion/cli": "^4.0.541",
+    "@remotion/renderer": "^4.0.541",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.541",
+    "yaml": "^2.9.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0"
+  }
+}
