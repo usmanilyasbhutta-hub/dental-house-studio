@@ -20,6 +20,8 @@ function allText(b: Brief): string[] {
   if (b.type === "offer") t.push(b.offer.headline, b.offer.detail, b.offer.terms, b.offer.price ?? "", ...b.points);
   if (b.type === "education") t.push(b.takeaway, ...b.steps.flatMap((s) => [s.title, s.subline]));
   if (b.type === "case") t.push(b.treatment, b.timeline ?? "", ...b.notes);
+  if (b.type === "talking-head")
+    t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
   return t.filter(Boolean);
 }
 
@@ -77,6 +79,16 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       if (b.identifiable && !b.consent.scope.includes("social-media"))
         err("consent", "identifiable patient needs explicit social-media consent");
     }
+  }
+
+  if (b.type === "talking-head") {
+    if (!clinic.doctors.some((d) => d.startsWith(b.speaker.name)))
+      err("speaker", `speaker "${b.speaker.name}" is not one of the clinic's doctors in src/brand.ts`);
+    if (b.footage.trim.end <= b.footage.trim.start) err("footage", "trim.end must be after trim.start");
+    if (!env.fileExists(b.footage.source)) err("footage", `source footage not found: ${b.footage.source}`);
+    if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
+    if (!b.sources.length)
+      warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
   }
 
   if (!b.demo && !b.review.approved_by)

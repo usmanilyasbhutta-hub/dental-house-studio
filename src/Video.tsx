@@ -1,14 +1,15 @@
 import React from "react";
-import type { Brief } from "./brief/schema";
+import type { Brief, Word } from "./brief/schema";
+import { TalkingHead } from "./templates/TalkingHead";
 import { ClinicalCase } from "./templates/ClinicalCase";
 import { Education } from "./templates/Education";
 import { Offer } from "./templates/Offer";
 import type { QcProps } from "./templates/shared/Shell";
 
-export type VideoProps = { brief: Brief } & QcProps;
+export type VideoProps = { brief: Brief; words?: Word[] } & QcProps;
 
 /** One entry composition; the brief's `type` picks the template. */
-export const Video: React.FC<VideoProps> = ({ brief, showSafeZones }) => {
+export const Video: React.FC<VideoProps> = ({ brief, words, showSafeZones }) => {
   switch (brief.type) {
     case "offer":
       return <Offer brief={brief} showSafeZones={showSafeZones} />;
@@ -16,5 +17,7 @@ export const Video: React.FC<VideoProps> = ({ brief, showSafeZones }) => {
       return <Education brief={brief} showSafeZones={showSafeZones} />;
     case "case":
       return <ClinicalCase brief={brief} showSafeZones={showSafeZones} />;
+    case "talking-head":
+      return <TalkingHead brief={brief} words={words} showSafeZones={showSafeZones} />;
   }
 };

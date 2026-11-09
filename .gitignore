@@ -12,3 +12,7 @@ public/cases/*
 # Reference videos (may contain patients) and their analysis frames
 references/*
 !references/README.md
+.cache/
+
+# Clinic footage (large; processed copies are rebuilt by scripts/prep_footage.py)
+public/footage/*

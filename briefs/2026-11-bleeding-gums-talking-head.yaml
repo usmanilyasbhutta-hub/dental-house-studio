@@ -1,0 +1,41 @@
+# TEST RUN: talking-head from a compressed Instagram copy (the only copy available).
+id: th-bleeding-gums
+type: talking-head
+title: Bleeding gums, Dr Ayesha explains causes and care
+theme: editorial
+tone: calm
+language: as-spoken          # Roman Urdu + English, word for word
+label: Patient education
+speaker:
+  name: Dr. Ayesha Sarfraz
+  role: Dental surgeon · Dental House
+footage:
+  source: references/inbox/53084eba-new-upload.mp4
+  trim: { start: 10.70, end: 46.45 }       # drops the 10 s self-intro (shown as name tag instead) and the sign-off
+  crop: { x: 0, y: 350, w: 576, h: 410 }   # below the burned-in title, above the burned-in names
+  remove: [{ x: 30, y: 548, w: 175, h: 95 }]   # old @dentalhousesktt watermark position over the coat
+  grade: neutral-skin
+  cutout: true
+transcript: references/work/bleeding-gums.roman.srt
+hook:
+  lines: ["Bleeding gums?"]
+  accent: gums
+chapters:
+  - { at: 0,     label: "01 · Causes",    title: "Why gums bleed", accent: bleed }
+  - { at: 8.17,  label: "02 · Daily care", title: "What helps",     accent: helps }
+  - { at: 30.95, label: "03 · In clinic", title: "Once a year",    accent: year }
+callouts:
+  - { on: hygiene,      big: "01", small: Poor oral hygiene }
+  - { on: hard,         big: "02", small: Brushing too hard }
+  - { on: deficiencies, big: "03", small: Vitamin deficiency }
+  - { on: hormonal,     big: "04", small: Hormonal changes }
+  - { on: twice,        big: "2×", small: Brush twice a day }
+  - { on: gentle,       big: Gentle, small: "Soft brush, light pressure" }
+  - { on: Floss,        big: Floss, small: Every day }
+  - { on: C,            big: Vit C, small: Vitamin C intake }
+  - { on: hydrogen,     big: "H₂O₂", small: Peroxide mouthwash }
+  - { on: salt,         big: Salt, small: + baking soda massage }
+  - { on: cleaning,     big: "1×", small: Cleaning every year }
+cta: Book a gum check-up
+music: audio/pad-calm.mp3
+music_volume: 0.10

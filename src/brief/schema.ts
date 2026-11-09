@@ -94,7 +94,57 @@ export const caseBrief = base.extend({
     .optional(),
 });
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief]);
+/** One spoken word with timing (seconds, relative to the trimmed footage). */
+export const word = z.object({ text: z.string(), start: z.number(), end: z.number() });
+export type Word = z.infer<typeof word>;
+
+/**
+ * Doctor-led talking head (style profile §5.1): cut-out doctor over the theme backdrop,
+ * word-by-word captions as spoken, chapter titles, giant keyword callouts behind the doctor.
+ */
+export const talkingHeadBrief = base.extend({
+  type: z.literal("talking-head"),
+  speaker: z.object({ name: z.string(), role: line(40) }),
+  footage: z.object({
+    /** Raw recording (any folder; not bundled). */
+    source: z.string(),
+    /** Seconds in the source to keep. */
+    trim: z.object({ start: z.number().min(0), end: z.number().positive() }),
+    /** Source-pixel rectangle that contains the speaker (drops burned-in text). */
+    crop: z.object({ x: z.number().int().min(0), y: z.number().int().min(0), w: z.number().int().positive(), h: z.number().int().positive() }),
+    /** Colour correction applied before compositing. */
+    grade: z.enum(["none", "neutral-skin"]).default("neutral-skin"),
+    /** Source-pixel boxes where burned-in overlays (e.g. an old handle watermark) appear; their text strokes are painted out. */
+    remove: z.array(z.object({ x: z.number().int(), y: z.number().int(), w: z.number().int(), h: z.number().int() })).default([]),
+    /** Cut the speaker out of the background (needs scripts/prep_footage.py). */
+    cutout: z.boolean().default(true),
+  }),
+  /** Transcript as SRT with times in SOURCE seconds; converted to word timings by prep_footage. */
+  transcript: z.string(),
+  chapters: z
+    .array(z.object({ at: z.number().min(0), label: line(20), title: line(22), accent: z.string().optional() }))
+    .min(1)
+    .max(4),
+  /** Giant keyword behind the doctor, triggered when `on` is spoken. */
+  callouts: z
+    .array(z.object({ on: z.string().min(1), big: line(12), small: line(28).optional() }))
+    .max(14)
+    .default([]),
+  music_volume: z.number().min(0).max(1).default(0.12),
+  sources: z
+    .array(z.object({ citation: z.string().min(5), pmid: z.string().optional(), url: z.string().url().optional() }))
+    .default([]),
+});
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief]);
+export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
+
+/** Where prep_footage writes its outputs for a talking-head brief (inside public/). */
+export const footagePaths = (id: string) => ({
+  /** VP9 WebM with alpha (cut-out) or plain, including the speech audio. */
+  video: `footage/${id}.webm`,
+  words: `footage/${id}.words.json`,
+});
 
 export type Brief = z.infer<typeof brief>;
 export type OfferBrief = z.infer<typeof offerBrief>;

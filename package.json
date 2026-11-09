@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "npm run typecheck && npm test && npm run validate -- briefs/examples",
-    "brand:assets": "python3 scripts/brand_assets.py && node scripts/copy_fonts.mjs"
+    "brand:assets": "python3 scripts/brand_assets.py && node scripts/copy_fonts.mjs",
+    "prep": "tsx scripts/prep_footage.ts"
   },
   "dependencies": {
     "@fontsource/instrument-serif": "^5.3.0",

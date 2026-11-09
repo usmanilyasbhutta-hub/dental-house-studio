@@ -10,10 +10,11 @@ import { SafeZones } from "./SafeZones";
 export type QcProps = { showSafeZones?: boolean };
 
 /** Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays. */
-export const Shell: React.FC<{ brief: Brief; endSeconds: number; children: React.ReactNode } & QcProps> = ({
+export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: number; children: React.ReactNode } & QcProps> = ({
   brief,
   endSeconds,
   showSafeZones,
+  musicVolume = 0.9,
   children,
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
@@ -34,7 +35,7 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; children: React
       {brief.music ? (
         <Audio
           src={staticFile(brief.music)}
-          volume={(f) => interpolate(f, [0, 15, durationInFrames - 30, durationInFrames], [0, 0.9, 0.9, 0], { extrapolateRight: "clamp" })}
+          volume={(f) => interpolate(f, [0, 15, durationInFrames - 30, durationInFrames], [0, musicVolume, musicVolume, 0], { extrapolateRight: "clamp" })}
         />
       ) : null}
       {brief.demo ? <DemoWatermark /> : null}
