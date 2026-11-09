@@ -27,8 +27,14 @@ Pick the tool by the request, then follow CLAUDE.md (brief → validate → stil
 - Quote YAML text containing commas inside `{ }` (the validator rejects comma splits).
 
 ## Tracing regions for an anatomy map
-Read the photo (Read tool), note its pixel size, and trace each area with 6–14 points in photo pixels (`units: px`).
-The template smooths them with a Catmull-Rom curve. Then render stills at each region's beat with `--safe-zones` and check the
+**Never eyeball tooth outlines** (the owner caught inaccurate cervical margins). Measure them from the photo:
+`python3 scripts/trace_regions.py <photo> '[{"name":"11","box":[x0,y0,x1,y1]}, …]' --preview out.png`
+- `tooth` mode separates enamel from gingiva by colour (Lab a*/b*), so cervical margins follow the real gumline;
+  `dark` traces gaps/missing structure; `gum` traces gingiva.
+- Put box edges on the interproximal contacts (touching neighbours merge otherwise); crown margin at the top of the box.
+- Zoom the preview at the gumline and incisal edge before using the points; refine boxes, not points.
+Hand-placed points are only for things colour can't find (e.g. a planned outline), and must be checked the same way.
+The template smooths points with a Catmull-Rom curve. Then render stills at each region's beat with `--safe-zones` and check the
 outlines sit on the anatomy; adjust points and re-render. Styles: `outline`, `hatch` (cavity/prep), `fill` + `color` 1–6
 (cusps/zones), `ridge` (open line with ticks: marginal ridge, margin). At most 4 labels per scene; anchors are the four corners.
 

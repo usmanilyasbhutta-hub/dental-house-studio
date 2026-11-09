@@ -1,5 +1,7 @@
 # Anatomy map of a real case: fractured upper central incisors (11, 21).
 # DRAFT: demo: true (watermarked) until written consent is on file. Photos are in public/cases/fracture-11-21/ (gitignored).
+# Outlines measured from the photo: python3 scripts/trace_regions.py public/cases/fracture-11-21/front.jpg '[{"name":"11","box":[800,440,1110,905]},{"name":"21","box":[1160,440,1500,905]},{"name":"missing","box":[1030,680,1215,890],"mode":"dark","points":18}]'
+# (box edges sit on the 11/12 and 21/22 contacts, so neighbouring teeth stay separate)
 # Wording is descriptive only; the dentist confirms diagnosis words before publishing.
 id: map-fracture-11-21
 type: anatomy-map
@@ -18,15 +20,15 @@ scenes:
     focus: { x: 700, y: 430, w: 900, h: 520 }
     title: { text: "Two chipped front teeth", bold: "chipped" }
     regions:
-      - points: [[810, 600], [830, 545], [900, 520], [980, 525], [1050, 560], [1095, 640], [1080, 690], [1055, 715], [1050, 800], [1025, 860], [1010, 885], [900, 890], [845, 875], [810, 820], [800, 700]]
+      - points: [[959, 481], [906, 489], [867, 520], [834, 562], [809, 609], [800, 661], [800, 715], [800, 769], [808, 821], [835, 867], [885, 885], [938, 888], [993, 887], [1025, 855], [1043, 806], [1057, 755], [1080, 713], [1106, 677], [1085, 695], [1084, 664], [1109, 622], [1085, 601], [1091, 589], [1085, 552], [1050, 515], [1006, 495]]   # traced from the photo (scripts/trace_regions.py)
         style: outline
         label: { bold: "11", text: "fractured corner" }
         anchor: top-left
-      - points: [[1165, 670], [1190, 575], [1240, 525], [1350, 512], [1440, 532], [1490, 590], [1500, 700], [1490, 820], [1450, 865], [1300, 875], [1205, 860], [1190, 800], [1175, 720]]
+      - points: [[1373, 479], [1330, 492], [1286, 505], [1252, 535], [1234, 575], [1212, 616], [1191, 657], [1160, 685], [1164, 731], [1181, 774], [1195, 820], [1215, 860], [1258, 875], [1306, 876], [1353, 875], [1400, 873], [1447, 865], [1479, 832], [1499, 791], [1499, 743], [1499, 696], [1499, 649], [1484, 608], [1465, 564], [1446, 525], [1417, 490]]   # traced from the photo (scripts/trace_regions.py)
         style: outline
         label: { bold: "21", text: "fractured corner" }
         anchor: top-right
-      - points: [[1055, 715], [1085, 695], [1130, 690], [1165, 700], [1175, 720], [1190, 800], [1205, 860], [1110, 872], [1020, 885], [1025, 860], [1050, 800]]
+      - points: [[1119, 708], [1084, 714], [1067, 739], [1059, 772], [1046, 805], [1030, 836], [1030, 871], [1049, 889], [1085, 889], [1120, 889], [1156, 889], [1192, 889], [1214, 875], [1202, 844], [1190, 810], [1180, 776], [1167, 743], [1152, 713]]   # traced from the photo (scripts/trace_regions.py)
         style: hatch
         label: { bold: "Missing", text: "tooth structure" }
         anchor: bottom-right
