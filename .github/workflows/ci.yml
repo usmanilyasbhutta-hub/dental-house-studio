@@ -12,7 +12,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: npm ci
       - name: Typecheck, unit tests, validate all briefs
-        run: npm run typecheck && npm test && npm run validate -- briefs
+        run: npm run typecheck && npm test && npm run validate -- briefs/examples   # real briefs need local footage/consent that is never in git
       - name: Render + QC every example (proves all three templates still work)
         run: |
           for b in briefs/examples/*.yaml; do npm run make -- "$b"; done
