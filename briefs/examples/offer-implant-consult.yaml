@@ -3,6 +3,7 @@ id: offer-implant-consult
 type: offer
 title: Implant consultation, example offer
 demo: true
+fx: { transition: push, transition_frames: 10, sfx: subtle }   # contemporary offer
 tone: contemporary
 hook:
   lines: ["Missing a tooth?", "Let's talk", "about implants"]

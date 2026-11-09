@@ -8,7 +8,30 @@ export const scenes = {
   case: { hook: 2.5, before: 2.5, wipe: 3, after: 2.5, notes: 3, disclaimer: 2.2, end: 4.5 },
 } as const;
 
+/** Time lost to scene overlaps when a transition is used (n scenes → n−1 overlaps). */
+function overlap(b: Brief, nScenes: number) {
+  return b.fx.transition === "none" ? 0 : ((nScenes - 1) * b.fx.transition_frames) / 30;
+}
+
+/** Number of body scenes per template (end card excluded). */
+export function sceneCount(b: Brief): number {
+  switch (b.type) {
+    case "offer":
+      return 3 + b.points.length;
+    case "education":
+      return 6;
+    case "case":
+      return 7;
+    case "talking-head":
+      return 1;
+  }
+}
+
 export function durationSeconds(b: Brief): number {
+  return rawSeconds(b) - overlap(b, sceneCount(b));
+}
+
+function rawSeconds(b: Brief): number {
   switch (b.type) {
     case "offer": {
       const s = scenes.offer;

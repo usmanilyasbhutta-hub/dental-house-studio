@@ -5,6 +5,7 @@ id: case-demo-spacing
 type: case
 title: Closing a front-tooth gap, demo
 demo: true
+fx: { transition: fade, transition_frames: 10, sfx: none }   # clinical: quiet, honest
 tone: calm
 case_id: demo-case
 treatment: Composite bonding

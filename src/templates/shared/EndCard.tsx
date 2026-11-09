@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { clinic } from "../../brand";
 import { useTheme } from "../../theme";
+import { Sfx } from "../../fx/effects";
 import { prog } from "./motion";
 import { headline, mono, serif } from "./text";
 
@@ -18,6 +19,7 @@ export const EndCard: React.FC<{ cta: string; tagline?: string; note?: string }>
     <AbsoluteFill style={{ background: `linear-gradient(180deg, ${e.top} 0%, ${e.bottom} 100%)`, alignItems: "center", paddingTop: 330, color: e.text }}>
       <Img src={staticFile("brand/logo.png")} style={{ width: 720, clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0)` }} />
       <div style={{ ...serif(76, e.accent), marginTop: 60, opacity: tg, transform: `translateY(${(1 - tg) * 20}px)` }}>{tagline}</div>
+      <Sfx name="click" at={Math.round(fps * 1.25)} volume={0.35} />
       <div style={{ position: "relative", marginTop: 70, opacity: c }}>
         <div
           style={{

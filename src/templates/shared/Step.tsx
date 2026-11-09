@@ -3,17 +3,21 @@ import { useTheme } from "../../theme";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { video } from "../../brand";
 import { prog, sceneFade } from "./motion";
+import { useEdgeFade } from "../../fx/Scenes";
+import { Sfx } from "../../fx/effects";
 import { fitSize, headline, serif } from "./text";
 
 /** Numbered beat: outlined numeral, bronze rule, headline + serif subline. */
 export const Step: React.FC<{ n: number; title: string; subline?: string; dur: number }> = ({ n, title, subline, dur }) => {
   const t = useTheme();
   const frame = useCurrentFrame();
+  const edge = useEdgeFade();
   const { fps } = useVideoConfig();
   const a = prog(frame, 0, Math.round(fps * 0.5));
   const b = prog(frame, Math.round(fps * 0.25), Math.round(fps * 0.6));
   return (
-    <AbsoluteFill style={{ opacity: sceneFade(frame, dur), padding: `0 ${video.safe.right}px 0 ${90}px`, justifyContent: "center" }}>
+    <AbsoluteFill style={{ opacity: sceneFade(frame, dur, 8, edge), padding: `0 ${video.safe.right}px 0 ${90}px`, justifyContent: "center" }}>
+      <Sfx name="pop" at={2} volume={0.4} />
       <div
         style={{
           ...headline(300, "transparent"),

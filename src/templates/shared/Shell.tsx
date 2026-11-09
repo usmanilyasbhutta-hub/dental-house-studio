@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useVideoConfig } from "remotion";
 import type { Brief } from "../../brief/schema";
 import { ThemeContext, themes } from "../../theme";
+import { FxContext } from "../../fx/context";
 import { Backdrop } from "./Backdrop";
 import { EndCard } from "./EndCard";
 import { DemoWatermark, Hud } from "./Hud";
@@ -23,6 +24,7 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: n
   const theme = themes[brief.theme];
   return (
     <ThemeContext.Provider value={theme}>
+    <FxContext.Provider value={{ transition: brief.fx.transition, transitionFrames: brief.fx.transition_frames, sfx: brief.fx.sfx }}>
     <AbsoluteFill style={{ color: theme.text }}>
       <Sequence durationInFrames={bodyFrames}>
         <Backdrop broll={brief.broll[0]} />
@@ -41,6 +43,7 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: n
       {brief.demo ? <DemoWatermark /> : null}
       {showSafeZones ? <SafeZones /> : null}
     </AbsoluteFill>
+    </FxContext.Provider>
     </ThemeContext.Provider>
   );
 };

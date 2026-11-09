@@ -32,6 +32,11 @@ Needs Node 22+, ffmpeg, Python 3 with numpy and pillow (only for `scripts/*.py`)
 
 All examples in `briefs/examples/` are `demo: true` (watermarked). The case example uses a synthetic illustration, not a patient.
 
+## Effects
+Free effects library: 8 transitions, 15 effects (shine, highlighter, typewriter, count-up, glow, sparkles, light sweep,
+light leak, draw-on circle/arrow/underline, punch zoom, shake, glitch, confetti) and 7 code-generated sound effects.
+`npm run gallery` previews them all. Guide: `docs/effects.md`.
+
 ## Quality control on three levels
 - **Understanding:** the Zod schema (length limits keep text readable), compliance rules (banned claims, patient IDs, unknown phone numbers, expired offers, consent for cases, sources for education) and the `clinical-reviewer` / `brand-reviewer` agents.
 - **Code:** TypeScript strict, unit tests, a hook that typechecks after every edit, and CI that renders all three templates on every push.

@@ -71,6 +71,11 @@ describe("compliance", () => {
     b.offer.terms = "Follow @dentalhouseskt for updates"; // typo of the real handle
     expect(errors(b)[0].rule).toBe("contact");
   });
+  it("fx defaults are calm and unknown transitions are rejected", () => {
+    const { fx: _f, ...noFx } = demoCase;
+    expect(brief.parse(noFx).fx).toEqual({ transition: "fade", transition_frames: 10, sfx: "none" });
+    expect(brief.safeParse({ ...demoCase, fx: { transition: "ripple" } }).success).toBe(false); // WebGL ones are not offered
+  });
   it("defaults to the brand theme and accepts editorial", () => {
     const { theme: _omit, ...noTheme } = demoOffer;
     expect(brief.parse(noTheme).theme).toBe("brand");
@@ -105,7 +110,9 @@ describe("compliance", () => {
 describe("timing", () => {
   it("offer length depends on number of points", () => {
     const one = { ...demoOffer, points: ["One"] };
-    expect(durationSeconds(demoOffer) - durationSeconds(one)).toBeCloseTo(4);
+    // 2 extra points × 2 s, minus 2 extra transition overlaps of 10 frames
+    expect(durationSeconds(demoOffer) - durationSeconds(one)).toBeCloseTo(4 - (2 * 10) / 30);
+    expect(durationSeconds({ ...demoOffer, fx: { ...demoOffer.fx, transition: "none" } }) - durationSeconds({ ...one, fx: { ...one.fx, transition: "none" } })).toBeCloseTo(4);
   });
   it("all examples fit in a reel", () => {
     for (const b of [demoOffer, demoEducation, demoCase]) expect(durationSeconds(b)).toBeLessThan(30);

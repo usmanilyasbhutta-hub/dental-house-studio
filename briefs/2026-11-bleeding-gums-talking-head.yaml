@@ -4,6 +4,7 @@ type: talking-head
 title: "Bleeding gums: Dr. Ayesha explains causes and care"
 theme: editorial
 tone: calm
+fx: { transition: none, sfx: subtle }   # continuous footage; quiet UI sounds under the voice
 language: as-spoken          # Roman Urdu + English, word for word
 label: Patient education
 speaker:
@@ -36,10 +37,10 @@ callouts:
   - { on: hard,         big: "02", small: Brushing too hard }
   - { on: deficiencies, big: "03", small: Vitamin deficiency }
   - { on: hormonal,     big: "04", small: "Hormones, e.g. pregnancy" }
-  - { on: twice,        big: "2×", small: Brush twice a day }
-  - { on: gentle,       big: Gentle, small: "Be gentle to your gums" }
+  - { on: twice,        big: "2×", small: Brush twice a day, fx: punch }
+  - { on: gentle,       big: Gentle, small: "Be gentle to your gums", fx: shine }
   - { on: Floss,        big: Floss, small: Floss or interdental brush }
-  - { on: cleaning,     big: Check-up, small: As often as advised }
+  - { on: cleaning,     big: Check-up, small: As often as advised, fx: sparkle }
 cta: Book a gum check-up
 disclaimer: "General information, not a diagnosis. Bleeding that doesn't stop needs a dental check-up."
 review:

@@ -1,12 +1,13 @@
 // Studio defaults (mirrors briefs/examples/*.yaml; tests keep them in sync).
 import type { CaseBrief, EducationBrief, OfferBrief } from "./brief/schema";
 
-const common = { theme: "brand" as const, language: "as-spoken" as const, broll: [] as string[], review: {}, demo: true };
+const common = { fx: { transition: "fade" as const, transition_frames: 10, sfx: "none" as const }, theme: "brand" as const, language: "as-spoken" as const, broll: [] as string[], review: {}, demo: true };
 
 export const demoOffer: OfferBrief = {
   ...common,
   id: "offer-implant-consult",
   type: "offer",
+  fx: { transition: "push", transition_frames: 10, sfx: "subtle" },
   title: "Implant consultation, example offer",
   tone: "contemporary",
   hook: { lines: ["Missing a tooth?", "Let's talk", "about implants"], accent: "implants" },
@@ -27,6 +28,7 @@ export const demoEducation: EducationBrief = {
   ...common,
   id: "education-bleeding-gums",
   type: "education",
+  fx: { transition: "blur-fade", transition_frames: 12, sfx: "none" },
   theme: "editorial",
   title: "Bleeding gums, what they mean",
   tone: "calm",

@@ -3,6 +3,7 @@ import { AbsoluteFill, OffthreadVideo, Sequence, interpolate, staticFile, useCur
 import { video } from "../brand";
 import { footagePaths, segmentsOf, type TalkingHeadBrief, type Word } from "../brief/schema";
 import { useTheme } from "../theme";
+import { Glow, ShineText, Sfx, Sparkles } from "../fx/effects";
 import { KineticHeadline } from "./shared/Headline";
 import { prog } from "./shared/motion";
 import { Shell, type QcProps } from "./shared/Shell";
@@ -29,7 +30,9 @@ export function chapterTimes(b: TalkingHeadBrief, words: Word[]): number[] {
 /** Edit-time positions of the jump cuts between kept segments. */
 export function cutTimes(b: TalkingHeadBrief): number[] {
   let t = 0;
-  return segmentsOf(b).map((g) => (t += g.end - g.start)).slice(0, -1);
+  return segmentsOf(b)
+    .map((g) => (t += g.end - g.start))
+    .slice(0, -1);
 }
 
 /** Map each callout to the time its trigger word is spoken (sequential search). */
@@ -77,7 +80,8 @@ export const TalkingHead: React.FC<{ brief: TalkingHeadBrief; words?: Word[] } &
       <Sequence durationInFrames={body}>
         {callouts.map((h, k) => (
           <Sequence key={k} from={Math.round(h.start * fps) - 3} durationInFrames={Math.max(fps, Math.round((h.end - h.start) * fps) + 3)}>
-            <BigWord text={h.c.big} />
+            <BigWord text={h.c.big} fx={h.c.fx} />
+            <Sfx name={h.c.fx === "punch" ? "thud" : "whoosh"} at={0} volume={0.3} />
           </Sequence>
         ))}
         <Speaker src={footagePaths(brief.id).video} cuts={cutTimes(brief)} />
@@ -85,6 +89,7 @@ export const TalkingHead: React.FC<{ brief: TalkingHeadBrief; words?: Word[] } &
           h.c.small ? (
             <Sequence key={k} from={Math.round(h.start * fps)} durationInFrames={Math.max(fps, Math.round((h.end - h.start) * fps))}>
               <SmallTag text={h.c.small} />
+              <Sfx name="pop" at={3} volume={0.3} />
             </Sequence>
           ) : null,
         )}
@@ -111,16 +116,25 @@ const Speaker: React.FC<{ src: string; cuts: number[] }> = ({ src, cuts }) => {
   return (
     <div
       style={{
-        position: "absolute", left: STAGE.left, top: STAGE.top, width: STAGE.width, opacity: a,
-        transform: `scale(${zoom})`, transformOrigin: "50% 35%",
-        WebkitMaskImage: fade, maskImage: fade, WebkitMaskComposite: "source-in", maskComposite: "intersect",
+        position: "absolute",
+        left: STAGE.left,
+        top: STAGE.top,
+        width: STAGE.width,
+        opacity: a,
+        transform: `scale(${zoom})`,
+        transformOrigin: "50% 35%",
+        WebkitMaskImage: fade,
+        maskImage: fade,
+        WebkitMaskComposite: "source-in",
+        maskComposite: "intersect",
       }}
     >
       <OffthreadVideo
         src={staticFile(src)}
         transparent
         style={{
-          width: "100%", display: "block",
+          width: "100%",
+          display: "block",
           filter: `drop-shadow(2px 0 0 ${t.text}99) drop-shadow(-2px 0 0 ${t.text}99) drop-shadow(0 -2px 0 ${t.text}99) drop-shadow(0 18px 40px rgba(0,0,0,0.45))`,
         }}
       />
@@ -129,16 +143,28 @@ const Speaker: React.FC<{ src: string; cuts: number[] }> = ({ src, cuts }) => {
 };
 
 /** Giant keyword BEHIND the doctor (reference style C). */
-const BigWord: React.FC<{ text: string }> = ({ text }) => {
+const BigWord: React.FC<{ text: string; fx?: TalkingHeadBrief["callouts"][number]["fx"] }> = ({ text, fx = "none" }) => {
   const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const p = prog(frame, 0, fps * 0.35);
   const size = fitSize([text], 860, 245, 140);
+  const punch = fx === "punch" ? 1 + 0.12 * Math.max(0, 1 - Math.abs(frame - 5) / 6) : 1;
+  const word = fx === "shine" ? <ShineText delay={6}>{text}</ShineText> : fx === "glow" ? <Glow>{text}</Glow> : text;
   return (
     <AbsoluteFill style={{ alignItems: "center", paddingTop: 468, paddingRight: video.safe.right - video.safe.left }}>
-      <div style={{ ...headline(size, t.accent), opacity: 0.92 * p, transform: `translateY(${(1 - p) * 60}px) scale(${0.94 + 0.06 * p})`, textAlign: "center", width: 920 }}>
-        {text}
+      <div
+        style={{
+          position: "relative",
+          ...headline(size, t.accent),
+          opacity: 0.92 * p,
+          transform: `translateY(${(1 - p) * 60}px) scale(${(0.94 + 0.06 * p) * punch})`,
+          textAlign: "center",
+          width: 920,
+        }}
+      >
+        {word}
+        {fx === "sparkle" ? <Sparkles x={50} y={50} spread={90} count={10} seed={text} /> : null}
       </div>
     </AbsoluteFill>
   );
@@ -152,7 +178,9 @@ const SmallTag: React.FC<{ text: string }> = ({ text }) => {
   const p = prog(frame, 3, fps * 0.3);
   return (
     <div style={{ position: "absolute", right: video.safe.right + 10, top: 1150, opacity: p, transform: `translateX(${(1 - p) * 30}px)` }}>
-      <div style={{ ...mono(26, t.bgBottom), background: t.text, padding: "12px 20px", borderRadius: 10, letterSpacing: "0.08em" }}>{text}</div>
+      <div style={{ ...mono(26, t.bgBottom), background: t.text, padding: "12px 20px", borderRadius: 10, letterSpacing: "0.08em" }}>
+        {text}
+      </div>
     </div>
   );
 };
@@ -169,7 +197,10 @@ const Chapters: React.FC<{ brief: TalkingHeadBrief; times: number[] }> = ({ brie
         <KineticHeadline lines={brief.hook.lines} accent={brief.hook.accent} width={850} max={150} />
       </AbsoluteFill>
     );
-  const idx = Math.max(0, times.findLastIndex((at) => sec >= Math.max(at, HOOK)));
+  const idx = Math.max(
+    0,
+    times.findLastIndex((at) => sec >= Math.max(at, HOOK)),
+  );
   const ch = brief.chapters[idx];
   const start = Math.round(Math.max(times[idx], HOOK) * fps);
   const p = prog(frame, start, fps * 0.5);
@@ -203,7 +234,15 @@ const NameTag: React.FC<{ name: string; role: string }> = ({ name, role }) => {
   const p = prog(frame, 0, 6) * interpolate(frame, [fps * 3.0, fps * 3.4], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <div style={{ position: "absolute", left: 80, top: 1225, opacity: p, transform: `translateX(${(1 - p) * -30}px)` }}>
-      <div style={{ background: t.text, padding: "12px 22px 14px", borderRadius: 12, borderLeft: `8px solid ${t.accent}`, boxShadow: "0 10px 30px rgba(0,0,0,0.35)" }}>
+      <div
+        style={{
+          background: t.text,
+          padding: "12px 22px 14px",
+          borderRadius: 12,
+          borderLeft: `8px solid ${t.accent}`,
+          boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+        }}
+      >
         <div style={{ ...headline(44, t.bgBottom), textTransform: "none", letterSpacing: 0 }}>{name}</div>
         <div style={{ ...mono(20, t.bgTop), marginTop: 6, letterSpacing: "0.1em" }}>{role}</div>
       </div>
@@ -223,8 +262,15 @@ const Captions: React.FC<{ words: Word[] }> = ({ words }) => {
   return (
     <div
       style={{
-        position: "absolute", left: video.safe.left + 20, right: video.safe.right + 20, top: CAPTION_TOP,
-        textAlign: "center", ...headline(66), textTransform: "none", letterSpacing: "0.005em", lineHeight: 1.12,
+        position: "absolute",
+        left: video.safe.left + 20,
+        right: video.safe.right + 20,
+        top: CAPTION_TOP,
+        textAlign: "center",
+        ...headline(66),
+        textTransform: "none",
+        letterSpacing: "0.005em",
+        lineHeight: 1.12,
         textShadow: "0 3px 18px rgba(0,0,0,0.65)",
       }}
     >
@@ -232,7 +278,16 @@ const Captions: React.FC<{ words: Word[] }> = ({ words }) => {
         const active = sec >= w.start && sec < w.end + 0.05;
         const said = sec >= w.start;
         return (
-          <span key={i} style={{ color: active ? t.accent : t.text, opacity: said ? 1 : 0.62, display: "inline-block", margin: "0 0.15em", transform: active ? "scale(1.06)" : undefined }}>
+          <span
+            key={i}
+            style={{
+              color: active ? t.accent : t.text,
+              opacity: said ? 1 : 0.62,
+              display: "inline-block",
+              margin: "0 0.15em",
+              transform: active ? "scale(1.06)" : undefined,
+            }}
+          >
             {w.text}
           </span>
         );

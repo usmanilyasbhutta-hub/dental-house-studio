@@ -15,7 +15,9 @@
     "test": "vitest run",
     "check": "npm run typecheck && npm test && npm run validate -- briefs/examples",
     "brand:assets": "python3 scripts/brand_assets.py && node scripts/copy_fonts.mjs",
-    "prep": "tsx scripts/prep_footage.ts"
+    "prep": "tsx scripts/prep_footage.ts",
+    "gallery": "remotion render src/index.ts EffectsGallery out/effects-gallery.mp4 ${REMOTION_BROWSER:+--browser-executable=$REMOTION_BROWSER}",
+    "sfx": "python3 scripts/make_sfx.py"
   },
   "dependencies": {
     "@fontsource/instrument-serif": "^5.3.0",
@@ -23,7 +25,12 @@
     "@fontsource/oswald": "^5.3.0",
     "@remotion/bundler": "^4.0.541",
     "@remotion/cli": "^4.0.541",
+    "@remotion/motion-blur": "^4.0.541",
+    "@remotion/noise": "^4.0.541",
+    "@remotion/paths": "^4.0.541",
     "@remotion/renderer": "^4.0.541",
+    "@remotion/shapes": "^4.0.541",
+    "@remotion/transitions": "^4.0.541",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "remotion": "^4.0.541",

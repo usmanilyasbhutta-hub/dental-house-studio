@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRANSITIONS } from "../fx/context";
 
 // ---- shared ---------------------------------------------------------------
 const line = (max: number) => z.string().min(1).max(max);
@@ -39,6 +40,14 @@ const base = z.object({
   music: publicAsset.optional(),
   /** Optional clinic b-roll photos/videos (inside public/). */
   broll: z.array(publicAsset).max(6).default([]),
+  /** Effects (see docs/effects.md). Calm defaults: soft fade between scenes, no sound effects. */
+  fx: z
+    .object({
+      transition: z.enum(TRANSITIONS).default("fade"),
+      transition_frames: z.number().int().min(4).max(24).default(10),
+      sfx: z.enum(["none", "subtle"]).default("none"),
+    })
+    .default({}),
   /** Short note printed on the end card, e.g. "General information, not a diagnosis." */
   disclaimer: z.string().max(110).optional(),
   /** Demo briefs are watermarked and may skip consent; never publish them. */
@@ -133,7 +142,15 @@ export const talkingHeadBrief = base.extend({
     .max(4),
   /** Giant keyword behind the doctor, triggered when `on` is spoken. */
   callouts: z
-    .array(z.object({ on: z.string().min(1), big: line(12), small: line(28).optional() }))
+    .array(
+      z.object({
+        on: z.string().min(1),
+        big: line(12),
+        small: line(28).optional(),
+        /** Extra emphasis on this keyword. */
+        fx: z.enum(["none", "sparkle", "shine", "glow", "punch"]).default("none"),
+      }),
+    )
     .max(14)
     .default([]),
   music_volume: z.number().min(0).max(1).default(0.12),
