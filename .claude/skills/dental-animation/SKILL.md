@@ -18,6 +18,9 @@ Pick the tool by the request, then follow CLAUDE.md (brief → validate → stil
 | Doctor explains on camera | `type: talking-head` | docs/talking-head.md |
 | Short education with steps/numbers | `type: education` + effects (`Highlighter`, `CountUp`, `DrawCircle`) | docs/effects.md |
 | Fix/convert footage (vertical, shaky, noisy, audio, grade, GIF, join) | `npm run ff -- <recipe>` | `scripts/ff.ts`, `npm run ff -- help` |
+| Creator-style effects on doctor footage (orbit, frame break, phone mockup, pull-back, green screen, vertigo, cover story, glass type, doodles…) | `src/fx/footage.tsx` (17 effects), gallery `FootageFxGallery` | docs/effects.md |
+| Quick stills of any composition | `npx tsx scripts/stills.ts <CompositionId> <dir> <frame…>` (one bundle) | |
+| Photoreal 3D (Blender/Cycles) | `pip install bpy==5.2.3` works here (no GPU: ~8.5 s/frame at 540×960) | render frames, assemble in Remotion |
 | Animated icon/diagram someone supplies as Lottie | `<LottieClip file="x.json" />` | `src/fx/LottieClip.tsx` (licence must allow commercial use) |
 
 ## Rules for clinical honesty (non-negotiable)

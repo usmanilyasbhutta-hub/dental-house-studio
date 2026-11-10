@@ -63,6 +63,32 @@ left out because they're unreliable in headless rendering.
 Regenerate the sounds with `npm run sfx`. They peak around −10 dBFS and play at 0.3–0.5 volume, so they sit under
 the voice and music.
 
+## Footage effects (`src/fx/footage.tsx`): creator-style looks for doctor videos
+Preview all: `npx remotion render src/index.ts FootageFxGallery out/footage-fx-gallery.mp4` (needs local footage).
+Most take `subject` (the cut-out doctor from `npm run prep`) and/or `children` (any full-frame layer).
+
+| # | Effect | Use for |
+|---|---|---|
+| 01 | `Orbit` | clip as a 3D card turning in space (intros, "behind the scenes") |
+| 02 | `VideoWall` | clip repeated on a wall of screens, camera pushes in ("couch wall": interpretation, refine with reference) |
+| 03 | `UIWorld` | doctor among floating app cards (appointment, reminder, WhatsApp) |
+| 04 | `FrameBreak` | doctor's head breaks out of a framed photo/clip |
+| 05 | `DigitalZoom` | punch-in with scanlines, pixel grid and focus brackets |
+| 06 | `PhoneMockup` | any layer inside a tilting phone |
+| 07 | `Checklist` | card that ticks off steps (treatment plan, aftercare) |
+| 08 | `HeadlineWall` | scrolling wall of headlines/myths behind the doctor |
+| 09 | `ZoomThrough` | dive through a circle into the next scene |
+| 10 | `ChartGrow` | bars grow with counting values (statistics, need sources) |
+| 11 | `PullBackReveal` | full-screen clip pulls back into a phone |
+| 12 | `GreenScreen` | cut-out doctor over any background (clinic, 3D, photo) |
+| 13 | `PaperCut` | torn-paper collage with stop-motion jitter |
+| 14 | `DoodleBoil` | hand-drawn circles/arrows/stars that "boil" |
+| 15 | `Vertigo` | dolly zoom: background grows, doctor stays |
+| 16 | `CoverStory` | magazine cover: masthead behind the head, cover lines |
+| 17 | `GlassType` | frosted-glass letters refracting the footage |
+
+Clinical-photo rule still applies: these go on doctor/clinic footage and graphics, never to alter a clinical photo.
+
 ## Rules
 1. **Never put sparkles, glow, shine or light leaks on clinical photos** (before/after, intraoral). It can read as
    an enhanced result. Effects go on text and graphics only.

@@ -8,6 +8,7 @@ import { demoCase, demoEducation, demoOffer } from "./demo-briefs";
 import { loadBrandFonts } from "./templates/shared/fonts";
 import { Video, type VideoProps } from "./Video";
 import { EffectsGallery, galleryFrames } from "./fx/Gallery";
+import { FootageGallery, footageGalleryFrames } from "./fx/FootageGallery";
 import { photoSizes } from "./templates/PhotoLayout";
 
 loadBrandFonts();
@@ -34,6 +35,7 @@ export const Root: React.FC = () => (
     <Composition id="Offer" {...common} defaultProps={{ brief: demoOffer }} />
     <Composition id="Education" {...common} defaultProps={{ brief: demoEducation }} />
     <Composition id="ClinicalCase" {...common} defaultProps={{ brief: demoCase }} />
+    <Composition id="FootageFxGallery" component={FootageGallery} fps={video.fps} width={video.width} height={video.height} durationInFrames={footageGalleryFrames} />
     <Composition id="EffectsGallery" component={EffectsGallery} fps={video.fps} width={video.width} height={video.height} durationInFrames={galleryFrames} />
   </>
 );
