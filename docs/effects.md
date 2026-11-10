@@ -123,6 +123,12 @@ Rebuilt in our own code (three.js + Remotion); nothing copied from the reel. Pre
 
 | 36 | **Blueprint** | brief `type: blueprint` (`src/templates/Blueprint.tsx`, drawings in `src/fx/blueprint-subjects.ts`) | white line drawing builds on blueprint paper: centre line, cross-section hatch, dimension lines, leader labels, typed NOTE box, title block. `subject: implant` (crown lowers onto the abutment) or `tooth` (molar section, scan line) |
 
+| 37 | **Receipt** | brief `type: receipt` (`src/templates/Receipt.tsx`) | printer drops in, receipt prints line by line (stutter feed, printer sound), tears off, camera pushes in on the total, underline draws. Generated SFX `printer`, `tear` |
+
+**Receipt rules.** Prices are clinic facts. Only use the owner's real, current prices and set `prices_confirmed_on`.
+A non-demo brief with numbers and no date fails validation, and dates older than 90 days warn. Otherwise use
+non-price values ("Included", "Rs X,XXX" placeholders). The clinic name and phone at the bottom come from `src/brand.ts`.
+
 **Blueprint rules.** Drawings are illustrations ("NOT TO SCALE · ILLUSTRATION" stays in the title block). Implant
 dimensions are typical values, so keep a note line such as "Sizes vary per patient" (validation warns otherwise),
 or set `dimensions: null`. Notes are labels, not claims; the banned-words list still applies. To add a subject

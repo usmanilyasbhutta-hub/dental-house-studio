@@ -423,7 +423,7 @@ export const DrawUnderline: React.FC<{ width: number; delay?: number; duration?:
 
 /* ----------------------------------------------------------------- sound */
 
-export const SFX = ["whoosh", "pop", "tick", "shimmer", "thud", "swoosh-out", "click"] as const;
+export const SFX = ["whoosh", "pop", "tick", "shimmer", "thud", "swoosh-out", "click", "printer", "tear"] as const;
 export type SfxName = (typeof SFX)[number];
 
 /** Plays a generated UI sound (public/sfx, made by scripts/make_sfx.py) when the brief enables sfx. */

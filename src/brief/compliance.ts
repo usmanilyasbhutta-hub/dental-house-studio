@@ -27,6 +27,7 @@ function allText(b: Brief): string[] {
   if (b.type === "anatomy-map")
     t.push(...b.scenes.flatMap((sc) => [sc.title.text, ...sc.regions.flatMap((r) => (r.label ? [r.label.bold, r.label.text ?? ""] : []))]));
   if (b.type === "photo-layout") t.push(...b.annotations.map((a) => a.label), ...b.photos.map((p) => p.label ?? ""), b.caption ?? "");
+  if (b.type === "receipt") t.push(...b.items.flatMap((i) => [i.text, i.value]), b.total.label, b.total.value, ...b.footer);
   if (b.type === "blueprint") t.push(b.figure ?? "", ...b.note, b.dimensions?.length ?? "", b.dimensions?.diameter ?? "");
   if (b.type === "map-route")
     t.push(b.chip, b.start?.label ?? "", b.destination.label ?? "", ...b.streets.map((x) => x.text));
@@ -107,6 +108,19 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)
       warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
+  }
+
+  if (b.type === "receipt") {
+    const priced = [...b.items.map((i) => i.value), b.total.value].some((v) => /\d/.test(v));
+    if (priced && !b.prices_confirmed_on) {
+      const msg = "prices are clinic facts: use the owner's current prices and set prices_confirmed_on (or use values like \"Included\")";
+      if (b.demo) warn("prices", msg);
+      else err("prices", msg);
+    }
+    if (b.prices_confirmed_on) {
+      const age = (Date.parse(env.today) - Date.parse(b.prices_confirmed_on)) / 86400000;
+      if (age > 90) warn("prices", `prices were confirmed ${Math.round(age)} days ago: check they are still current`);
+    }
   }
 
   if (b.type === "blueprint") {

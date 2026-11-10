@@ -6,6 +6,7 @@ import { PhotoLayout, type PhotoSize } from "./templates/PhotoLayout";
 import { AnatomyMap } from "./templates/AnatomyMap";
 import { MapRoute } from "./templates/MapRoute";
 import { Blueprint } from "./templates/Blueprint";
+import { Receipt } from "./templates/Receipt";
 import { ClinicalCase } from "./templates/ClinicalCase";
 import { Education } from "./templates/Education";
 import { Offer } from "./templates/Offer";
@@ -22,6 +23,8 @@ export const Video: React.FC<VideoProps> = ({ brief, words, sizes, showSafeZones
       return <Education brief={brief} showSafeZones={showSafeZones} />;
     case "case":
       return <ClinicalCase brief={brief} showSafeZones={showSafeZones} />;
+    case "receipt":
+      return <Receipt brief={brief} showSafeZones={showSafeZones} />;
     case "blueprint":
       return <Blueprint brief={brief} showSafeZones={showSafeZones} />;
     case "map-route":

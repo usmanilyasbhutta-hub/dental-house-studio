@@ -100,3 +100,17 @@ d = 0.9; t = t_(d)
 x = sum(np.sin(2 * np.pi * fr * t) * np.exp(-t / dc) * (1 - np.exp(-t / 0.006)) * a
         for fr, dc, a in [(1568, 0.35, 0.5), (2093, 0.28, 0.35), (2637, 0.22, 0.25), (3136, 0.18, 0.15)])
 save("shimmer", band(x, 0, 5000) * 0.8, wet=0.3, tau=0.18)
+
+# printer: thermal receipt printer feeding one burst of lines (stepper whine + paper feed hiss), ~0.9 s; loop for longer
+d = 0.9; t = t_(d)
+steps = (np.sin(2 * np.pi * 410 * t) > 0.6).astype(float)  # stepper pulses
+whine = band(steps, 300, 2600) * 0.5 + 0.25 * np.sin(2 * np.pi * 820 * t)
+hiss = band(rng.standard_normal(len(t)), 1500, 6000) * 0.35
+gate = 0.55 + 0.45 * (np.sin(2 * np.pi * 7.5 * t) > -0.2)  # line-by-line stutter
+fade = np.minimum(1, t / 0.02) * np.minimum(1, (d - t) / 0.05)
+save("printer", (whine + hiss) * gate * fade, wet=0.08)
+
+# tear: paper tearing off a serrated edge, short crackle
+d = 0.32; t = t_(d)
+crackle = band(rng.standard_normal(len(t)), 900, 5500) * (rng.random(len(t)) < 0.18)
+save("tear", (band(rng.standard_normal(len(t)), 600, 4000) * 0.5 + crackle) * env(d, 0.004, 0.11), wet=0.1)

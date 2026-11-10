@@ -297,7 +297,24 @@ export const blueprintBrief = base.extend({
 });
 export type BlueprintBrief = z.infer<typeof blueprintBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief]);
+/**
+ * Receipt (reference: "/receipt" reel): a printer prints a receipt line by line, it tears off, camera pushes in on the total.
+ * Prices are clinic facts: only the owner's real, current prices (set prices_confirmed_on), or non-price values ("Included").
+ */
+export const receiptBrief = base.extend({
+  type: z.literal("receipt"),
+  items: z.array(z.object({ text: line(24), value: line(12) })).min(2).max(7),
+  total: z.object({ label: line(14).default("Total"), value: line(14) }),
+  /** Small lines under the items, e.g. "Check-up visit" / "Prices as of Nov 2026". */
+  footer: z.array(line(34)).max(2).default([]),
+  /** Date the owner confirmed the prices on this receipt (required when values contain numbers). */
+  prices_confirmed_on: isoDate.optional(),
+  /** Seconds to hold on the total before the end card. */
+  hold: z.number().min(1.5).max(5).default(2.6),
+});
+export type ReceiptBrief = z.infer<typeof receiptBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

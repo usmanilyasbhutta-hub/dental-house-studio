@@ -28,6 +28,7 @@ export function sceneCount(b: Brief): number {
     case "anatomy-map":
     case "map-route":
     case "blueprint":
+    case "receipt":
       return 1;
   }
 }
@@ -48,6 +49,10 @@ function rawSeconds(b: Brief): number {
     }
     case "anatomy-map":
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
+    case "receipt": {
+      const r = receiptTimes(b);
+      return r.end + scenes.offer.end;
+    }
     case "blueprint":
       return b.seconds + scenes.offer.end;
     case "map-route":
@@ -74,3 +79,17 @@ export const mapSceneSeconds = (b: Extract<Brief, { type: "anatomy-map" }>) =>
 
 /** Map route: the route starts drawing after `lead` (during the halftone reveal) and the overview holds for `hold`. */
 export const MAP_ROUTE = { lead: 0.4, hold: 2.8 } as const;
+
+/** Receipt layout (px) and timeline (s). The paper height decides how long printing takes. */
+export const RECEIPT = { pad: 44, total: 100, rule: 36, item: 58, foot: 40, store: 120, speed: 380 } as const;
+export function receiptHeight(b: Extract<Brief, { type: "receipt" }>) {
+  const R = RECEIPT;
+  return R.pad * 2 + R.total + R.rule * 2 + b.items.length * R.item + b.footer.length * R.foot + R.store;
+}
+export function receiptTimes(b: Extract<Brief, { type: "receipt" }>) {
+  const hook = 1.5, arrive = 0.6;
+  const printStart = hook + arrive;
+  const print = receiptHeight(b) / RECEIPT.speed;
+  const tear = printStart + print + 0.35;
+  return { hook, printStart, print, tear, end: tear + 0.4 + b.hold };
+}

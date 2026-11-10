@@ -175,3 +175,22 @@ describe("blueprint", () => {
     expect(checkCompliance(b, env).some((x) => x.rule === "dimensions")).toBe(true);
   });
 });
+
+describe("receipt", () => {
+  const ex = () => clone(loadBrief("briefs/examples/receipt.yaml")) as Extract<Brief, { type: "receipt" }>;
+  it("example (placeholder values) is valid", () => expect(errors(ex())).toEqual([]));
+  it("blocks real-looking prices without prices_confirmed_on (non-demo)", () => {
+    const b = ex();
+    b.demo = false;
+    b.total.value = "Rs 4,500";
+    expect(errors(b).some((f) => f.rule === "prices")).toBe(true);
+    b.prices_confirmed_on = "2026-11-01";
+    expect(errors(b).some((f) => f.rule === "prices")).toBe(false);
+  });
+  it("warns when confirmed prices are older than 90 days", () => {
+    const b = ex();
+    b.total.value = "Rs 4,500";
+    b.prices_confirmed_on = "2026-05-01";
+    expect(checkCompliance(b, env).some((f) => f.rule === "prices" && f.level === "warning")).toBe(true);
+  });
+});

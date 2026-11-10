@@ -1,0 +1,19 @@
+# Receipt (reference: "/receipt" reel). Values are PLACEHOLDERS: prices are clinic facts, so a real video uses the
+# owner's current prices and sets prices_confirmed_on (validation blocks numbers without it).
+id: example-receipt
+type: receipt
+title: "What a check-up visit includes: receipt (demo)"
+demo: true
+hook:
+  lines: ["Your check-up,", "itemised"]
+  accent: "itemised"
+label: "Check-up"
+items:
+  - { text: "Consultation", value: "Rs X,XXX" }
+  - { text: "Exam & charting", value: "Rs X,XXX" }
+  - { text: "Scaling & polish", value: "Rs X,XXX" }
+  - { text: "X-ray, if needed", value: "Rs X,XXX" }
+total: { label: "Total", value: "Rs XX,XXX" }
+footer: ["Demo: fill in real prices", "Prices from the clinic only"]
+cta: "Call or WhatsApp to book"
+fx: { sfx: subtle }
