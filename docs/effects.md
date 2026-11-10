@@ -67,25 +67,29 @@ the voice and music.
 Preview all: `npx remotion render src/index.ts FootageFxGallery out/footage-fx-gallery.mp4` (needs local footage).
 Most take `subject` (the cut-out doctor from `npm run prep`) and/or `children` (any full-frame layer).
 
-| # | Effect | Use for |
+Matched against the reference reel ("17 video effects", Nov 2026). The person is always the top layer, so walls, cards
+and type sit behind them.
+
+| # | Effect | What it does (as in the reel) |
 |---|---|---|
-| 01 | `Orbit` | clip as a 3D card turning in space (intros, "behind the scenes") |
-| 02 | `VideoWall` | clip repeated on a wall of screens, camera pushes in ("couch wall": interpretation, refine with reference) |
-| 03 | `UIWorld` | doctor among floating app cards (appointment, reminder, WhatsApp) |
-| 04 | `FrameBreak` | doctor's head breaks out of a framed photo/clip |
-| 05 | `DigitalZoom` | punch-in with scanlines, pixel grid and focus brackets |
-| 06 | `PhoneMockup` | any layer inside a tilting phone |
-| 07 | `Checklist` | card that ticks off steps (treatment plan, aftercare) |
-| 08 | `HeadlineWall` | scrolling wall of headlines/myths behind the doctor |
-| 09 | `ZoomThrough` | dive through a circle into the next scene |
-| 10 | `ChartGrow` | bars grow with counting values (statistics, need sources) |
-| 11 | `PullBackReveal` | full-screen clip pulls back into a phone |
-| 12 | `GreenScreen` | cut-out doctor over any background (clinic, 3D, photo) |
-| 13 | `PaperCut` | torn-paper collage with stop-motion jitter |
-| 14 | `DoodleBoil` | hand-drawn circles/arrows/stars that "boil" |
-| 15 | `Vertigo` | dolly zoom: background grows, doctor stays |
-| 16 | `CoverStory` | magazine cover: masthead behind the head, cover lines |
-| 17 | `GlassType` | frosted-glass letters refracting the footage |
+| 01 | `Orbit` | small clip/photo cards orbit around the speaker, passing behind and in front |
+| 02 | `CouchWall` | the wall behind the speaker fills with pinned photos/screens (`VideoWall` = screen grid) |
+| 03 | `UIWorld` | a big app window in the scene; clips drop in, prompt types, tag appears |
+| 04 | `FrameBreak` | speaker inside a frame, head/hands break out |
+| 05 | `DigitalZoom` | crash zoom to the face (+ `PunchCaption`) |
+| 06 | `PhoneBeside` / `PhoneMockup` | phone floating next to the speaker showing an app / any layer inside a phone |
+| 07 | `Checklist` | card ticking off steps |
+| 08 | `HeadlineWall` | taped paper notes pop onto the wall behind the speaker |
+| 09 | `ZoomThrough` | dive through into the next scene |
+| 10 | `TrendLine` / `ChartGrow` | calendar grid + rising line with a pill label / growing bars |
+| 11 | `PullBackReveal` | clip pulls back into an editor app (checklist + render bar) or a phone |
+| 12 | `GreenScreen` | speaker cut out over a web page / any background |
+| 13 | `PaperCut` | scrapbook: paper, pencil scribbles, sticker-cut speaker, ransom-note letters |
+| 14 | `DoodleBoil` | boiling white outline around the speaker's body + boiling doodle icons |
+| 15 | `Vertigo` | dolly zoom (+ caption) |
+| 16 | `CoverStory` | magazine masthead behind the head, cover lines |
+| 17 | `GlassType` | huge glass letters standing in the room behind the speaker |
+| 18 | `PunchCaption` | big white words, one keyword in yellow, popping in |
 
 Clinical-photo rule still applies: these go on doctor/clinic footage and graphics, never to alter a clinical photo.
 
