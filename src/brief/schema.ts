@@ -278,7 +278,26 @@ export const mapRouteBrief = base.extend({
   });
 export type MapRouteBrief = z.infer<typeof mapRouteBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief]);
+/**
+ * Blueprint (reference: "Blueprint" style reel): white line drawing builds on blueprint paper, dimension lines,
+ * typed note, title block. Subjects are drawn in code (src/fx/blueprint-subjects.ts). Illustration, not to scale.
+ */
+export const blueprintBrief = base.extend({
+  type: z.literal("blueprint"),
+  subject: z.enum(["implant", "tooth"]),
+  /** Title block text; defaults to the subject's figure title. */
+  figure: line(32).optional(),
+  /** Up to 3 short lines typed into the NOTE box. */
+  note: z.array(line(30)).max(3).default([]),
+  /** Implant only: dimension texts, or null to hide them. Typical sizes; say in the note that sizes vary per patient. */
+  dimensions: z.object({ length: line(12), diameter: line(12) }).nullable().default({ length: "L 10 mm", diameter: "Ø 4.0 mm" }),
+  labels: z.boolean().default(true),
+  /** How long the drawing takes (the end card follows). */
+  seconds: z.number().min(8).max(20).default(12),
+});
+export type BlueprintBrief = z.infer<typeof blueprintBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

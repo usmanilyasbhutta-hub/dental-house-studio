@@ -161,3 +161,17 @@ describe("map route", () => {
     expect(errors(b).some((f) => f.rule === "claims")).toBe(true);
   });
 });
+
+describe("blueprint", () => {
+  for (const f of ["briefs/examples/blueprint-implant.yaml", "briefs/examples/blueprint-tooth.yaml"])
+    it(`${f} is valid with no warnings about dimensions`, () => {
+      const b = loadBrief(f);
+      expect(errors(b)).toEqual([]);
+      expect(checkCompliance(b, env).some((x) => x.rule === "dimensions")).toBe(false);
+    });
+  it("asks for a 'sizes vary' note when implant dimensions are shown", () => {
+    const b = clone(loadBrief("briefs/examples/blueprint-implant.yaml")) as Extract<Brief, { type: "blueprint" }>;
+    b.note = ["Crown seats on abutment"];
+    expect(checkCompliance(b, env).some((x) => x.rule === "dimensions")).toBe(true);
+  });
+});

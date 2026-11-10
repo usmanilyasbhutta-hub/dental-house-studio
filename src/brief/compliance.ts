@@ -27,6 +27,7 @@ function allText(b: Brief): string[] {
   if (b.type === "anatomy-map")
     t.push(...b.scenes.flatMap((sc) => [sc.title.text, ...sc.regions.flatMap((r) => (r.label ? [r.label.bold, r.label.text ?? ""] : []))]));
   if (b.type === "photo-layout") t.push(...b.annotations.map((a) => a.label), ...b.photos.map((p) => p.label ?? ""), b.caption ?? "");
+  if (b.type === "blueprint") t.push(b.figure ?? "", ...b.note, b.dimensions?.length ?? "", b.dimensions?.diameter ?? "");
   if (b.type === "map-route")
     t.push(b.chip, b.start?.label ?? "", b.destination.label ?? "", ...b.streets.map((x) => x.text));
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
@@ -106,6 +107,13 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)
       warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
+  }
+
+  if (b.type === "blueprint") {
+    if (b.subject === "implant" && b.dimensions && !b.note.some((n) => /vary|varies|per patient|typical/i.test(n)))
+      warn("dimensions", "implant sizes are chosen per patient: add a note line such as \"Sizes vary per patient\"");
+    if (b.subject !== "implant" && b.dimensions && b.dimensions.length !== "L 10 mm")
+      warn("dimensions", "dimensions are only drawn for the implant subject");
   }
 
   if (b.type === "map-route") {

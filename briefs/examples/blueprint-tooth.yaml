@@ -1,0 +1,14 @@
+# Blueprint of a molar in section: labels only, no claims. Illustration, not to scale.
+id: example-blueprint-tooth
+type: blueprint
+theme: editorial
+subject: tooth
+note: ["Longitudinal section", "Lower molar, two roots"]
+dimensions: null
+hook:
+  lines: ["What's inside", "your tooth"]
+  accent: "inside"
+label: "Know your teeth"
+seconds: 12
+demo: true
+title: "Tooth anatomy: blueprint (demo)"

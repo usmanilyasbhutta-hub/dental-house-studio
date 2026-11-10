@@ -121,6 +121,14 @@ Rebuilt in our own code (three.js + Remotion); nothing copied from the reel. Pre
 | 34 | `HalftoneReveal` | `src/fx/Halftone.tsx` | dark screen opens through growing dots. Intro or transition; put it above the scene |
 | 35 | **Map route** | brief `type: map-route` (`src/templates/MapRoute.tsx`, `src/three/city.ts`) | route drawn through a 3D clay city: halftone intro, chase camera, pull-back, pin drop on the clinic, address card from `src/brand.ts` |
 
+| 36 | **Blueprint** | brief `type: blueprint` (`src/templates/Blueprint.tsx`, drawings in `src/fx/blueprint-subjects.ts`) | white line drawing builds on blueprint paper: centre line, cross-section hatch, dimension lines, leader labels, typed NOTE box, title block. `subject: implant` (crown lowers onto the abutment) or `tooth` (molar section, scan line) |
+
+**Blueprint rules.** Drawings are illustrations ("NOT TO SCALE · ILLUSTRATION" stays in the title block). Implant
+dimensions are typical values, so keep a note line such as "Sizes vary per patient" (validation warns otherwise),
+or set `dimensions: null`. Notes are labels, not claims; the banned-words list still applies. To add a subject
+(crown prep, root canal, bridge...), add its strokes to `blueprint-subjects.ts`. Each stroke has a start and end as
+fractions of the drawing time, so `seconds` stretches the whole thing. Examples: `briefs/examples/blueprint-*.yaml`.
+
 **Map route rules.** The city is procedural, so it is an *illustration*, not directions. Keep the chip saying so
 ("Illustrative map · not to scale"); validation warns otherwise. Only label streets the owner names. The destination
 defaults to the clinic name, and the address comes from `src/brand.ts`. Route points are grid crossings `[col, row]`.

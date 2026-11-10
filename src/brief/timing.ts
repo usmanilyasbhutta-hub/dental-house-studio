@@ -27,6 +27,7 @@ export function sceneCount(b: Brief): number {
     case "photo-layout":
     case "anatomy-map":
     case "map-route":
+    case "blueprint":
       return 1;
   }
 }
@@ -47,6 +48,8 @@ function rawSeconds(b: Brief): number {
     }
     case "anatomy-map":
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
+    case "blueprint":
+      return b.seconds + scenes.offer.end;
     case "map-route":
       return MAP_ROUTE.lead + b.seconds + MAP_ROUTE.hold + scenes.offer.end;
     case "photo-layout":

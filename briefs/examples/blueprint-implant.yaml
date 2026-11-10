@@ -1,0 +1,14 @@
+# Blueprint (reference: blueprint-style reel). Drawn in code, illustration only, not to scale.
+id: example-blueprint-implant
+type: blueprint
+title: "How an implant is built: blueprint (demo)"
+demo: true
+subject: implant          # implant | tooth
+note: ["Sizes vary per patient", "Crown seats on abutment"]
+dimensions: { length: "L 10 mm", diameter: "Ø 4.0 mm" }   # or null to hide
+hook:
+  lines: ["Inside a", "dental implant"]
+  accent: "implant"
+label: "Implants"
+seconds: 12
+fx: { sfx: subtle }
