@@ -50,6 +50,7 @@ Safe area: keep text out of the top 220 px, bottom 380 px, right 140 px and left
 The logo bug and HUD label sit in the top band on purpose. They're decorative, not information.
 
 ## How to work
+- **Owner is not an editor:** for any new video, offer `/options` (2–3 directions with stills) before committing to one. See `docs/review-process.md`.
 - **New video:** use `/new-video`. Interview the user, then write the brief, preview 3 stills, and wait for approval before the full render.
 - **After any render:** run QC, then **look at `qc/<id>/contact.jpg` yourself** (Read the image) and report what you see. The `visual-qc` agent does this in a fresh context.
 - **Before calling a video ready:** run `/review` (clinical-reviewer + brand-reviewer + visual-qc agents). Fill in the `review:` block only when the user says a dentist approved it.
