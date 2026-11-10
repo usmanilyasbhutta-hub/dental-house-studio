@@ -9,6 +9,7 @@ import { loadBrandFonts } from "./templates/shared/fonts";
 import { Video, type VideoProps } from "./Video";
 import { EffectsGallery, galleryFrames } from "./fx/Gallery";
 import { FootageGallery, footageGalleryFrames } from "./fx/FootageGallery";
+import { FootageGallery2, footageGallery2Frames } from "./fx/FootageGallery2";
 import { photoSizes } from "./templates/PhotoLayout";
 
 loadBrandFonts();
@@ -36,6 +37,7 @@ export const Root: React.FC = () => (
     <Composition id="Education" {...common} defaultProps={{ brief: demoEducation }} />
     <Composition id="ClinicalCase" {...common} defaultProps={{ brief: demoCase }} />
     <Composition id="FootageFxGallery" component={FootageGallery} fps={video.fps} width={video.width} height={video.height} durationInFrames={footageGalleryFrames} />
+    <Composition id="FootageFxGallery2" component={FootageGallery2} fps={video.fps} width={video.width} height={video.height} durationInFrames={footageGallery2Frames} />
     <Composition id="EffectsGallery" component={EffectsGallery} fps={video.fps} width={video.width} height={video.height} durationInFrames={galleryFrames} />
   </>
 );

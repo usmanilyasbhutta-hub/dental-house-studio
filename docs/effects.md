@@ -91,6 +91,23 @@ and type sit behind them.
 | 17 | `GlassType` | huge glass letters standing in the room behind the speaker |
 | 18 | `PunchCaption` | big white words, one keyword in yellow, popping in |
 
+### Set 2 (`src/fx/footage2.tsx`), built for clinic use. Preview: composition `FootageFxGallery2`
+
+| # | Effect | Use for |
+|---|---|---|
+| 19 | `TextRing` | words orbiting the speaker in 3D ("CONSULT FIRST") |
+| 20 | `Spotlight` | background dims and blurs, soft light on the doctor |
+| 21 | `WhipPan` | fast motion-blur swipe between two scenes |
+| 22 | `ShapeReveal` | next clip opens out of a tooth / rounded / circle mask |
+| 23 | `FreezeIntro` | freeze frame + white outline + name/role card, then play on |
+| 24 | `NotificationStack` | phone notifications slide in and stack (booking, reminder, WhatsApp) |
+| 25 | `LocationPin` | drawn map (no tiles), pin drops on the clinic, address card from `src/brand.ts` |
+| 26 | `Countdown` | flip-style days left for a real, dated offer |
+| 27 | `PostMockup` | Instagram-style post with a heart pop (never invent like/comment counts) |
+| 28 | `MulticamGrid` | 2×2 panels of one clip: wide, face, hands, tight face |
+| 29 | `WordStack` | kinetic words stacking to fill the screen |
+| 30 | `BrandDuotone` | footage graded in two brand colours |
+
 Clinical-photo rule still applies: these go on doctor/clinic footage and graphics, never to alter a clinical photo.
 
 ## Rules
