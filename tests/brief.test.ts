@@ -133,3 +133,31 @@ describe("timing", () => {
     for (const b of [demoOffer, demoEducation, demoCase]) expect(durationSeconds(b)).toBeLessThan(30);
   });
 });
+
+describe("map route", () => {
+  const base = () => loadBrief("briefs/examples/map-route.yaml") as Extract<Brief, { type: "map-route" }>;
+  it("example is valid, defaults to the clinic, and fits in a reel", () => {
+    const b = base();
+    expect(errors(b)).toEqual([]);
+    expect(b.destination.label).toBeUndefined(); // template falls back to clinic.name
+    expect(durationSeconds(b)).toBeLessThanOrEqual(90);
+  });
+  it("rejects diagonal steps, repeats and points off the grid", () => {
+    const b = clone(base());
+    b.route = [[1, 1], [3, 4], [3, 4], [40, 4]];
+    const rules = errors(b).map((f) => f.message);
+    expect(rules.some((m) => m.includes("share a col or row"))).toBe(true);
+    expect(rules.some((m) => m.includes("repeats"))).toBe(true);
+    expect(rules.some((m) => m.includes("outside"))).toBe(true);
+  });
+  it("warns when the chip stops saying the map is illustrative", () => {
+    const b = clone(base());
+    b.chip = "Route to the clinic";
+    expect(checkCompliance(b, env).some((f) => f.rule === "map")).toBe(true);
+  });
+  it("still applies the claims list to labels", () => {
+    const b = clone(base());
+    b.streets = [{ at: [2, 2], text: "Best dentist street" }];
+    expect(errors(b).some((f) => f.rule === "claims")).toBe(true);
+  });
+});

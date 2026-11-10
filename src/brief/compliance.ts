@@ -27,6 +27,8 @@ function allText(b: Brief): string[] {
   if (b.type === "anatomy-map")
     t.push(...b.scenes.flatMap((sc) => [sc.title.text, ...sc.regions.flatMap((r) => (r.label ? [r.label.bold, r.label.text ?? ""] : []))]));
   if (b.type === "photo-layout") t.push(...b.annotations.map((a) => a.label), ...b.photos.map((p) => p.label ?? ""), b.caption ?? "");
+  if (b.type === "map-route")
+    t.push(b.chip, b.start?.label ?? "", b.destination.label ?? "", ...b.streets.map((x) => x.text));
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
@@ -104,6 +106,22 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)
       warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
+  }
+
+  if (b.type === "map-route") {
+    const { cols, rows } = b.grid;
+    const off = ([i, j]: [number, number]) => i > cols || j > rows;
+    b.route.forEach((p, k) => {
+      if (off(p)) err("route", `route point ${k + 1} [${p}] is outside the ${cols}×${rows} grid`);
+      if (k > 0) {
+        const q = b.route[k - 1];
+        if (q[0] !== p[0] && q[1] !== p[1]) err("route", `route point ${k + 1} must share a col or row with point ${k} (roads are a grid)`);
+        if (q[0] === p[0] && q[1] === p[1]) err("route", `route point ${k + 1} repeats point ${k}`);
+      }
+    });
+    for (const s of b.streets) if (off(s.at)) err("route", `street label "${s.text}" is outside the grid`);
+    if (!/illustrat|not to scale|demo/i.test(b.chip))
+      warn("map", "the city is drawn, not mapped: keep \"Illustrative map\" (or similar) in the chip");
   }
 
   if (b.type === "anatomy-map") {

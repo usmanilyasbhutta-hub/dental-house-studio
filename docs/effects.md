@@ -108,6 +108,25 @@ and type sit behind them.
 | 29 | `WordStack` | kinetic words stacking to fill the screen |
 | 30 | `BrandDuotone` | footage graded in two brand colours |
 
+### Set 3: 3D reel effects (reference: the /git-city · /teardown · /map-route · /headline reel)
+
+Rebuilt in our own code (three.js + Remotion); nothing copied from the reel. Preview: composition `EffectsGallery3`
+(`npx tsx scripts/stills.ts EffectsGallery3 qc/gallery3 60 290 400` for quick stills).
+
+| # | Effect | Where | Use for |
+|---|---|---|---|
+| 31 | `DataCity` | `src/fx/reel3.tsx` | 3D columns rising from a grid of numbers. **Real data only** (e.g. monthly check-ups); demo data must say so on screen |
+| 32 | `Teardown` | `src/fx/reel3.tsx` | object materialises from particles, then explodes into numbered, labelled parts (implant: crown, abutment screw, abutment, implant). Keeps "Illustration · not to scale" |
+| 33 | `Newspaper` | `src/fx/reel3.tsx` | a front page that writes itself. Use **our own masthead** (e.g. "The Dental House Times"); never imitate a real newspaper or quote a real outlet |
+| 34 | `HalftoneReveal` | `src/fx/Halftone.tsx` | dark screen opens through growing dots. Intro or transition; put it above the scene |
+| 35 | **Map route** | brief `type: map-route` (`src/templates/MapRoute.tsx`, `src/three/city.ts`) | route drawn through a 3D clay city: halftone intro, chase camera, pull-back, pin drop on the clinic, address card from `src/brand.ts` |
+
+**Map route rules.** The city is procedural, so it is an *illustration*, not directions. Keep the chip saying so
+("Illustrative map · not to scale"); validation warns otherwise. Only label streets the owner names. The destination
+defaults to the clinic name, and the address comes from `src/brand.ts`. Route points are grid crossings `[col, row]`.
+Each step must be straight (same col or same row), and row 0 is the far end. `palette: clay` gives the white city and
+blue route of the reference; `palette: brand` gives slate and bronze. Example: `briefs/examples/map-route.yaml`.
+
 Clinical-photo rule still applies: these go on doctor/clinic footage and graphics, never to alter a clinical photo.
 
 ## Rules

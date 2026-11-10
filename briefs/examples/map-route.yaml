@@ -1,0 +1,23 @@
+# Map route (reference: "map-route" reel). The city is DRAWN, not a real map: grid, buildings and river are procedural.
+# Only label streets the owner gives (Commissioner Road is from the clinic address in src/brand.ts).
+id: example-map-route
+type: map-route
+title: "Find Dental House: route animation (demo)"
+demo: true
+palette: clay            # clay = white city + blue route (like the reference); brand = slate + bronze
+seed: 7
+grid: { cols: 14, rows: 20 }
+river: true
+route: [[5, 18], [5, 13], [9, 13], [9, 6], [11, 6]]   # grid intersections [col, row]; row 0 is far away
+start: { label: "You" }
+destination: {}          # defaults to the clinic name
+streets:
+  - { at: [10, 6], text: "Commissioner Road" }
+chip: "Illustrative map · not to scale"
+hook:
+  lines: ["Easy to find", "in Sialkot"]
+  accent: "Sialkot"
+label: "Find us"
+cta: "Call or WhatsApp to book"
+seconds: 7
+fx: { sfx: subtle }

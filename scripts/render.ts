@@ -1,6 +1,6 @@
 // Usage:
 //   npm run render -- briefs/x.yaml                 -> out/<id>.mp4
-//   npm run still  -- briefs/x.yaml --frame 90 [--safe-zones]  -> qc/<id>/still-90.png
+//   npm run still  -- briefs/x.yaml --frame 90[,150,…] [--safe-zones]  -> qc/<id>/still-90.png
 // Refuses to render if the brief fails validation/compliance.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, rmSync } from "node:fs";
@@ -9,7 +9,7 @@ import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { arg, flag, printFindings, validate } from "./lib";
 
-export async function render(path: string, opts: { still?: number; safeZones?: boolean } = {}) {
+export async function render(path: string, opts: { still?: number; stills?: number[]; safeZones?: boolean } = {}) {
   const { brief, findings } = validate(path);
   printFindings(path, findings);
   if (findings.some((f) => f.level === "error")) throw new Error("Brief has compliance errors; fix them before rendering.");
@@ -21,11 +21,15 @@ export async function render(path: string, opts: { still?: number; safeZones?: b
   const chromiumOptions = { gl: "swangle" as const };
   const composition = await selectComposition({ serveUrl, id: "Video", inputProps, browserExecutable, chromiumOptions });
 
-  if (opts.still !== undefined) {
+  const stills = opts.stills ?? (opts.still !== undefined ? [opts.still] : []);
+  if (stills.length) {
     mkdirSync(`qc/${brief.id}`, { recursive: true });
-    const output = `qc/${brief.id}/still-${opts.still}${opts.safeZones ? "-safe" : ""}.png`;
-    await renderStill({ composition, serveUrl, output, frame: opts.still, inputProps, browserExecutable, chromiumOptions });
-    console.log(`still → ${output}`);
+    let output = "";
+    for (const f of stills) {
+      output = `qc/${brief.id}/still-${f}${opts.safeZones ? "-safe" : ""}.png`;
+      await renderStill({ composition, serveUrl, output, frame: f, inputProps, browserExecutable, chromiumOptions });
+      console.log(`still → ${output}`);
+    }
     return output;
   }
 
@@ -61,8 +65,9 @@ function master(raw: string, output: string, hasAudio: boolean) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const file = process.argv.slice(2).find((a) => /\.ya?ml$/.test(a));
   if (!file) throw new Error("Pass a brief file, e.g. npm run render -- briefs/x.yaml");
-  const still = flag("still") ? Number(arg("frame") ?? 45) : undefined;
-  render(file, { still, safeZones: flag("safe-zones") }).catch((e) => {
+  // --frame 90 (one) or --frame 10,60,120 (several stills from one bundle)
+  const stills = flag("still") ? String(arg("frame") ?? 45).split(",").map(Number) : undefined;
+  render(file, { stills, safeZones: flag("safe-zones") }).catch((e) => {
     console.error(e.message ?? e);
     process.exit(1);
   });

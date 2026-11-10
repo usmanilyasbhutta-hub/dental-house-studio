@@ -249,7 +249,36 @@ export const anatomyMapBrief = base.extend({
 });
 export type AnatomyMapBrief = z.infer<typeof anatomyMapBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief]);
+const gridPoint = z.tuple([z.number().int().min(0), z.number().int().min(0)]);
+
+/**
+ * Map route (reference: "map-route" reel): a route drawn through an ILLUSTRATIVE 3D clay city, chase camera,
+ * pull-back to an overview, pin drop at the destination. Not a real map: streets are only labels the brief gives.
+ * Route points are grid intersections [col, row]; consecutive points must share a col or a row (roads are a grid).
+ */
+export const mapRouteBrief = base.extend({
+    type: z.literal("map-route"),
+    /** clay = white city, blue route (as the reference); brand = slate city, bronze route. */
+    palette: z.enum(["clay", "brand"]).default("clay"),
+    seed: z.number().int().min(1).default(7),
+    grid: z.object({ cols: z.number().int().min(6).max(24).default(14), rows: z.number().int().min(8).max(30).default(20) }).default({}),
+    river: z.boolean().default(true),
+    route: z.array(gridPoint).min(2).max(12),
+    start: z.object({ label: line(22) }).optional(),
+    /** Defaults to the clinic name (src/brand.ts). */
+    destination: z.object({ label: line(22).optional() }).default({}),
+    /** Street labels at grid intersections (text only: do not invent real street names; use ones the owner gives). */
+    streets: z.array(z.object({ at: gridPoint, text: line(22) })).max(4).default([]),
+    /** Small chip at the top. Keep it honest: the city is drawn, not mapped. */
+    chip: line(44).default("Illustrative map · not to scale"),
+    /** Print the clinic address (from src/brand.ts) under the headline at the end. */
+    show_address: z.boolean().default(true),
+    /** How long the route takes to draw. */
+    seconds: z.number().min(4).max(14).default(7),
+  });
+export type MapRouteBrief = z.infer<typeof mapRouteBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

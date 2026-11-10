@@ -26,6 +26,7 @@ export function sceneCount(b: Brief): number {
     case "procedure":
     case "photo-layout":
     case "anatomy-map":
+    case "map-route":
       return 1;
   }
 }
@@ -46,6 +47,8 @@ function rawSeconds(b: Brief): number {
     }
     case "anatomy-map":
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
+    case "map-route":
+      return MAP_ROUTE.lead + b.seconds + MAP_ROUTE.hold + scenes.offer.end;
     case "photo-layout":
       return 1.6 + Math.max(b.annotations.length, b.layout === "annotate" ? 0 : b.photos.length) * 1.3 + (b.loupe ? 1.6 : 0) + 2.4 + scenes.offer.end;
     case "procedure":
@@ -65,3 +68,6 @@ export const sec = (s: number, fps: number) => Math.round(s * fps);
 export const MAP_XFADE = 0.8;
 export const mapSceneSeconds = (b: Extract<Brief, { type: "anatomy-map" }>) =>
   b.scenes.map((sc) => 1.4 + sc.regions.length * b.seconds_per_region + 1.4);
+
+/** Map route: the route starts drawing after `lead` (during the halftone reveal) and the overview holds for `hold`. */
+export const MAP_ROUTE = { lead: 0.4, hold: 3.6 } as const;

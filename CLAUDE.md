@@ -61,7 +61,8 @@ The logo bug and HUD label sit in the top band on purpose. They're decorative, n
 Effects library in `src/fx/` (transitions, text/overlay/annotation effects, generated sound effects). Read `docs/effects.md`
 before using one. Briefs choose `fx.transition` and `fx.sfx`, and talking-head callouts can set `fx`.
 Never put sparkle, glow, shine or light leaks on clinical photos. No `Glitch` or `Shake` in education or clinical videos.
-`npm run gallery` renders every effect for review.
+`npm run gallery` renders every effect for review. Set 3 (data city, teardown, front page, halftone) previews in `EffectsGallery3`.
+Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illustrative map" chip; only owner-given street names).
 
 ## Animation, photos and footage
 Use the project skill `dental-animation` (`.claude/skills/dental-animation/SKILL.md`): 3D procedure explainers
