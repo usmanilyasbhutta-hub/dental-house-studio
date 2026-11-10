@@ -11,6 +11,9 @@ export const BANNED = [
   "risk-free", "no risk", "cure", "instant results",
 ];
 
+/** Technical dental phrases that contain a banned word but make no claim (e.g. light-curing composite). */
+export const ALLOWED_PHRASES = ["light cure", "light-cure", "light curing", "light-curing", "curing light", "cured layer"];
+
 const PATIENT_ID = /\bDH-\d{2,}\b/i; // Dental Align patient IDs
 const PHONE = /(\+?92|0)3\d{2}[-\s]?\d{7}/g;
 const CLINIC_PHONE = clinic.phone.replace(/\D/g, "");
@@ -41,7 +44,8 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
   const warn = (rule: string, message: string) => f.push({ level: "warning", rule, message });
 
   for (const text of allText(b)) {
-    const lower = text.toLowerCase();
+    let lower = text.toLowerCase();
+    for (const ok of ALLOWED_PHRASES) lower = lower.split(ok).join(" ");
     for (const w of BANNED) {
       const re = new RegExp(`(^|[^a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z]|$)`, "i");
       if (re.test(lower)) err("claims", `"${w}" is not allowed in medical advertising: "${text}"`);

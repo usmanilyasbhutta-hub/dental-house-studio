@@ -6,6 +6,7 @@ import { video } from "../brand";
 import type { ProcedureBrief } from "../brief/schema";
 import { useTheme } from "../theme";
 import { Abutment, Crown, DentalLights, Implant, JawSection, PreparedTooth, Tooth } from "../three/dental";
+import { CompositeScene } from "../three/CompositeScene";
 import { Sfx } from "../fx/effects";
 import { prog } from "./shared/motion";
 import { KineticHeadline } from "./shared/Headline";
@@ -70,14 +71,20 @@ const Model: React.FC<{ brief: ProcedureBrief; per: number; offset: number }> = 
   return (
     <div style={{ position: "absolute", left: 0, top: STAGE3D.top, width: video.width, height: STAGE3D.height, opacity: enter }}>
       <ThreeCanvas width={video.width} height={STAGE3D.height} camera={{ position: [0, 0.9, 6.4], fov: 32 }} gl={{ antialias: true, alpha: true }}>
-        <Aim y={-0.35} />
-        <DentalLights />
-        <group rotation={[0.08, turn, 0]}>
-          <JawSection />
-          <Tooth position={[-0.95, 0, 0]} />
-          <Tooth position={[0.95, 0, 0]} />
-          {brief.procedure === "implant" ? <ImplantStages after={after} /> : <CrownStages after={after} />}
-        </group>
+        {brief.procedure === "composite" ? (
+          <CompositeScene after={after} frame={raw} stage={stage} pullBack={interpolate(frame, [brief.steps.length * per - 10, brief.steps.length * per + 40], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })} />
+        ) : (
+          <>
+            <Aim y={-0.35} />
+            <DentalLights />
+            <group rotation={[0.08, turn, 0]}>
+              <JawSection />
+              <Tooth position={[-0.95, 0, 0]} />
+              <Tooth position={[0.95, 0, 0]} />
+              {brief.procedure === "implant" ? <ImplantStages after={after} /> : <CrownStages after={after} />}
+            </group>
+          </>
+        )}
       </ThreeCanvas>
     </div>
   );

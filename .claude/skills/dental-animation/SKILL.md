@@ -24,6 +24,8 @@ Pick the tool by the request, then follow CLAUDE.md (brief → validate → stil
 | Animated icon/diagram someone supplies as Lottie | `<LottieClip file="x.json" />` | `src/fx/LottieClip.tsx` (licence must allow commercial use) |
 
 ## Rules for clinical honesty (non-negotiable)
+- **Never infer a diagnosis or treatment stage from a photo.** Ask the dentist what it shows (e.g. "carious, after cavity
+  preparation" was once mislabelled as "fractured"). Labels describe only what the dentist confirmed.
 - 3D procedure videos are **illustrations**: keep the "Illustration · not to scale" label; no claims of outcome, pain or duration beyond what a dentist approved.
 - Photos: contain-fit only; never retouch, warp, sparkle, glow or light-leak a clinical photo. Annotations (lines, labels, loupe) are fine.
 - Patient photos need `clinical: true` and consent (the validator enforces it).

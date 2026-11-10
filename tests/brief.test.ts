@@ -55,6 +55,13 @@ describe("compliance", () => {
     expect(rules.some((m) => m.includes("painless"))).toBe(true);
     expect(rules.some((m) => m.includes("guaranteed"))).toBe(true);
   });
+  it("allows the technical term light cure but still blocks cure claims", () => {
+    const b = clone(demoOffer);
+    b.points = ["Light cure each layer"];
+    expect(errors(b)).toEqual([]);
+    b.points = ["A cure for gum disease"];
+    expect(errors(b)[0].rule).toBe("claims");
+  });
   it("does not flag words that merely contain a banned word", () => {
     const b = clone(demoOffer);
     b.points = ["Secure your appointment"]; // contains "cure"

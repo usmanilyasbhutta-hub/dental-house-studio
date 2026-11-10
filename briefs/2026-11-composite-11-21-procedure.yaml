@@ -1,0 +1,23 @@
+# 3D illustration (three.js): composite restoration of carious 11/21, mesial. Generic products only (owner, Nov 2026).
+# Companion to the anatomy map of the real case (briefs/2026-11-caries-11-21-map.yaml). Dentist checks the wording.
+id: procedure-composite-11-21
+type: procedure
+procedure: composite        # stages: decay → prep → etch → bond → layer → cure → polish
+title: How we restore decayed front teeth
+theme: brand
+fx: { transition: none, sfx: subtle }
+tone: calm
+label: Tooth-coloured fillings
+hook: { lines: ["How we rebuild", "decayed front teeth"], accent: rebuild }
+seconds_per_step: 3
+steps:
+  - { title: "Decay found", subline: "Decay between the two front teeth." }
+  - { title: "Decay removed", subline: "Only the decayed part is removed." }
+  - { title: "Etch", subline: "A gel prepares the surface, then is rinsed." }
+  - { title: "Bond", subline: "A bonding layer helps the filling attach." }
+  - { title: "Layered composite", subline: "Tooth-coloured layers rebuild the shape." }
+  - { title: "Light cure", subline: "A blue light sets each layer." }
+  - { title: "Polish", subline: "Polishing brings back a natural shine." }
+takeaway: "Tooth-coloured fillings, shaped by hand."
+cta: Book a check-up
+music: audio/pad-calm.mp3

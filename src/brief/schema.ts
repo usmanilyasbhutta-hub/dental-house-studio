@@ -163,13 +163,15 @@ export const talkingHeadBrief = base.extend({
 export const PROCEDURE_STAGES = {
   implant: ["gap", "implant", "abutment", "crown"],
   crown: ["damaged", "prepare", "crown"],
+  /** Composite restoration of carious anterior teeth (mesial, 11/21): generic products only. */
+  composite: ["decay", "prep", "etch", "bond", "layer", "cure", "polish"],
 } as const;
 
 /** 3D procedure explainer (illustration): procedural models, one step card per stage. */
 export const procedureBrief = base.extend({
   type: z.literal("procedure"),
-  procedure: z.enum(["implant", "crown"]),
-  steps: z.array(z.object({ title: line(26), subline: line(56) })).min(3).max(4),
+  procedure: z.enum(["implant", "crown", "composite"]),
+  steps: z.array(z.object({ title: line(26), subline: line(56) })).min(3).max(7),
   seconds_per_step: z.number().min(2).max(6).default(3.4),
   takeaway: line(60).optional(),
 });
