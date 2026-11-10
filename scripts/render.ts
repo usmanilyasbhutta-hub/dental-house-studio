@@ -45,19 +45,25 @@ export async function render(path: string, opts: { still?: number; stills?: numb
       if (p !== last) { last = p; process.stdout.write(`${p * 10}% `); }
     },
   });
-  master(raw, output, !!brief.music);
+  // music or speech → loudness-normalise; sound effects only → keep them, peak-limit only (−14 LUFS would blast them)
+  const hasAudio = execFileSync("ffprobe", ["-v", "error", "-select_streams", "a", "-show_entries", "stream=index", "-of", "csv=p=0", raw]).toString().trim() !== "";
+  master(raw, output, !hasAudio ? "none" : brief.music || brief.type === "talking-head" ? "programme" : "sfx");
   console.log(`\nvideo → ${output}`);
   return output;
 }
 
 /**
  * Mastering: H.264 yuv420p, TV range, BT.709 tags (what Instagram/TikTok expect), +faststart.
- * Audio loudness-normalised to -14 LUFS / -1.5 dBTP.
+ * Audio: music/speech loudness-normalised to -14 LUFS / -1.5 dBTP; SFX-only mixes are just peak-limited.
  */
-function master(raw: string, output: string, hasAudio: boolean) {
+function master(raw: string, output: string, audio: "programme" | "sfx" | "none") {
   const v = ["-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p", "-vf", "scale=in_range=full:out_range=tv",
     "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709"];
-  const a = hasAudio ? ["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000", "-c:a", "aac", "-b:a", "192k"] : ["-an"];
+  const enc = ["-ar", "48000", "-c:a", "aac", "-b:a", "192k"];
+  const a =
+    audio === "programme" ? ["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", ...enc]
+    : audio === "sfx" ? ["-af", "alimiter=limit=0.8:level=false", ...enc]
+    : ["-an"];
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", raw, ...v, ...a, "-movflags", "+faststart", output]);
   rmSync(raw);
 }

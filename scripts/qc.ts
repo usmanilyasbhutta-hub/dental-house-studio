@@ -47,7 +47,8 @@ export function qc(briefPath: string): Check[] {
     const summary = r.stderr.slice(r.stderr.lastIndexOf("Summary:"));
     const I = Number(/I:\s+(-?[\d.]+) LUFS/.exec(summary)?.[1]);
     const tp = Number(/Peak:\s+(-?[\d.]+) dBFS/.exec(summary)?.[1]);
-    add("loudness", I >= -16 && I <= -12, `${I} LUFS (target -14 ±2)`);
+    const programme = !!brief.music || brief.type === "talking-head";
+    add("loudness", programme ? I >= -16 && I <= -12 : true, programme ? `${I} LUFS (target -14 ±2)` : `${I} LUFS (sound effects only: no -14 target)`);
     add("true peak", tp <= -0.9, `${tp} dBTP (max -1)`);
   }
 

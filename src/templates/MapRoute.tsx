@@ -49,7 +49,7 @@ function overview(path: Path, drift: number): Cam {
   const az = -0.2 + drift * 0.1;
   const tv = Math.tan(((FOV / 2) * Math.PI) / 180);
   const th = tv * (video.width / video.height);
-  const R = Math.max(hw / (th * 0.86), (hd * Math.sin(el)) / (tv * 0.35)) * (1 - drift * 0.05); // route fills the band above the card
+  const R = Math.max(hw / (th * 0.86), (hd * Math.sin(el)) / (tv * 0.35)) * (1 - drift * 0.09); // route fills the band above the card
   const dir = new THREE.Vector3(Math.sin(az), 0, Math.cos(az));
   const look = c.clone().addScaledVector(dir, (0.2 * R * tv) / Math.sin(el)); // route sits above centre, clear of the card
   const pos = look.clone().add(new THREE.Vector3(Math.sin(az) * R * Math.cos(el), R * Math.sin(el), Math.cos(az) * R * Math.cos(el)));
@@ -59,8 +59,8 @@ function overview(path: Path, drift: number): Cam {
 function chase(path: Path, d: number): Cam {
   const fwd = smoothAt(path, d + 0.5, 0.9).sub(smoothAt(path, d - 0.5, 0.9)).setY(0).normalize();
   const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
-  const pos = smoothAt(path, d - 2.6, 1.3).addScaledVector(right, 0.35).add(new THREE.Vector3(0, 1.95, 0));
-  const look = smoothAt(path, d + 1.5, 1.0);
+  const pos = smoothAt(path, d - 2.4, 1.4).addScaledVector(right, 0.3).add(new THREE.Vector3(0, 2.7, 0));
+  const look = smoothAt(path, d + 0.9, 1.0); // head sits a little below centre, city ahead fills the frame
   return { pos, look };
 }
 

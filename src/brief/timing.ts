@@ -70,4 +70,4 @@ export const mapSceneSeconds = (b: Extract<Brief, { type: "anatomy-map" }>) =>
   b.scenes.map((sc) => 1.4 + sc.regions.length * b.seconds_per_region + 1.4);
 
 /** Map route: the route starts drawing after `lead` (during the halftone reveal) and the overview holds for `hold`. */
-export const MAP_ROUTE = { lead: 0.4, hold: 3.6 } as const;
+export const MAP_ROUTE = { lead: 0.4, hold: 2.8 } as const;
