@@ -6,6 +6,8 @@ export const scenes = {
   education: { hook: 3, step: 3.2, takeaway: 2.8, sources: 2.2, end: 4.5 },
   "talking-head": { end: 4.5 },
   case: { hook: 2.5, before: 2.5, wipe: 3, after: 2.5, notes: 3, disclaimer: 2.2, end: 4.5 },
+  /** Promo reel: hook on frame 1, proof, value, price card, end card (≈19 s, hard cuts). */
+  promo: { hook: 2.5, proof: 5, value: 3, price: 4, end: 4.5 },
 } as const;
 
 /** Time lost to scene overlaps when a transition is used (n scenes → n−1 overlaps). */
@@ -30,6 +32,7 @@ export function sceneCount(b: Brief): number {
     case "blueprint":
     case "receipt":
     case "sketch":
+    case "promo":
       return 1;
   }
 }
@@ -50,6 +53,10 @@ function rawSeconds(b: Brief): number {
     }
     case "anatomy-map":
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
+    case "promo": {
+      const s = scenes.promo;
+      return s.hook + s.proof + s.value + s.price + s.end;
+    }
     case "sketch":
       return SKETCH_INTRO + b.scenes.length * b.seconds_per_scene + scenes.offer.end;
     case "receipt": {

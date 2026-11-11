@@ -14,6 +14,8 @@ export const BANNED = [
 /** Technical dental phrases that contain a banned word but make no claim (e.g. light-curing composite). */
 export const ALLOWED_PHRASES = ["light cure", "light-cure", "light curing", "light-curing", "curing light", "cured layer"];
 
+/** Result/speed promises like "8 shades whiter" or "white in 60 minutes" (owner rule, Nov 2026). */
+const SPEED_CLAIM = /\b\d+\s*(\+\s*)?shades?\b|\b(in|within)\s+\d+\s*(min|mins|minutes|hour|hours|ghante|minute)\b/i;
 const PATIENT_ID = /\bDH-\d{2,}\b/i; // Dental Align patient IDs
 const PHONE = /(\+?92|0)3\d{2}[-\s]?\d{7}/g;
 const CLINIC_PHONE = clinic.phone.replace(/\D/g, "");
@@ -32,6 +34,9 @@ function allText(b: Brief): string[] {
   if (b.type === "blueprint") t.push(b.figure ?? "", ...b.note, b.dimensions?.length ?? "", b.dimensions?.diameter ?? "");
   if (b.type === "map-route")
     t.push(b.chip, b.start?.label ?? "", b.destination.label ?? "", ...b.streets.map((x) => x.text));
+  if (b.type === "promo")
+    t.push(b.kicker ?? "", b.proof.note, b.proof.labels.before, b.proof.labels.after, b.value.title ?? "", ...b.value.points,
+      b.price.label, b.price.service, b.price.now, b.price.was ?? "", b.price.save ?? "");
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
@@ -55,6 +60,7 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       const re = new RegExp(`(^|[^a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z]|$)`, "i");
       if (re.test(lower)) err("claims", `"${w}" is not allowed in medical advertising: "${text}"`);
     }
+    if (SPEED_CLAIM.test(text)) err("claims", `no "X shades / in Y minutes" result claims (owner rule): "${text}"`);
     if (PATIENT_ID.test(text)) err("privacy", `patient ID must never appear on screen: "${text}"`);
     for (const m of text.match(PHONE) ?? []) {
       if (m.replace(/\D/g, "").replace(/^92/, "0") !== CLINIC_PHONE)
@@ -190,6 +196,36 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
         if (!b.consent.scope.includes("social-media")) err("consent", "consent scope does not cover social media");
       }
     }
+  }
+
+  if (b.type === "promo") {
+    const p = b.proof;
+    if (b.price.valid_until < env.today) (b.demo ? warn : err)("offer", `offer expired on ${b.price.valid_until}`);
+    if (!/result|vary|varies/i.test(p.note) || !/assess/i.test(p.note))
+      err("proof", "the note under the photos must say results vary and that treatment is subject to assessment");
+    if (p.pending) {
+      if (!b.demo) err("proof", "photos pending: keep demo: true until the real before/after photos and consent are in");
+      else warn("proof", "placeholder photo boxes: real retractor photos + consent still needed");
+    } else {
+      for (const ph of [p.before, p.after]) if (!env.fileExists(`public/${ph}`)) err("assets", `missing image public/${ph}`);
+      if (!p.before.startsWith(`cases/${p.case_id}/`) || !p.after.startsWith(`cases/${p.case_id}/`))
+        err("privacy", `patient photos must live in public/cases/${p.case_id}/ (gitignored)`);
+      if (!b.demo) {
+        if (!p.consent) err("consent", "patient photos need written consent (proof.consent.file)");
+        else {
+          if (!env.fileExists(p.consent.file)) err("consent", `consent file not found: ${p.consent.file}`);
+          if (p.consent.file.startsWith("public/")) err("consent", "consent forms must never be inside public/");
+          if (!p.consent.scope.includes("social-media") || !p.consent.scope.includes("ads"))
+            err("consent", "a paid/organic ad needs consent scope covering social-media and ads");
+        }
+      }
+    }
+    const num = (x?: string) => (x ? Number(x.replace(/[^\d.]/g, "")) : NaN);
+    const now = num(b.price.now), was = num(b.price.was), pct = num(b.price.save);
+    if (b.price.was && !(was > now)) err("price", "regular price must be higher than the offer price");
+    if (b.price.save && b.price.was && Math.abs((1 - now / was) * 100 - pct) > 0.5)
+      err("price", `"${b.price.save}" does not match ${b.price.was} → ${b.price.now}`);
+    if (/\d/.test(b.price.now) && !b.prices_confirmed_on) (b.demo ? warn : err)("prices", "prices are clinic facts: set prices_confirmed_on");
   }
 
   if (b.type === "procedure") {

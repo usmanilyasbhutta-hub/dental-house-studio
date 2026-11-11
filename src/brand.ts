@@ -31,6 +31,8 @@ export const clinic = {
   ],
   address:
     "Ahsan Medical Centre, Opp. Trauma Centre Allama Iqbal Memorial Hospital, Commissioner Road, Sialkot",
+  /** Short form for tight end cards (owner's wording, Nov 2026). */
+  addressShort: "Ahsan Medical Centre, Commissioner Road, Sialkot",
 } as const;
 
 export const video = {

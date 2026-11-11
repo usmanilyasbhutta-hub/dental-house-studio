@@ -223,3 +223,33 @@ describe("sketch media", () => {
     expect(brief.safeParse({ ...b, style: "oil" }).success).toBe(false);
   });
 });
+
+describe("promo brief", () => {
+  const promo = () => loadBrief("briefs/2026-11-wedding-whitening.yaml");
+  it("the wedding whitening draft is valid (demo until real photos + consent)", () => {
+    const b = promo();
+    expect(b.type).toBe("promo");
+    expect(errors(b)).toEqual([]);
+    expect(durationSeconds(b)).toBeGreaterThanOrEqual(15);
+    expect(durationSeconds(b)).toBeLessThanOrEqual(20);
+  });
+  it("blocks publishing with placeholder photos", () => {
+    const b = clone(promo());
+    b.demo = false;
+    expect(errors(b).map((f) => f.rule)).toContain("proof");
+  });
+  it("flags shade/speed claims and wrong savings maths", () => {
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.value.points = ["8 shades whiter"];
+    b.price.save = "Save 40%";
+    const rules = errors(b).map((f) => f.rule);
+    expect(rules).toContain("claims");
+    expect(rules).toContain("price");
+  });
+  it("needs consent covering ads once real photos are used", () => {
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.demo = false;
+    b.proof.pending = false;
+    expect(errors(b).map((f) => f.rule)).toContain("consent");
+  });
+});

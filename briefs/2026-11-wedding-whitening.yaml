@@ -1,0 +1,46 @@
+# Wedding-season teeth whitening: Instagram Reel ad (owner's spec, 2026-11-11).
+# STATUS: draft. demo: true (watermarked) until the REAL retractor photos + signed consent are in:
+#   1. put the photos in public/cases/whitening-2026-11/before.jpg and after.jpg (gitignored; yellower = before)
+#   2. put the consent form in assets/cases/whitening-2026-11/consent.pdf (scope must include social-media and ads)
+#   3. set proof.pending: false, fill proof.consent, set demo: false
+id: 2026-11-wedding-whitening
+type: promo
+title: Wedding-season teeth whitening offer (Reel ad)
+demo: true
+theme: brand
+season: wedding
+tone: contemporary
+language: roman-ur
+fx: { transition: none, sfx: subtle }
+music: audio/wedding-dholki.mp3        # original, synthesised by scripts/make_wedding_music.py
+label: Wedding season
+kicker: "Wedding season · teeth whitening"
+hook:
+  lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
+  accent: perfect
+proof:
+  case_id: whitening-2026-11
+  before: cases/whitening-2026-11/before.jpg
+  after: cases/whitening-2026-11/after.jpg
+  labels: { before: Pehle, after: Baad mein }
+  note: "Lighting differs. Results vary. Subject to assessment."
+  pending: true
+value:
+  title: Kyun Dental House?
+  points:
+    - Dentist-led
+    - Gum protection
+    - Scaling + polish included
+price:
+  label: Shaadi season offer
+  service: Teeth Whitening
+  now: "PKR 21,000"
+  was: "PKR 30,000"
+  was_label: Regular
+  save: Save 30%
+  valid_until: 2026-12-15
+  valid_label: Valid till
+prices_confirmed_on: 2026-11-11   # given by the owner in chat
+whatsapp_keyword: WHITE
+cta: Assessment slot book karein
+address: short

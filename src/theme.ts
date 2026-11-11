@@ -52,3 +52,21 @@ export const themes: Record<ThemeName, Theme> = {
 
 export const ThemeContext = createContext<Theme>(themes.brand);
 export const useTheme = () => useContext(ThemeContext);
+
+/**
+ * Seasonal accents layered on the brand look (never a third visual family): the slate/bronze base stays.
+ * wedding: maroon (bride) + ivory (groom), owner's request Nov 2026.
+ */
+export type SeasonName = "none" | "wedding";
+export interface Season {
+  primary: string; // panels, price, pills
+  primaryDeep: string;
+  light: string; // light pages (full-colour logo sits here) and type on `primary`
+  lightEdge: string;
+  ink: string; // type on `light`
+  trim: string; // thin borders / accent word
+}
+export const seasons: Record<SeasonName, Season> = {
+  none: { primary: colors.bronze, primaryDeep: colors.bronzeDark, light: colors.white, lightEdge: colors.mist, ink: colors.slate, trim: colors.bronzeLight },
+  wedding: { primary: "#7A1F2E", primaryDeep: "#4F121C", light: "#F5EDE0", lightEdge: "#E6D9C3", ink: colors.slate, trim: colors.bronzeLight },
+};

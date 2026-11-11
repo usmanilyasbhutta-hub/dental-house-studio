@@ -357,7 +357,50 @@ export const sketchBrief = base.extend({
 });
 export type SketchBrief = z.infer<typeof sketchBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief]);
+/**
+ * Promo reel (offer with proof): hook on frame 1 → real before/after (same box, unwarped) with a small honesty note →
+ * up to 3 value points → price card (regular struck through, save badge, valid-till) → light end card with a WhatsApp keyword.
+ * `season` adds a seasonal accent on top of the brand look (wedding = maroon for the bride, ivory for the groom).
+ */
+export const promoBrief = base.extend({
+  type: z.literal("promo"),
+  season: z.enum(["none", "wedding"]).default("none"),
+  /** Small mono line above the hook, e.g. "Wedding season · teeth whitening". */
+  kicker: line(40).optional(),
+  proof: z.object({
+    case_id: z.string().regex(/^[a-z0-9-]+$/),
+    before: publicAsset,
+    after: publicAsset,
+    labels: z.object({ before: line(16), after: line(16) }).default({ before: "Before", after: "After" }),
+    /** Small honesty line under the photos (required: lighting/results/assessment). */
+    note: line(70),
+    /** Photos not received yet: draw labelled placeholders. Only allowed in demo briefs. */
+    pending: z.boolean().default(false),
+    consent: z
+      .object({ file: z.string(), signed_on: isoDate, scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1) })
+      .optional(),
+  }),
+  value: z.object({ title: line(28).optional(), points: z.array(line(30)).min(1).max(3) }),
+  price: z.object({
+    label: line(28),
+    service: line(24),
+    now: line(16),
+    was: line(16).optional(),
+    was_label: line(12).default("Regular"),
+    save: line(12).optional(),
+    valid_until: isoDate,
+    valid_label: line(16).default("Valid till"),
+  }),
+  /** Owner confirmed these prices on this date (prices are clinic facts). */
+  prices_confirmed_on: isoDate.optional(),
+  /** Keyword people send on WhatsApp, e.g. WHITE. */
+  whatsapp_keyword: z.string().regex(/^[A-Z0-9]{2,12}$/).optional(),
+  /** Short address on the end card (must be part of the address in src/brand.ts). */
+  address: z.enum(["full", "short"]).default("short"),
+});
+export type PromoBrief = z.infer<typeof promoBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, promoBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

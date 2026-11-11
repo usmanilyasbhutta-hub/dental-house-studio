@@ -11,12 +11,14 @@ import { SafeZones } from "./SafeZones";
 export type QcProps = { showSafeZones?: boolean };
 
 /** Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays. */
-export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: number; chrome?: "full" | "minimal" | "minimal-light"; children: React.ReactNode } & QcProps> = ({
+export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: number; chrome?: "full" | "minimal" | "minimal-light" | "none"; end?: React.ReactNode; backdrop?: boolean; children: React.ReactNode } & QcProps> = ({
   brief,
   endSeconds,
   showSafeZones,
   musicVolume = 0.9,
   chrome = "full",
+  end,
+  backdrop = true,
   children,
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
@@ -28,12 +30,12 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: n
     <FxContext.Provider value={{ transition: brief.fx.transition, transitionFrames: brief.fx.transition_frames, sfx: brief.fx.sfx }}>
     <AbsoluteFill style={{ color: theme.text }}>
       <Sequence durationInFrames={bodyFrames}>
-        <Backdrop broll={brief.broll[0]} />
+        {backdrop ? <Backdrop broll={brief.broll[0]} /> : null}
         {children}
-        {chrome === "full" ? <Hud label={brief.label} total={bodyFrames} /> : <MinimalBug light={chrome === "minimal-light"} />}
+        {chrome === "full" ? <Hud label={brief.label} total={bodyFrames} /> : chrome === "none" ? null : <MinimalBug light={chrome === "minimal-light"} />}
       </Sequence>
       <Sequence from={bodyFrames}>
-        <EndCard cta={brief.cta} note={brief.disclaimer} />
+        {end ?? <EndCard cta={brief.cta} note={brief.disclaimer} />}
       </Sequence>
       {brief.music ? (
         <Audio

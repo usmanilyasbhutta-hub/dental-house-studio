@@ -39,7 +39,7 @@ export const KineticHeadline: React.FC<{ lines: string[]; accent?: string; width
   );
 };
 
-function renderAccent(line: string, accent: string | undefined, size: number, accentColor: string) {
+export function renderAccent(line: string, accent: string | undefined, size: number, accentColor: string) {
   if (!accent) return line;
   const i = line.toLowerCase().indexOf(accent.toLowerCase());
   if (i < 0) return line;
