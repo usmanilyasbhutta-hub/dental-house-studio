@@ -37,6 +37,8 @@ Every video starts as a YAML brief → validated → rendered with Remotion → 
 - Two themes per brief: `theme: brand` (slate/bronze, default) for promos/offers/cases, `theme: editorial` (cream + deep green) for doctor-led education. Black/mint neon is retired. Tokens live in `src/theme.ts`; templates use `useTheme()`, never raw colours.
 - Instagram **@dentalhousesktt** (two Ts). 0323-7560160 is phone **and** WhatsApp. Both live in `src/brand.ts`.
 - Captions follow whatever is spoken (English, Urdu or mixed): `language: as-spoken`.
+- **The owner is the approving dentist** ("Remember i am the dentist, i use things after approval."). Don't ask for a separate
+  dentist sign-off; when the owner says a video is approved, fill in `review:` with their name and the date.
 
 ## Brand (from the dental-house-brand-reel skill)
 Slate `#333C39`, slateDeep `#1C2220`, bronze `#816951`, bronzeDark `#3D3622`, bronzeLight `#C9AB86`, mist `#C4CACA`, white `#F7F8F6`.

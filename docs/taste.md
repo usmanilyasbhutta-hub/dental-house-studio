@@ -63,6 +63,8 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-11 | approvals | "Remember i am the dentist, i use things after approval." | owner = approving dentist; recorded in CLAUDE.md | (process) |
+| 2026-11-11 | before/after colour | "why gum colours are diffirent, i did not change any setting or light nor any filter." | measured: lips shift as much as gums, so it is the phones' colour processing, not the tissue; photos left uncorrected | (fact) |
 | 2026-11-11 | wedding whitening, before/after | "These are pre and post op pics,crop them identical and use in this video, i tried to keep same light and angle." | own pre/post-op photos replace the Canva versions; aligned on tooth features (scale/rotation/shift only) and cut from the identical box (scripts/align_pair.py) | T16 |
 | 2026-11-11 | wedding whitening storyboard, clinic scene | "In see you here ahsan medical centre is bold, i want focus on Dental house." | "Dental House" is the big bold name; the Ahsan Medical Centre address is small grey type (clinic scene and end card) | T15 |
 | 2026-11-11 | wedding whitening Reel storyboard v2 | "Use english instead. Only hook should be urdu." · "Would you use canva pics?" · "Animation use/motion graphics?" | storyboard v3: English on screen, Roman Urdu hook only; photos from the owner's Canva carousels; motion graphics in every scene | T14 |
