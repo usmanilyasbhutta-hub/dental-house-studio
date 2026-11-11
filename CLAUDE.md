@@ -49,6 +49,15 @@ White logo bug top-left over dark; full-colour logo only on light backgrounds.
 Safe area: keep text out of the top 220 px, bottom 380 px, right 140 px and left 60 px (Instagram/TikTok UI).
 The logo bug and HUD label sit in the top band on purpose. They're decorative, not information.
 
+## Creative judgement (read `docs/taste.md` first)
+- **The owner's word wins** on every creative choice (look, pace, effects, music, wording). Only the golden rules outrank it.
+  You may say once, in one sentence, what a viewer might lose; then do it their way.
+- Before any creative decision, read the taste ledger. For a new video, the `creative-director` agent writes a decision
+  sheet (`docs/decisions/<id>.md`): every choice with its reason and source.
+- **Log every reaction** ("like this", "too fast", picking B, a correction) in `docs/taste.md` without being asked, with the
+  owner's exact words, and say in one line what you recorded. Once → lean; twice or "always/never" → firm; latest word wins.
+- Never present a guess as the owner's preference. If the ledger is silent, say so and ask at most two A/B questions.
+
 ## How to work
 - **Owner is not an editor:** for any new video, offer `/options` (2–3 directions with stills) before committing to one. See `docs/review-process.md`.
 - **New video:** use `/new-video`. Interview the user, then write the brief, preview 3 stills, and wait for approval before the full render.

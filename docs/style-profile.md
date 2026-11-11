@@ -86,6 +86,5 @@ Issues: too long for the content (51 s), low resolution, too quiet (−20 LUFS),
 Drop new videos into `references/inbox/`, then run `python3 scripts/analyze_reference.py references/inbox/*` and ask Claude to update this file.
 Add one note per video: ⭐ my style / ✗ don't like / 📈 performed well (Instagram numbers via Windsor.ai).
 
-## Choices log (filled by `/options`)
-| Date | Video | Picked | Why (owner's words) |
-|---|---|---|---|
+## Choices and feedback
+Moved to `docs/taste.md` (taste ledger): preferences, authority order and the feedback log.
