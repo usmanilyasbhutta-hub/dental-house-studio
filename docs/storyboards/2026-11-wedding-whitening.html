@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* layout: one column of scenes; each scene = phone frames on the left, shot sheet on the right */
+  /* layout: one column of scenes; each scene = phone frame on the left, shot sheet on the right */
   --paper:#FBF7F0; --card:#FFFFFF; --ink:#333C39; --soft:#6B736F; --line:#E2DACB;
   --bronze:#816951; --maroon:#7A1F2E; --ivory:#F1E7D6;
   --display:"Roboto","Helvetica Neue",Arial,sans-serif; --accent:"Instrument Serif",Georgia,serif;
@@ -23,23 +23,20 @@ h2{font-size:30px;line-height:1.1;letter-spacing:-.015em;margin:0;font-weight:90
 h3{font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;margin:0;color:var(--bronze)}
 p{margin:0;max-width:66ch}
 .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--soft)}
-.lede{font-size:18px;color:var(--ink)}
+.lede{font-size:18px}
 .rule{height:1px;background:var(--line);border:0;margin:0}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
 .note{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
 .note b{font-weight:700}
+.note ul{margin:4px 0 0;padding-left:18px}
 .swatches{display:flex;flex-wrap:wrap;gap:10px}
 .sw{display:flex;align-items:center;gap:8px;font-size:13px}
 .sw i{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);display:block}
-
-/* timeline */
 .tl{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
 .tl div{padding:10px 10px 12px;border-right:1px solid var(--line);font-size:12px;min-width:0}
 .tl div:last-child{border-right:0}
 .tl b{display:block;font-size:14px}
 .tl span{color:var(--soft);font-variant-numeric:tabular-nums}
-
-/* scene */
 .scene{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start}
 .frames{display:flex;gap:12px}
 .sheet{display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -47,10 +44,10 @@ p{margin:0;max-width:66ch}
 .time{font-variant-numeric:tabular-nums;font-size:13px;color:var(--soft);letter-spacing:.06em}
 table{border-collapse:collapse;width:100%;font-size:14.5px}
 th,td{text-align:left;vertical-align:top;padding:9px 0;border-top:1px solid var(--line)}
-th{width:92px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);font-weight:700;padding-right:12px;padding-top:12px}
+th{width:96px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);font-weight:700;padding-right:12px;padding-top:12px}
 td ol,td ul{margin:0;padding-left:18px}
 td li{margin:2px 0}
-code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--ivory);padding:1px 5px;border-radius:4px}
+.mg{display:inline-block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;background:var(--ivory);color:var(--bronze);border-radius:4px;padding:1px 6px;margin-right:4px}
 @media (max-width:760px){.scene{grid-template-columns:1fr}.frames{overflow-x:auto;padding-bottom:6px}}
 
 /* phone frame: real 1080x1920 coordinates scaled to 216x384 */
@@ -60,47 +57,49 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--
 .cap{font-size:11px;color:var(--soft);margin-top:6px;text-align:center;letter-spacing:.04em}
 .safe{left:60px;top:220px;width:880px;height:1320px;border:4px dashed rgba(122,31,46,.28)}
 .eb{left:90px;top:250px;font-size:27px;letter-spacing:.2em;text-transform:uppercase;font-weight:500;color:#333C39}
-.logo{left:700px;top:232px;width:240px;height:84px;border:3px solid #333C39;border-radius:10px;font-size:24px;font-weight:900;display:flex;align-items:center;justify-content:center;letter-spacing:.04em}
+.logo{left:700px;top:232px;width:240px;height:84px;border:3px solid #333C39;border-radius:10px;font-size:24px;font-weight:900;display:flex;align-items:center;justify-content:center;letter-spacing:.04em;background:#FBF7F0}
 .hl{left:90px;font-weight:900;letter-spacing:-.025em;line-height:1.0}
 .it{font-family:var(--accent);font-style:italic;font-weight:400;color:#816951;letter-spacing:0}
 .hair{left:90px;height:3px;background:#D9CFBD}
 .foot{left:90px;top:1492px;font-size:22px;letter-spacing:.16em;text-transform:uppercase;color:#6B736F}
-.fabric-m{left:-60px;top:1090px;width:560px;height:900px;border-radius:50% 60% 0 0/30% 40% 0 0;background:repeating-linear-gradient(115deg,#7A1F2E 0 26px,#8B2A39 26px 30px,#6A1826 30px 58px)}
-.fabric-i{left:440px;top:1180px;width:720px;height:800px;border-radius:60% 20% 0 0/35% 20% 0 0;background:repeating-linear-gradient(70deg,#EFE4D0 0 30px,#E3D5BB 30px 34px)}
-.ghost{opacity:.14}
-.tag{font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:#6B736F;left:90px}
-.box{left:90px;width:850px;height:420px;border-radius:10px;background:#EFE9DD;border:3px dashed #B9AE99;display:flex;align-items:center;justify-content:center;font-size:30px;color:#6B736F;text-align:center}
+.fabric{left:-40px;width:1160px;height:900px;object-fit:cover;object-position:50% 30%}
+.wash{left:0;top:0;width:1080px;height:1920px;background:linear-gradient(180deg,#FBF7F0 0%,rgba(251,247,240,.86) 60%,rgba(251,247,240,.7) 100%)}
+.tag{font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:#6B736F;left:90px}
+.box{left:90px;width:850px;height:456px;border-radius:6px;background:#E8DCC6;display:flex;align-items:center;justify-content:center;font-size:30px;color:#6B736F;text-align:center;line-height:1.4}
 .small{left:90px;font-size:27px;color:#333C39;line-height:1.4;width:840px}
+.icon{left:90px;width:96px;height:96px}
 </style>
 </head>
 <body>
 <main>
 
 <header style="display:flex;flex-direction:column;gap:14px">
-  <div class="eyebrow">Dental House Sialkot · Instagram Reel ad · storyboard v2 · 11 Nov 2026</div>
+  <div class="eyebrow">Dental House Sialkot · Instagram Reel ad · storyboard v3 · 11 Nov 2026</div>
   <h1>Wedding whitening Reel, in the <em>carousel</em> look</h1>
-  <p class="lede">19 seconds, 9:16, 1080×1920, 30 fps. Five pages that swipe like your Canva carousel. Nothing is built yet: this is the plan to approve or change.</p>
+  <p class="lede">19.5 seconds, 9:16, 1080×1920, 30 fps. English on screen, with the hook in Roman Urdu. Built from your own Canva carousel photos and animated entirely as motion graphics.</p>
   <div class="tl" aria-label="Timeline">
     <div style="flex:2.5"><b>1 Hook</b><span>0.0–2.5 s</span></div>
     <div style="flex:5"><b>2 Real case</b><span>2.5–7.5 s</span></div>
-    <div style="flex:3.5"><b>3 What you get</b><span>7.5–11.0 s</span></div>
+    <div style="flex:3.5"><b>3 Included</b><span>7.5–11.0 s</span></div>
     <div style="flex:4"><b>4 Price</b><span>11.0–15.0 s</span></div>
-    <div style="flex:4"><b>5 WhatsApp</b><span>15.0–19.0 s</span></div>
+    <div style="flex:1.5"><b>5 Clinic</b><span>15.0–16.5</span></div>
+    <div style="flex:3"><b>6 WhatsApp</b><span>16.5–19.5 s</span></div>
   </div>
 </header>
 
 <section style="display:flex;flex-direction:column;gap:14px">
-  <h3>What changes from the draft you rejected</h3>
+  <h3>Your three questions</h3>
   <div class="grid2">
-    <div class="note"><b>Out</b><span>Dark slate background, the heavy maroon band, all-caps condensed type, the ivory price card floating on dark, viewfinder corners, the pill buttons.</span></div>
-    <div class="note"><b>In, taken from your carousels</b><span>Warm white pages. Big bold sentence-case headlines in slate. Small spaced labels at the top. Thin hairlines. Bronze italic sublines. 01 / 02 / 03 list. Real photos in plain rectangles. Lots of empty space.</span></div>
-    <div class="note"><b>Wedding accent</b><span>The maroon dupatta and ivory sherwani photo from your Assessment Carousel cover opens the Reel, then stays as a faint texture. Maroon appears in only three places: the strike on the old price, the Save 30% tag, the word WHITE.</span></div>
-    <div class="note"><b>Movement idea</b><span>The carousel swipes itself. Each page pushes left like a thumb swipe, and things on a page arrive in reading order. Calm and premium, no glitch, no shake, no sparkle.</span></div>
+    <div class="note"><b>English instead</b><span>Every line is English now. Only the hook stays Roman Urdu: “Shaadi ki photos mein — perfect smile?”</span></div>
+    <div class="note"><b>Canva pictures: yes</b><span>I exported them from your carousels:
+      <ul><li>before and after teeth (V2 Premium, page 1)</li><li>the dupatta and sherwani photo (Assessment Carousel cover)</li><li>the clinic room (V2 Premium, page 5)</li></ul>
+      The teeth photos stay on the computer that renders the video and are left off this page for patient privacy.</span></div>
+    <div class="note"><b>Animation and motion graphics: yes, all of it</b><span>Everything moves in code, frame by frame. Each scene lists its pieces with a <span class="mg">MG</span> tag. The teeth photos themselves are never animated, zoomed or filtered, so the comparison stays honest.</span></div>
   </div>
   <div class="swatches" aria-label="Palette">
     <span class="sw"><i style="background:#FBF7F0"></i>Paper</span>
     <span class="sw"><i style="background:#333C39"></i>Slate type</span>
-    <span class="sw"><i style="background:#816951"></i>Bronze italics</span>
+    <span class="sw"><i style="background:#816951"></i>Bronze italics and line icons</span>
     <span class="sw"><i style="background:#7A1F2E"></i>Maroon, 3 uses</span>
     <span class="sw"><i style="background:#F1E7D6"></i>Ivory</span>
   </div>
@@ -111,58 +110,51 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--
 
 <!-- 1 -->
 <section class="scene">
-  <div class="frames">
-    <div><div class="ph"><div class="c">
-      <div class="fabric-m"></div><div class="fabric-i"></div>
-      <div class="safe"></div>
-      <div class="eb">Brides · Grooms · Families</div><div class="logo">DENTAL HOUSE</div>
-      <div class="hl" style="top:400px;font-size:112px">Shaadi ki<br>photos mein —</div>
-      <div class="hl" style="top:650px;font-size:112px"><span class="it" style="font-size:132px">perfect</span> smile?</div>
-      <div class="hair" style="top:810px;width:330px;background:#816951"></div>
-    </div></div><div class="cap">frame 0 (already readable)</div></div>
-  </div>
+  <div class="frames"><div><div class="ph"><div class="c">
+    <img class="fabric" style="top:1060px" src="data:image/jpeg;base64,FABRIC" alt="Maroon dupatta and ivory sherwani">
+    <div class="safe"></div>
+    <div class="eb">Brides · Grooms · Families</div><div class="logo">DENTAL HOUSE</div>
+    <div class="hl" style="top:400px;font-size:112px">Shaadi ki<br>photos mein —</div>
+    <div class="hl" style="top:650px;font-size:112px"><span class="it" style="font-size:132px">perfect</span> smile?</div>
+    <div class="hair" style="top:810px;width:330px;background:#816951"></div>
+  </div></div><div class="cap">frame 0, already readable</div></div></div>
   <div class="sheet">
     <div class="head"><span class="time">SCENE 1 · 0.0–2.5 s · frames 0–75</span><h2>Hook: <em>perfect</em> smile?</h2></div>
     <table>
-      <tr><th>On screen</th><td>Label: BRIDES · GROOMS · FAMILIES. Full-colour logo top right. Headline: “Shaadi ki photos mein — <i>perfect</i> smile?” with “perfect” in bronze serif italic. Wedding photo (maroon dupatta, ivory sherwani) fills the lower half.</td></tr>
+      <tr><th>On screen</th><td>Label: BRIDES · GROOMS · FAMILIES. Full-colour logo top right. Headline (Roman Urdu): “Shaadi ki photos mein — <i>perfect</i> smile?” The dupatta and sherwani photo from your carousel cover fills the lower part of the screen.</td></tr>
       <tr><th>Motion</th><td><ol>
-        <li>Frame 0: the whole page is already there. Nothing fades in, so the hook reads on the very first frame.</li>
-        <li>0–75: wedding photo slow push-in, 100% to 106%, and drifts up 20 px (parallax against the text).</li>
-        <li>8–16: soft camera flash, white at 35% that fades over 8 frames.</li>
-        <li>18–30: bronze hairline draws left to right under the headline.</li>
-        <li>24–40: “perfect” gets a single underline stroke drawn by hand (bronze).</li>
-        <li>66–75: page swipes left, next page pushes in.</li></ol></td></tr>
-      <tr><th>Effects</th><td>Flash, line draw, Ken Burns on the fabric photo, 10-frame push transition with slight motion blur.</td></tr>
-      <tr><th>Sound</th><td>Camera shutter click on the flash. Music starts on frame 0.</td></tr>
+        <li>Frame 0: the full page is already there, so the hook reads on the first frame.</li>
+        <li>0–75: <span class="mg">MG</span> 2.5D parallax. The photo is split into three depth layers (dupatta, sherwani, wall). The camera drifts up and the layers slide at different speeds, like a slow dolly shot.</li>
+        <li>4–30: <span class="mg">MG</span> a few soft bokeh lights float across the photo (the fabric only, never the teeth).</li>
+        <li>8–16: <span class="mg">MG</span> camera flash, white at 35%, fading over 8 frames.</li>
+        <li>18–40: <span class="mg">MG</span> a bronze line draws under the headline, then a hand-drawn underline is written under “perfect”.</li>
+        <li>66–75: <span class="mg">MG</span> the page swipes left and the next one pushes in.</li></ol></td></tr>
+      <tr><th>Sound</th><td>Camera shutter on the flash. Music starts on frame 0.</td></tr>
     </table>
   </div>
 </section>
 
 <!-- 2 -->
 <section class="scene">
-  <div class="frames">
-    <div><div class="ph"><div class="c">
-      <div class="fabric-m ghost"></div><div class="fabric-i ghost"></div><div class="safe"></div>
-      <div class="eb">DHS whitening · actual case</div>
-      <div class="hl" style="top:310px;font-size:120px">Real care.</div>
-      <div class="tag" style="top:478px">Pehle</div><div class="box" style="top:516px">Before photo<br>(retractor, yellower)</div>
-      <div class="tag" style="top:962px">Baad mein</div><div class="box" style="top:1000px">After photo<br>(same box, uncropped)</div>
-      <div class="small" style="top:1436px;font-size:24px;color:#6B736F">Lighting differs. Results vary. Subject to assessment.</div>
-      <div class="foot">Dental House Sialkot · 02 / 05</div>
-    </div></div><div class="cap">at 5.5 s</div></div>
-  </div>
+  <div class="frames"><div><div class="ph"><div class="c">
+    <div class="safe"></div>
+    <div class="eb">Dental House whitening · actual case</div>
+    <div class="hl" style="top:310px;font-size:120px">Real care.</div>
+    <div class="tag" style="top:472px">Before</div><div class="box" style="top:510px">Before photo from your carousel<br>(kept off this page for privacy)</div>
+    <div class="tag" style="top:996px">After</div><div class="box" style="top:1034px">After photo, same size box</div>
+    <div class="small" style="top:1500px;font-size:24px;color:#6B736F;top:1500px">Lighting differs. Results vary. Subject to assessment.</div>
+  </div></div><div class="cap">at 6 s</div></div></div>
   <div class="sheet">
     <div class="head"><span class="time">SCENE 2 · 2.5–7.5 s · frames 75–225</span><h2>Real case: before, then after</h2></div>
     <table>
-      <tr><th>On screen</th><td>Label: DHS WHITENING · ACTUAL CASE. Headline: “Real care.” Two photos stacked: Pehle, Baad mein. Small text: “Lighting differs. Results vary. Subject to assessment.”</td></tr>
+      <tr><th>On screen</th><td>Label: DENTAL HOUSE WHITENING · ACTUAL CASE. Headline: “Real care.” Before on top, after below, in identical boxes. Small text: “Lighting differs. Results vary. Subject to assessment.”</td></tr>
       <tr><th>Motion</th><td><ol>
-        <li>75–87: headline rises 30 px from behind a mask.</li>
-        <li>84–98: “Pehle” label and before photo fade up together.</li>
-        <li>98–120: hold on before alone (0.7 s) so the eye settles on the yellow shade.</li>
-        <li>120–140: after photo wipes in left to right behind a thin bronze line.</li>
-        <li>140–152: small text fades in.</li>
-        <li>152–216: both photos hold still for 2 seconds. No zoom on the teeth.</li></ol></td></tr>
-      <tr><th>Effects</th><td>Mask rise, wipe reveal. Photos are shown whole, in identical boxes, with no colour correction, sparkle or glow.</td></tr>
+        <li>75–87: <span class="mg">MG</span> headline rises from behind a mask.</li>
+        <li>84–98: before photo and its label fade up.</li>
+        <li>98–120: hold on the before photo alone for 0.7 s.</li>
+        <li>120–145: <span class="mg">MG</span> the after photo wipes in left to right behind a thin bronze line.</li>
+        <li>145–157: small text fades in. Both photos then hold still for 2 seconds.</li></ol></td></tr>
+      <tr><th>Rules</th><td>The photos are shown whole, with no zoom, colour change, sparkle or glow. Note: the carousel versions were already trimmed in Canva. If you have the original files, those are better.</td></tr>
       <tr><th>Sound</th><td>Soft paper swish on the page change, quiet whoosh on the wipe.</td></tr>
     </table>
   </div>
@@ -170,66 +162,61 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--
 
 <!-- 3 -->
 <section class="scene">
-  <div class="frames">
-    <div><div class="ph"><div class="c">
-      <div class="fabric-m ghost"></div><div class="fabric-i ghost"></div><div class="safe"></div>
-      <div class="eb">Kyun Dental House?</div>
-      <div class="hl" style="top:310px;font-size:112px">Kya shamil hai.</div>
-      <div class="tag" style="top:590px">01</div><div class="hl" style="left:170px;top:560px;font-size:84px;letter-spacing:-.01em">DENTIST-LED</div>
-      <div class="it" style="left:172px;top:660px;font-size:44px">Pehle assessment, phir treatment</div>
-      <div class="hair" style="top:760px;width:850px"></div>
-      <div class="tag" style="top:830px">02</div><div class="hl" style="left:170px;top:800px;font-size:84px;letter-spacing:-.01em">GUM PROTECTION</div>
-      <div class="it" style="left:172px;top:900px;font-size:44px">Masooron ki hifazat ke saath</div>
-      <div class="hair" style="top:1000px;width:850px"></div>
-      <div class="tag" style="top:1070px">03</div><div class="hl" style="left:170px;top:1040px;font-size:84px;letter-spacing:-.01em;width:770px">SCALING + POLISH INCLUDED</div>
-      <div class="it" style="left:172px;top:1224px;font-size:44px">Alag charge nahi</div>
-      <div class="foot">Dental House Sialkot · 03 / 05</div>
-    </div></div><div class="cap">at 10 s</div></div>
-  </div>
+  <div class="frames"><div><div class="ph"><div class="c">
+    <div class="safe"></div>
+    <div class="eb">Why Dental House?</div>
+    <div class="hl" style="top:310px;font-size:112px">What's included.</div>
+    <svg class="icon" style="top:560px" viewBox="0 0 48 48" fill="none" stroke="#816951" stroke-width="2.4" stroke-linecap="round"><circle cx="24" cy="15" r="7"/><path d="M10 42c1-9 7-14 14-14s13 5 14 14"/><path d="M30 31v5a3 3 0 0 1-6 0"/></svg>
+    <div class="hl" style="left:220px;top:562px;font-size:76px;letter-spacing:-.01em">Dentist-led</div>
+    <div class="it" style="left:222px;top:650px;font-size:42px">Assessment first, then treatment</div>
+    <div class="hair" style="top:740px;width:850px"></div>
+    <svg class="icon" style="top:790px" viewBox="0 0 48 48" fill="none" stroke="#816951" stroke-width="2.4" stroke-linecap="round"><path d="M24 6l14 5v11c0 9-6 16-14 20C16 38 10 31 10 22V11z"/><path d="M18 24c2 3 4 4 6 4s4-1 6-4"/></svg>
+    <div class="hl" style="left:220px;top:792px;font-size:76px;letter-spacing:-.01em">Gum protection</div>
+    <div class="it" style="left:222px;top:880px;font-size:42px">Your gums are shielded during treatment</div>
+    <div class="hair" style="top:970px;width:850px"></div>
+    <svg class="icon" style="top:1020px" viewBox="0 0 48 48" fill="none" stroke="#816951" stroke-width="2.4" stroke-linecap="round"><path d="M8 40l18-18"/><path d="M26 22l6-6 6 6-6 6z"/><path d="M38 8v6M35 11h6M14 10v4M12 12h4"/></svg>
+    <div class="hl" style="left:220px;top:1022px;font-size:76px;letter-spacing:-.01em;width:720px">Scaling + polish included</div>
+    <div class="it" style="left:222px;top:1196px;font-size:42px">No extra charge</div>
+  </div></div><div class="cap">at 10 s</div></div></div>
   <div class="sheet">
-    <div class="head"><span class="time">SCENE 3 · 7.5–11.0 s · frames 225–330</span><h2>What you get: 01 · 02 · 03</h2></div>
+    <div class="head"><span class="time">SCENE 3 · 7.5–11.0 s · frames 225–330</span><h2>What's included</h2></div>
     <table>
-      <tr><th>On screen</th><td>Label: KYUN DENTAL HOUSE? Headline: “Kya shamil hai.” Then 01 Dentist-led, 02 Gum protection, 03 Scaling + polish included, each with a short bronze italic line from your carousel.</td></tr>
+      <tr><th>On screen</th><td>Label: WHY DENTAL HOUSE? Headline: “What's included.” Three rows, each with a bronze line icon: <b>Dentist-led</b> (Assessment first, then treatment) · <b>Gum protection</b> (Your gums are shielded during treatment) · <b>Scaling + polish included</b> (No extra charge).</td></tr>
       <tr><th>Motion</th><td><ol>
-        <li>225–237: headline rises from a mask.</li>
-        <li>240, 258, 276: rows arrive one at a time, 18 frames apart. Number fades in, title slides 24 px from the left, italic line follows 6 frames later.</li>
-        <li>Each hairline draws across as its row lands.</li>
-        <li>294–320: all three hold for almost a second.</li></ol></td></tr>
-      <tr><th>Effects</th><td>Staggered slide-in, line draws. Nothing else.</td></tr>
-      <tr><th>Sound</th><td>Three soft ticks, one per row, landing on the beat.</td></tr>
+        <li>225–237: <span class="mg">MG</span> headline rises from a mask.</li>
+        <li>240, 258, 276: <span class="mg">MG</span> each icon draws itself stroke by stroke (dentist, gum shield, polishing tool), then the row title slides in 24 px and the italic line follows.</li>
+        <li><span class="mg">MG</span> each hairline draws across as its row lands.</li>
+        <li>294–330: all three hold.</li></ol></td></tr>
+      <tr><th>Sound</th><td>Three soft ticks, one per row, on the beat.</td></tr>
     </table>
   </div>
 </section>
 
 <!-- 4 -->
 <section class="scene">
-  <div class="frames">
-    <div><div class="ph"><div class="c">
-      <div class="fabric-m ghost"></div><div class="fabric-i ghost"></div><div class="safe"></div>
-      <div class="eb">Shaadi season offer</div>
-      <div class="hl" style="top:310px;font-size:112px">Teeth whitening.</div>
-      <div class="small" style="top:560px;font-size:44px;color:#6B736F">Regular <span style="text-decoration:line-through;text-decoration-color:#7A1F2E;text-decoration-thickness:5px">PKR 30,000</span></div>
-      <div class="hl" style="top:680px;font-size:52px;letter-spacing:.06em">PKR</div>
-      <div class="hl" style="top:735px;font-size:268px;letter-spacing:-.04em">21,000</div>
-      <div style="left:90px;top:1060px;background:#7A1F2E;color:#FBF7F0;font-weight:900;font-size:50px;letter-spacing:.04em;padding:14px 30px;border-radius:6px">SAVE 30%</div>
-      <div class="hair" style="top:1200px;width:850px"></div>
-      <div class="small" style="top:1236px;font-size:40px;font-weight:700">Valid till 15 Dec 2026</div>
-      <div class="small" style="top:1306px;font-size:32px;color:#6B736F">Scaling + polish included</div>
-      <div class="foot">Dental House Sialkot · 04 / 05</div>
-    </div></div><div class="cap">at 14 s</div></div>
-  </div>
+  <div class="frames"><div><div class="ph"><div class="c">
+    <div class="safe"></div>
+    <div class="eb">Wedding season offer</div>
+    <div class="hl" style="top:310px;font-size:112px">Teeth whitening.</div>
+    <div class="small" style="top:560px;font-size:44px;color:#6B736F">Regular <span style="text-decoration:line-through;text-decoration-color:#7A1F2E;text-decoration-thickness:5px">PKR 30,000</span></div>
+    <div class="hl" style="top:680px;font-size:52px;letter-spacing:.06em">PKR</div>
+    <div class="hl" style="top:735px;font-size:268px;letter-spacing:-.04em">21,000</div>
+    <div style="left:90px;top:1060px;background:#7A1F2E;color:#FBF7F0;font-weight:900;font-size:50px;letter-spacing:.04em;padding:14px 30px;border-radius:6px">SAVE 30%</div>
+    <div class="hair" style="top:1200px;width:850px"></div>
+    <div class="small" style="top:1236px;font-size:40px;font-weight:700">Valid until 15 Dec 2026</div>
+    <div class="small" style="top:1306px;font-size:32px;color:#6B736F">Scaling + polish included</div>
+  </div></div><div class="cap">at 14 s</div></div></div>
   <div class="sheet">
     <div class="head"><span class="time">SCENE 4 · 11.0–15.0 s · frames 330–450</span><h2>Price: 30,000 rolls down to 21,000</h2></div>
     <table>
-      <tr><th>On screen</th><td>Label: SHAADI SEASON OFFER. “Teeth whitening.” Regular PKR 30,000 struck through. PKR 21,000 very large. Maroon tag: SAVE 30%. “Valid till 15 Dec 2026”.</td></tr>
+      <tr><th>On screen</th><td>Label: WEDDING SEASON OFFER. “Teeth whitening.” Regular PKR 30,000 struck through. PKR 21,000 very large. Maroon tag: SAVE 30%. “Valid until 15 Dec 2026”.</td></tr>
       <tr><th>Motion</th><td><ol>
-        <li>330–342: headline rises. “Regular PKR 30,000” fades in.</li>
-        <li>346–356: the big number first shows 30,000.</li>
-        <li>356–380: digits roll down like a counter and land on 21,000, with a small settle bounce.</li>
-        <li>372–382: maroon line strikes through the regular price.</li>
-        <li>386–396: SAVE 30% tag stamps in (130% to 100%).</li>
-        <li>400–412: hairline draws, validity line fades in. Hold to 441.</li></ol></td></tr>
-      <tr><th>Effects</th><td>Number roll, strike draw, stamp. One slow light sweep across 21,000 at frame 405.</td></tr>
+        <li>330–342: <span class="mg">MG</span> headline rises, “Regular PKR 30,000” fades in.</li>
+        <li>346–380: <span class="mg">MG</span> odometer counter. The big number starts at 30,000 and the digits roll down to 21,000, with a small settle bounce.</li>
+        <li>372–382: <span class="mg">MG</span> maroon line strikes through the regular price.</li>
+        <li>386–396: <span class="mg">MG</span> SAVE 30% stamps in (130% to 100%).</li>
+        <li>405: <span class="mg">MG</span> one slow light sweep across 21,000.</li>
+        <li>400–412: hairline draws, the validity line fades in. Hold to 450.</li></ol></td></tr>
       <tr><th>Sound</th><td>Quick counter ticks during the roll, a soft thud when the tag lands.</td></tr>
     </table>
   </div>
@@ -237,34 +224,55 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--
 
 <!-- 5 -->
 <section class="scene">
-  <div class="frames">
-    <div><div class="ph"><div class="c">
-      <div class="fabric-m ghost"></div><div class="fabric-i ghost"></div><div class="safe"></div>
-      <div class="eb">Wedding season</div><div class="logo">DENTAL HOUSE</div>
-      <div class="small" style="top:380px;font-size:46px;font-weight:700;letter-spacing:.02em">ASSESSMENT SLOT BOOK KAREIN</div>
-      <div class="hl" style="top:480px;font-size:130px">WhatsApp</div>
-      <div class="hl" style="top:620px;font-size:200px;color:#7A1F2E">“WHITE”</div>
-      <div class="hair" style="top:850px;width:560px;height:8px;background:#7A1F2E"></div>
-      <div class="hl" style="top:950px;font-size:120px;letter-spacing:-.01em">0323 7560160</div>
-      <div class="hair" style="top:1110px;width:850px"></div>
-      <div class="small" style="top:1146px;font-size:38px;font-weight:700">Ahsan Medical Centre</div>
-      <div class="small" style="top:1200px;font-size:34px">Commissioner Road, Sialkot</div>
-      <div class="small" style="top:1310px;font-size:24px;color:#6B736F">Subject to assessment. Results vary.</div>
-      <div class="foot">Dental House Sialkot · 05 / 05</div>
-    </div></div><div class="cap">last frame (held 1.5 s)</div></div>
-  </div>
+  <div class="frames"><div><div class="ph"><div class="c">
+    <div class="safe"></div>
+    <div class="eb">Your visit · Dental House Sialkot</div>
+    <div class="hl" style="top:310px;font-size:112px">See you here.</div>
+    <img style="left:90px;top:500px;width:850px;height:637px;object-fit:cover;border-radius:6px" src="data:image/jpeg;base64,CLINIC" alt="Dental House treatment room">
+    <div class="small" style="top:1176px;font-size:40px;font-weight:700">Ahsan Medical Centre</div>
+    <div class="small" style="top:1232px;font-size:34px">Commissioner Road, Sialkot</div>
+  </div></div><div class="cap">at 16 s</div></div></div>
   <div class="sheet">
-    <div class="head"><span class="time">SCENE 5 · 15.0–19.0 s · frames 450–570</span><h2>End card: WhatsApp “WHITE”</h2></div>
+    <div class="head"><span class="time">SCENE 5 · 15.0–16.5 s · frames 450–495</span><h2>Clinic: see you here</h2></div>
     <table>
-      <tr><th>On screen</th><td>Logo top right. “Assessment slot book karein”. WhatsApp “WHITE” in maroon. 0323 7560160. Ahsan Medical Centre, Commissioner Road, Sialkot. Small: “Subject to assessment. Results vary.”</td></tr>
+      <tr><th>On screen</th><td>Label: YOUR VISIT · DENTAL HOUSE SIALKOT. “See you here.” The clinic room photo from your carousel. Ahsan Medical Centre, Commissioner Road, Sialkot.</td></tr>
       <tr><th>Motion</th><td><ol>
-        <li>450–462: first line and “WhatsApp” rise from a mask.</li>
-        <li>462–480: W-H-I-T-E types in letter by letter, 3 frames each, like a message being typed.</li>
-        <li>480–492: maroon underline draws under WHITE.</li>
-        <li>492–506: phone number fades up, then the address.</li>
-        <li>525–570: everything holds still for 1.5 s so people can screenshot. Music rings out.</li></ol></td></tr>
-      <tr><th>Effects</th><td>Typewriter, line draw. No pulsing buttons.</td></tr>
-      <tr><th>Sound</th><td>Five soft key taps, then a WhatsApp-style “sent” pop made in code (not the real app sound).</td></tr>
+        <li>450–460: <span class="mg">MG</span> the photo opens from a thin horizontal slit to full height, like a door opening.</li>
+        <li>450–495: <span class="mg">MG</span> slow push-in on the room, 100% to 105%.</li>
+        <li>458–470: <span class="mg">MG</span> a small bronze map pin drops beside the address.</li></ol></td></tr>
+      <tr><th>Why</th><td>A real room builds trust just before the ask, and the address is repeated on the end card anyway.</td></tr>
+      <tr><th>Sound</th><td>Soft swish.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="scene">
+  <div class="frames"><div><div class="ph"><div class="c">
+    <img class="fabric" style="top:1380px;opacity:.18" src="data:image/jpeg;base64,FABRIC" alt="">
+    <div class="safe"></div>
+    <div class="eb">Wedding season</div><div class="logo">DENTAL HOUSE</div>
+    <div class="small" style="top:380px;font-size:46px;font-weight:700;letter-spacing:.02em">BOOK YOUR ASSESSMENT SLOT</div>
+    <div class="hl" style="top:480px;font-size:130px">WhatsApp</div>
+    <div class="hl" style="top:620px;font-size:200px;color:#7A1F2E">“WHITE”</div>
+    <div class="hair" style="top:850px;width:560px;height:8px;background:#7A1F2E"></div>
+    <div class="hl" style="top:950px;font-size:120px;letter-spacing:-.01em">0323 7560160</div>
+    <div class="hair" style="top:1110px;width:850px"></div>
+    <div class="small" style="top:1146px;font-size:38px;font-weight:700">Ahsan Medical Centre</div>
+    <div class="small" style="top:1200px;font-size:34px">Commissioner Road, Sialkot</div>
+    <div class="small" style="top:1310px;font-size:24px;color:#6B736F">Subject to assessment. Results vary.</div>
+  </div></div><div class="cap">last frame, held 1.5 s</div></div></div>
+  <div class="sheet">
+    <div class="head"><span class="time">SCENE 6 · 16.5–19.5 s · frames 495–585</span><h2>End card: WhatsApp “WHITE”</h2></div>
+    <table>
+      <tr><th>On screen</th><td>Logo top right. “Book your assessment slot”. WhatsApp “WHITE” in maroon. 0323 7560160. Ahsan Medical Centre, Commissioner Road, Sialkot. Small: “Subject to assessment. Results vary.” The fabric photo returns faintly at the bottom.</td></tr>
+      <tr><th>Motion</th><td><ol>
+        <li>495–507: <span class="mg">MG</span> first line and “WhatsApp” rise from a mask.</li>
+        <li>507–525: <span class="mg">MG</span> W-H-I-T-E types in letter by letter with a blinking cursor, like a message being typed.</li>
+        <li>525–537: <span class="mg">MG</span> maroon underline draws under WHITE, and a small chat bubble with “WHITE ✓✓” pops up beside it.</li>
+        <li>537–550: <span class="mg">MG</span> phone number and address fade up.</li>
+        <li>540–585: everything holds still so people can screenshot. Music rings out.</li></ol></td></tr>
+      <tr><th>Sound</th><td>Five soft key taps, then a “sent” pop made in code (not the real WhatsApp sound).</td></tr>
     </table>
   </div>
 </section>
@@ -274,25 +282,17 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--
 <section style="display:flex;flex-direction:column;gap:14px">
   <h3>Sound and type</h3>
   <div class="grid2">
-    <div class="note"><b>Music</b><span>Original, made in code. To suit the lighter look I would swap the dholki groove for something softer: santoor-style plucks over a warm pad with a light tabla pattern, about 92 bpm. Mixed to −14 LUFS.</span></div>
-    <div class="note"><b>Type</b><span>Bold sentence-case sans for headlines, as in Carousel V2, with one bronze serif italic word per page. This replaces the all-caps condensed type the studio normally uses, for this video only unless you say otherwise.</span></div>
+    <div class="note"><b>Music</b><span>Original, made in code. Soft santoor-style plucks over a warm pad with a light tabla pattern, about 92 bpm, so it suits the light look. Mixed to −14 LUFS.</span></div>
+    <div class="note"><b>Type</b><span>Bold sentence-case sans for headlines, as in Carousel V2, with one bronze serif italic word or line per page.</span></div>
   </div>
 </section>
 
 <section style="display:flex;flex-direction:column;gap:14px">
-  <h3>Two choices for you</h3>
+  <h3>Before the final render</h3>
   <div class="grid2">
-    <div class="note"><b>A or B: headline style</b><span>A: bold sans like Carousel V2 Premium (drawn here). B: bold serif like the Assessment Carousel (“Wedding + WHITENING”).</span></div>
-    <div class="note"><b>A or B: music</b><span>A: soft santoor and tabla (planned here). B: keep the livelier dholki from the first draft.</span></div>
-  </div>
-</section>
-
-<section style="display:flex;flex-direction:column;gap:14px">
-  <h3>Still needed before the final render</h3>
-  <div class="grid2">
-    <div class="note"><b>Before and after photos</b><span>The two retractor photos already sit in your Canva carousel. I can't download them from this session, so please send the original files.</span></div>
-    <div class="note"><b>Patient consent</b><span>The signed form, covering social media and ads.</span></div>
-    <div class="note"><b>The wedding photo</b><span>The dupatta and sherwani image from the carousel cover, as a file, and where it came from (your own, Canva stock, or AI-made) so its licence is clear for a paid ad. Without it, scene 1 uses a drawn fabric texture.</span></div>
+    <div class="note"><b>Patient consent</b><span>The signed form for this patient, covering social media and ads.</span></div>
+    <div class="note"><b>Where the wedding photo came from</b><span>Your own photo, Canva stock, or AI-made? A paid ad needs the licence to cover it. If it's AI-made, that's fine for fabric and props.</span></div>
+    <div class="note"><b>Original teeth photos (optional)</b><span>The carousel versions work. The original files would be sharper and uncropped.</span></div>
   </div>
 </section>
 

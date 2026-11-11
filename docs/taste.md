@@ -35,6 +35,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T10 | Likes "wow" 3D/motion pieces as occasional features: map route (most), blueprint, receipt, exploded view, data city, hand-drawn explainer. | lean | "especially map route"; "Blue print animation from this"; "This reciept effect"; "Add this skill also" (hand-drawn) |
 | T11 | Three.js for 3D first; Blender photoreal only if three.js isn't enough. | lean | "Lets see three.js first" |
 | T13 | Offers/promos in the look of the Canva whitening carousels: light warm-white pages, big bold sentence-case slate headlines, small spaced labels, hairlines, bronze italic sublines, real photos, lots of space. | lean | "design like whitening carousel previously made" (Canva: Wedding Whitening Assessment Carousel, Carousel V2 Premium) |
+| T14 | On-screen text in English; Roman Urdu only for the hook. | lean | "Use english instead. Only hook should be urdu." (wedding whitening, 2026-11-11) |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -60,6 +61,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-11 | wedding whitening Reel storyboard v2 | "Use english instead. Only hook should be urdu." · "Would you use canva pics?" · "Animation use/motion graphics?" | storyboard v3: English on screen, Roman Urdu hook only; photos from the owner's Canva carousels; motion graphics in every scene | T14 |
 | 2026-11-11 | wedding whitening Reel, first stills (dark slate, maroon band, caps type) | "Dont like aesthetics, design like whitening carousel previously made, formulate full storyboard with effects,motions etc" | dark draft dropped; storyboard v2 in the Canva carousel look (light pages, bold sentence-case type, labels, hairlines, real photos): docs/storyboards/2026-11-wedding-whitening.html | T13, N06 |
 | 2026-11-11 | wedding whitening ad | "brand slate/bronze + maroon (bride) / ivory (groom) wedding accent; full-colour Dental House logo" · "Roman Urdu on-screen text, burned-in (most watch muted)" · "no claims like 'X shades in Y minutes'" | new `promo` type, `season: wedding` accent; shade/speed-claim check in compliance.ts | (spec for this video; claims rule → compliance) |
 | 2026-11-11 | Claude Drawing + Huashu Art Motion repos | "No outside instructions,just borrow ideas from both and make your own" | own sketch media + docs/style-recipes.md; repos not installed | N05 |
