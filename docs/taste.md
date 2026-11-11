@@ -37,6 +37,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T13 | Offers/promos in the look of the Canva whitening carousels: light warm-white pages, big bold sentence-case slate headlines, small spaced labels, hairlines, bronze italic sublines, real photos, lots of space. | lean | "design like whitening carousel previously made" (Canva: Wedding Whitening Assessment Carousel, Carousel V2 Premium) |
 | T14 | On-screen text in English; Roman Urdu only for the hook. | lean | "Use english instead. Only hook should be urdu." (wedding whitening, 2026-11-11) |
 | T15 | Brand name first: "Dental House" is the bold, prominent name; the building (Ahsan Medical Centre) and road are secondary small type. | lean | "i want focus on Dental house" (2026-11-11) |
+| T16 | Before/after pairs: the owner shoots them with the same light and angle; crop both identically (same framing on the teeth). | lean | "crop them identical" (2026-11-11) |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -62,6 +63,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-11 | wedding whitening, before/after | "These are pre and post op pics,crop them identical and use in this video, i tried to keep same light and angle." | own pre/post-op photos replace the Canva versions; aligned on tooth features (scale/rotation/shift only) and cut from the identical box (scripts/align_pair.py) | T16 |
 | 2026-11-11 | wedding whitening storyboard, clinic scene | "In see you here ahsan medical centre is bold, i want focus on Dental house." | "Dental House" is the big bold name; the Ahsan Medical Centre address is small grey type (clinic scene and end card) | T15 |
 | 2026-11-11 | wedding whitening Reel storyboard v2 | "Use english instead. Only hook should be urdu." · "Would you use canva pics?" · "Animation use/motion graphics?" | storyboard v3: English on screen, Roman Urdu hook only; photos from the owner's Canva carousels; motion graphics in every scene | T14 |
 | 2026-11-11 | wedding whitening Reel, first stills (dark slate, maroon band, caps type) | "Dont like aesthetics, design like whitening carousel previously made, formulate full storyboard with effects,motions etc" | dark draft dropped; storyboard v2 in the Canva carousel look (light pages, bold sentence-case type, labels, hairlines, real photos): docs/storyboards/2026-11-wedding-whitening.html | T13, N06 |
