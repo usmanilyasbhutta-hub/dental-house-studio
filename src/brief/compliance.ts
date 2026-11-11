@@ -27,6 +27,7 @@ function allText(b: Brief): string[] {
   if (b.type === "anatomy-map")
     t.push(...b.scenes.flatMap((sc) => [sc.title.text, ...sc.regions.flatMap((r) => (r.label ? [r.label.bold, r.label.text ?? ""] : []))]));
   if (b.type === "photo-layout") t.push(...b.annotations.map((a) => a.label), ...b.photos.map((p) => p.label ?? ""), b.caption ?? "");
+  if (b.type === "sketch") t.push(b.subheading ?? "", b.footer ?? "", ...b.scenes.flatMap((sc) => [sc.caption.replace(/\*/g, ""), sc.tag?.text ?? ""]));
   if (b.type === "receipt") t.push(...b.items.flatMap((i) => [i.text, i.value]), b.total.label, b.total.value, ...b.footer);
   if (b.type === "blueprint") t.push(b.figure ?? "", ...b.note, b.dimensions?.length ?? "", b.dimensions?.diameter ?? "");
   if (b.type === "map-route")
@@ -108,6 +109,14 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)
       warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
+  }
+
+  if (b.type === "sketch") {
+    b.scenes.forEach((sc, i) => {
+      const stars = (sc.caption.match(/\*/g) ?? []).length;
+      if (stars !== 0 && stars !== 2) err("caption", `scene ${i + 1}: highlight exactly one word with *stars* ("${sc.caption}")`);
+    });
+    if (!b.sources.length && !b.demo) warn("sources", "education captions: add PubMed sources so clinical-reviewer can check each claim");
   }
 
   if (b.type === "receipt") {

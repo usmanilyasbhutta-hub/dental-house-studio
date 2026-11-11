@@ -194,3 +194,22 @@ describe("receipt", () => {
     expect(checkCompliance(b, env).some((f) => f.rule === "prices" && f.level === "warning")).toBe(true);
   });
 });
+
+describe("sketch", () => {
+  const ex = () => clone(loadBrief("briefs/examples/sketch-bleeding-gums.yaml")) as Extract<Brief, { type: "sketch" }>;
+  it("example is valid", () => expect(errors(ex())).toEqual([]));
+  it("needs exactly one *highlighted* word", () => {
+    const b = ex();
+    b.scenes[0].caption = "Bleeding *when* you *brush* is a sign";
+    expect(errors(b).some((f) => f.rule === "caption")).toBe(true);
+  });
+  it("applies the claims list to captions", () => {
+    const b = ex();
+    b.scenes[0].caption = "Our *painless* cleaning";
+    expect(errors(b).some((f) => f.rule === "claims")).toBe(true);
+  });
+  it("rejects unknown doodles", () => {
+    const raw = { ...ex(), scenes: [{ draw: [{ doodle: "unicorn" }], caption: "x" }] };
+    expect(brief.safeParse(raw).success).toBe(false);
+  });
+});

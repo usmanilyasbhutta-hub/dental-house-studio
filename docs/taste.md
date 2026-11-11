@@ -32,7 +32,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T07 | Real footage and the doctors themselves first; graphics support them. Doctor cut-outs over big type. | lean | own reels A–D (style profile §2) |
 | T08 | Heavy condensed caps + one serif-italic accent word; numbered structure (01/02/03). | lean | own reels; kept in every approved video |
 | T09 | Textbook-style annotation on clinical close-ups: thin lines, labels, colour zones. | lean | "Layout like in this vid" (reference I) |
-| T10 | Likes "wow" 3D/motion pieces as occasional features: map route (most), blueprint, receipt, exploded view, data city. | lean | "especially map route"; "Blue print animation from this"; "This reciept effect" |
+| T10 | Likes "wow" 3D/motion pieces as occasional features: map route (most), blueprint, receipt, exploded view, data city, hand-drawn explainer. | lean | "especially map route"; "Blue print animation from this"; "This reciept effect"; "Add this skill also" (hand-drawn) |
 | T11 | Three.js for 3D first; Blender photoreal only if three.js isn't enough. | lean | "Lets see three.js first" |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
@@ -57,6 +57,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-11 | reference: Hand-Drawn Explainer post | "Add this skill also" | built `sketch` type (doodles drawn stroke by stroke) | T10 |
 | 2026-11-10 | references | "This reciept effect" / "Blue print animation from this" / "especially map route" | built `receipt`, `blueprint`, `map-route` types | T10 |
 | 2026-11-10 | caries 11/21 map | "It was not fractured but carious and the pic was after cavity prepration" | relabelled; never-infer-diagnosis rule | T05 |
 | 2026-11-10 | composite 3D | "Generic is better. Lets see three.js first" | generic labels; three.js pipeline | T06, T11 |

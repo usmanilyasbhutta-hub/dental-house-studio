@@ -5,6 +5,9 @@ const files = {
   "oswald-latin-700-normal.woff2": "@fontsource/oswald/files/oswald-latin-700-normal.woff2",
   "instrument-serif-latin-400-italic.woff2": "@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2",
   "jetbrains-mono-latin-500-normal.woff2": "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2",
+  // hand-drawn explainer (type: sketch); both SIL Open Font License
+  "caveat-latin-700-normal.woff2": "@fontsource/caveat/files/caveat-latin-700-normal.woff2",
+  "patrick-hand-latin-400-normal.woff2": "@fontsource/patrick-hand/files/patrick-hand-latin-400-normal.woff2",
 };
 mkdirSync("public/fonts", { recursive: true });
 for (const [out, src] of Object.entries(files)) {

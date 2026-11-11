@@ -5,6 +5,8 @@ const FACES: [family: string, file: string, weight: string, style: string][] = [
   ["Oswald", "oswald-latin-700-normal.woff2", "700", "normal"],
   ["Instrument Serif", "instrument-serif-latin-400-italic.woff2", "400", "italic"],
   ["JetBrains Mono", "jetbrains-mono-latin-500-normal.woff2", "500", "normal"],
+  ["Caveat", "caveat-latin-700-normal.woff2", "700", "normal"],
+  ["Patrick Hand", "patrick-hand-latin-400-normal.woff2", "400", "normal"],
 ];
 
 let started = false;

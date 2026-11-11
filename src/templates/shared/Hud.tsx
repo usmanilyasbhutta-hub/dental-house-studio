@@ -38,11 +38,11 @@ export const DemoWatermark: React.FC = () => (
   </AbsoluteFill>
 );
 
-/** Minimal chrome for photo-led layouts: small logo bug + handle, nothing else. */
-export const MinimalBug: React.FC = () => (
+/** Minimal chrome for photo-led layouts: small logo bug + handle, nothing else. `light`: full-colour logo for light pages. */
+export const MinimalBug: React.FC<{ light?: boolean }> = ({ light }) => (
   <AbsoluteFill style={{ pointerEvents: "none" }}>
-    <AbsoluteFill style={{ height: 240, background: "linear-gradient(180deg, rgba(0,0,0,0.28), transparent)" }} />
-    <Img src={staticFile("brand/logo-white.png")} style={{ position: "absolute", top: 100, left: 64, width: 190, opacity: 0.95 }} />
-    <div style={{ position: "absolute", top: 128, right: 150, ...mono(22, "#F7F8F6"), textTransform: "none", letterSpacing: "0.06em", opacity: 0.9 }}>{clinic.instagram}</div>
+    {light ? null : <AbsoluteFill style={{ height: 240, background: "linear-gradient(180deg, rgba(0,0,0,0.28), transparent)" }} />}
+    <Img src={staticFile(light ? "brand/logo.png" : "brand/logo-white.png")} style={{ position: "absolute", top: 100, left: 64, width: 190, opacity: 0.95 }} />
+    <div style={{ position: "absolute", top: 128, right: 150, ...mono(22, light ? "#333C39" : "#F7F8F6"), textTransform: "none", letterSpacing: "0.06em", opacity: 0.9 }}>{clinic.instagram}</div>
   </AbsoluteFill>
 );

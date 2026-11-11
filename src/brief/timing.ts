@@ -29,6 +29,7 @@ export function sceneCount(b: Brief): number {
     case "map-route":
     case "blueprint":
     case "receipt":
+    case "sketch":
       return 1;
   }
 }
@@ -49,6 +50,8 @@ function rawSeconds(b: Brief): number {
     }
     case "anatomy-map":
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
+    case "sketch":
+      return SKETCH_INTRO + b.scenes.length * b.seconds_per_scene + scenes.offer.end;
     case "receipt": {
       const r = receiptTimes(b);
       return r.end + scenes.offer.end;
@@ -93,3 +96,6 @@ export function receiptTimes(b: Extract<Brief, { type: "receipt" }>) {
   const tear = printStart + print + 0.35;
   return { hook, printStart, print, tear, end: tear + 0.4 + b.hold };
 }
+
+/** Sketch explainer: the handwritten title writes itself first, then one scene per seconds_per_scene. */
+export const SKETCH_INTRO = 1.6;

@@ -11,7 +11,7 @@ import { SafeZones } from "./SafeZones";
 export type QcProps = { showSafeZones?: boolean };
 
 /** Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays. */
-export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: number; chrome?: "full" | "minimal"; children: React.ReactNode } & QcProps> = ({
+export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: number; chrome?: "full" | "minimal" | "minimal-light"; children: React.ReactNode } & QcProps> = ({
   brief,
   endSeconds,
   showSafeZones,
@@ -30,7 +30,7 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: n
       <Sequence durationInFrames={bodyFrames}>
         <Backdrop broll={brief.broll[0]} />
         {children}
-        {chrome === "full" ? <Hud label={brief.label} total={bodyFrames} /> : <MinimalBug />}
+        {chrome === "full" ? <Hud label={brief.label} total={bodyFrames} /> : <MinimalBug light={chrome === "minimal-light"} />}
       </Sequence>
       <Sequence from={bodyFrames}>
         <EndCard cta={brief.cta} note={brief.disclaimer} />

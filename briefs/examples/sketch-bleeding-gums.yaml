@@ -1,0 +1,26 @@
+# Hand-drawn explainer (reference: "Hand-Drawn Explainer" reel). Doodles: see src/fx/doodles.ts / docs/effects.md.
+# Captions are plain, cautious statements; real videos list PubMed sources for each claim.
+id: example-sketch-bleeding-gums
+type: sketch
+theme: editorial
+title: "Bleeding gums, explained by hand (demo)"
+demo: true
+hook:
+  lines: ["Why do gums", "bleed?"]
+  accent: "bleed?"
+subheading: "A 20-second sketch note"
+label: "Gum health"
+scenes:
+  - draw: [{ doodle: gums-bleeding, x: 50, y: 50, size: 560 }]
+    tag: { text: "Ouch", x: 82, y: 18 }
+    caption: "Bleeding when you brush is often a sign of *inflamed* gums."
+  - draw: [{ doodle: toothbrush, x: 36, y: 46, size: 420, rotate: -24 }, { doodle: floss, x: 76, y: 56, size: 300 }]
+    caption: "Gentle brushing twice a day, and *cleaning* between teeth."
+  - draw: [{ doodle: calendar, x: 32, y: 52, size: 380 }, { doodle: tooth-happy, x: 74, y: 54, size: 320 }]
+    tag: { text: "Check-up", x: 34, y: 6 }
+    caption: "If it keeps bleeding, get your gums *checked*."
+seconds_per_scene: 4.6
+footer: "Field notes · bleeding gums"
+sources:
+  - "Chapple ILC et al. Primary prevention of periodontitis: managing gingivitis. J Clin Periodontol 2015;42 Suppl 16:S71-6. PMID 25639826"
+cta: "Book a gum check"

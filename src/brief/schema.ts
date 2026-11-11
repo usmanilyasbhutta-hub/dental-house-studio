@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TRANSITIONS } from "../fx/context";
+import { DOODLES } from "../fx/doodles";
 
 // ---- shared ---------------------------------------------------------------
 const line = (max: number) => z.string().min(1).max(max);
@@ -314,7 +315,46 @@ export const receiptBrief = base.extend({
 });
 export type ReceiptBrief = z.infer<typeof receiptBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief]);
+/**
+ * Hand-drawn explainer (reference: "Hand-Drawn Explainer" reel): doodles draw themselves stroke by stroke on paper,
+ * colour fills in, a handwritten caption highlights one *word*. The title is the hook (handwritten, underlined).
+ */
+export const sketchBrief = base.extend({
+  type: z.literal("sketch"),
+  subheading: line(60).optional(),
+  scenes: z
+    .array(
+      z.object({
+        /** 1–3 doodles; x/y = centre in % of the drawing area, size in px, rotate in degrees. */
+        draw: z
+          .array(
+            z.object({
+              doodle: z.enum(DOODLES as [string, ...string[]]),
+              x: pct.default(50),
+              y: pct.default(50),
+              size: z.number().min(120).max(700).default(420),
+              rotate: z.number().min(-180).max(180).default(0),
+            }),
+          )
+          .min(1)
+          .max(3),
+        /** Small handwritten sign on the drawing (like "LATER"). */
+        tag: z.object({ text: line(16), x: pct, y: pct }).optional(),
+        /** Caption; wrap ONE word in *stars* to highlight it. */
+        caption: line(90),
+      }),
+    )
+    .min(1)
+    .max(6),
+  seconds_per_scene: z.number().min(3).max(7).default(4.5),
+  /** Small label bottom-left, e.g. "Field notes · bleeding gums". */
+  footer: line(40).optional(),
+  /** Education claims need sources (PubMed). */
+  sources: z.array(z.string()).default([]),
+});
+export type SketchBrief = z.infer<typeof sketchBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

@@ -125,6 +125,13 @@ Rebuilt in our own code (three.js + Remotion); nothing copied from the reel. Pre
 
 | 37 | **Receipt** | brief `type: receipt` (`src/templates/Receipt.tsx`) | printer drops in, receipt prints line by line (stutter feed, printer sound), tears off, camera pushes in on the total, underline draws. Generated SFX `printer`, `tear` |
 
+| 38 | **Hand-drawn explainer** | brief `type: sketch` (`src/templates/Sketch.tsx`, doodles in `src/fx/doodles.ts`) | paper page, handwritten title (Caveat) with underline, doodles drawn stroke by stroke by a pencil, marker fills, a handwritten sign, caption with one *highlighted* word (Patrick Hand), footer notes |
+
+**Sketch rules.** Doodles: `tooth-happy`, `tooth-sad`, `toothbrush`, `floss`, `gums-bleeding`, `calendar`, `water`, `candy`,
+`clock`, `clinic`, `check`, `cross`, `arrow`, `heart`. Place 1–3 per scene (`x`/`y` in % of the drawing area, `size` ≈ width
+in px, `rotate`). Captions are education claims, so list sources. Mark exactly one word with `*stars*`. Fills use the
+theme's palette by hue name. New doodle: add strokes and fills to `doodles.ts`. Example: `briefs/examples/sketch-bleeding-gums.yaml`.
+
 **Receipt rules.** Prices are clinic facts. Only use the owner's real, current prices and set `prices_confirmed_on`.
 A non-demo brief with numbers and no date fails validation, and dates older than 90 days warn. Otherwise use
 non-price values ("Included", "Rs X,XXX" placeholders). The clinic name and phone at the bottom come from `src/brand.ts`.
