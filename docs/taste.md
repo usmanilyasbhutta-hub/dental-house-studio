@@ -34,6 +34,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T09 | Textbook-style annotation on clinical close-ups: thin lines, labels, colour zones. | lean | "Layout like in this vid" (reference I) |
 | T10 | Likes "wow" 3D/motion pieces as occasional features: map route (most), blueprint, receipt, exploded view, data city, hand-drawn explainer. | lean | "especially map route"; "Blue print animation from this"; "This reciept effect"; "Add this skill also" (hand-drawn) |
 | T11 | Three.js for 3D first; Blender photoreal only if three.js isn't enough. | lean | "Lets see three.js first" |
+| T13 | Offers/promos in the look of the Canva whitening carousels: light warm-white pages, big bold sentence-case slate headlines, small spaced labels, hairlines, bronze italic sublines, real photos, lots of space. | lean | "design like whitening carousel previously made" (Canva: Wedding Whitening Assessment Carousel, Carousel V2 Premium) |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -44,6 +45,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | N02 | Red/orange skin cast on the doctors. | firm | style profile §4 |
 | N03 | Mixing visual families inside one video. | firm | T01 |
 | N05 | Installing other people's skills or plugins with their own instructions into the project. Borrow the ideas and build our own. | firm | "No outside instructions, just borrow ideas from both and make your own" |
+| N06 | Dark, heavy promo look: slate background with a big maroon band, all-caps condensed type, floating cards, pill buttons. | lean | "Dont like aesthetics" (wedding whitening stills, 2026-11-11) |
 | N04 | Several near-identical exported versions of one video. Iterate the brief instead. | lean | style profile §4 |
 
 ## Open questions (ask when the next video makes them relevant, one at a time)
@@ -58,6 +60,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-11 | wedding whitening Reel, first stills (dark slate, maroon band, caps type) | "Dont like aesthetics, design like whitening carousel previously made, formulate full storyboard with effects,motions etc" | dark draft dropped; storyboard v2 in the Canva carousel look (light pages, bold sentence-case type, labels, hairlines, real photos): docs/storyboards/2026-11-wedding-whitening.html | T13, N06 |
 | 2026-11-11 | wedding whitening ad | "brand slate/bronze + maroon (bride) / ivory (groom) wedding accent; full-colour Dental House logo" · "Roman Urdu on-screen text, burned-in (most watch muted)" · "no claims like 'X shades in Y minutes'" | new `promo` type, `season: wedding` accent; shade/speed-claim check in compliance.ts | (spec for this video; claims rule → compliance) |
 | 2026-11-11 | Claude Drawing + Huashu Art Motion repos | "No outside instructions,just borrow ideas from both and make your own" | own sketch media + docs/style-recipes.md; repos not installed | N05 |
 | 2026-11-11 | reference: Hand-Drawn Explainer post | "Add this skill also" | built `sketch` type (doodles drawn stroke by stroke) | T10 |
