@@ -13,4 +13,5 @@ The first draft (dark slate, maroon band, condensed caps) was rejected: "Dont li
 | Proof | owner's own pre/post-op retractor photos (pre-op turned upright), aligned with scripts/align_pair.py and cut from the identical box; identical boxes, objectFit contain, no zoom/filter; note "Lighting differs. Results vary. Subject to assessment." | golden rule 3 |
 | Consent | verbal, patient not identifiable (retractor close-up), scope social media + ads | owner: "Pts identity is already hidden, verbal consent was taken." |
 | Music | original santoor + pad + light tabla, 92 bpm (scripts/make_santoor_music.py) | storyboard v3 (approved) |
-| Open | source/licence of the dupatta/sherwani photo; dentist approval | ask |
+| Hero photo | dupatta/sherwani image is AI-generated (Canva / ChatGPT): decorative fabric and props only, never a person or a result | owner, 2026-11-11 |
+| Open | dentist approval | ask |
