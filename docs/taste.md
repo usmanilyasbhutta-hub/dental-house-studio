@@ -43,6 +43,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | N01 | Captions or CTA in the bottom 20 % of the frame; cut-off watermarks. | firm | found in own reels C/D (style profile §4) |
 | N02 | Red/orange skin cast on the doctors. | firm | style profile §4 |
 | N03 | Mixing visual families inside one video. | firm | T01 |
+| N05 | Installing other people's skills or plugins with their own instructions into the project. Borrow the ideas and build our own. | firm | "No outside instructions, just borrow ideas from both and make your own" |
 | N04 | Several near-identical exported versions of one video. Iterate the brief instead. | lean | style profile §4 |
 
 ## Open questions (ask when the next video makes them relevant, one at a time)
@@ -57,6 +58,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-11 | Claude Drawing + Huashu Art Motion repos | "No outside instructions,just borrow ideas from both and make your own" | own sketch media + docs/style-recipes.md; repos not installed | N05 |
 | 2026-11-11 | reference: Hand-Drawn Explainer post | "Add this skill also" | built `sketch` type (doodles drawn stroke by stroke) | T10 |
 | 2026-11-10 | references | "This reciept effect" / "Blue print animation from this" / "especially map route" | built `receipt`, `blueprint`, `map-route` types | T10 |
 | 2026-11-10 | caries 11/21 map | "It was not fractured but carious and the pic was after cavity prepration" | relabelled; never-infer-diagnosis rule | T05 |

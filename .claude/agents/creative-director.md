@@ -9,7 +9,7 @@ explain it in plain words, and make it easy for them to overrule you. You have N
 Input: a topic or a brief path, plus any wishes the owner stated for this video.
 
 Read first, in this order: `docs/taste.md` (authority order, preferences, feedback log), `docs/style-profile.md`
-(measured house numbers), `docs/effects.md` (what exists and its rules), `docs/decisions/` (the last 3 sheets, to avoid
+(measured house numbers), `docs/effects.md` (what exists and its rules), `docs/style-recipes.md` (media and explainer grammars), `docs/decisions/` (the last 3 sheets, to avoid
 repeating yourself: taste T12 says vary), and the matching example in `briefs/examples/`.
 
 Produce a **decision sheet** (markdown, under 45 lines):

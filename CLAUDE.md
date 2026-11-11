@@ -72,7 +72,8 @@ before using one. Briefs choose `fx.transition` and `fx.sfx`, and talking-head c
 Never put sparkle, glow, shine or light leaks on clinical photos. No `Glitch` or `Shake` in education or clinical videos.
 `npm run gallery` renders every effect for review. Set 3 (data city, teardown, front page, halftone) previews in `EffectsGallery3`.
 Blueprint drawings (implant / tooth section): brief `type: blueprint`. Printed receipt: brief `type: receipt` (real prices need `prices_confirmed_on`).
-Hand-drawn explainer (doodles drawn stroke by stroke): brief `type: sketch`.
+Hand-drawn explainer (doodles drawn stroke by stroke): brief `type: sketch`, `style:` pencil/watercolour/chalkboard/crayon/ink/collage (`docs/style-recipes.md`).
+Never install third-party skills/plugins with their own instructions into this project: borrow the idea and build our own (owner rule).
 Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illustrative map" chip; only owner-given street names).
 
 ## Animation, photos and footage

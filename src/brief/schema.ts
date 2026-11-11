@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TRANSITIONS } from "../fx/context";
 import { DOODLES } from "../fx/doodles";
+import { MEDIA } from "../fx/media";
 
 // ---- shared ---------------------------------------------------------------
 const line = (max: number) => z.string().min(1).max(max);
@@ -321,6 +322,8 @@ export type ReceiptBrief = z.infer<typeof receiptBrief>;
  */
 export const sketchBrief = base.extend({
   type: z.literal("sketch"),
+  /** Drawing medium (docs/style-recipes.md): pencil, watercolour, chalkboard, crayon, ink, collage. */
+  style: z.enum(MEDIA).default("pencil"),
   subheading: line(60).optional(),
   scenes: z
     .array(

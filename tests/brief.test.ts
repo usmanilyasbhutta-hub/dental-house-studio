@@ -213,3 +213,13 @@ describe("sketch", () => {
     expect(brief.safeParse(raw).success).toBe(false);
   });
 });
+
+describe("sketch media", () => {
+  it("accepts every medium and defaults to pencil", async () => {
+    const { MEDIA } = await import("../src/fx/media");
+    const b = clone(loadBrief("briefs/examples/sketch-bleeding-gums.yaml")) as Extract<Brief, { type: "sketch" }>;
+    expect(b.style).toBe("pencil");
+    for (const style of MEDIA) expect(brief.safeParse({ ...b, style }).success).toBe(true);
+    expect(brief.safeParse({ ...b, style: "oil" }).success).toBe(false);
+  });
+});

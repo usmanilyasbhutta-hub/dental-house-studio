@@ -127,7 +127,8 @@ Rebuilt in our own code (three.js + Remotion); nothing copied from the reel. Pre
 
 | 38 | **Hand-drawn explainer** | brief `type: sketch` (`src/templates/Sketch.tsx`, doodles in `src/fx/doodles.ts`) | paper page, handwritten title (Caveat) with underline, doodles drawn stroke by stroke by a pencil, marker fills, a handwritten sign, caption with one *highlighted* word (Patrick Hand), footer notes |
 
-**Sketch rules.** Doodles: `tooth-happy`, `tooth-sad`, `toothbrush`, `floss`, `gums-bleeding`, `calendar`, `water`, `candy`,
+**Sketch rules.** `style:` pencil (default), watercolour, chalkboard, crayon, ink or collage (recipes and when to use them:
+`docs/style-recipes.md`). Doodles: `tooth-happy`, `tooth-sad`, `toothbrush`, `floss`, `gums-bleeding`, `calendar`, `water`, `candy`,
 `clock`, `clinic`, `check`, `cross`, `arrow`, `heart`. Place 1–3 per scene (`x`/`y` in % of the drawing area, `size` ≈ width
 in px, `rotate`). Captions are education claims, so list sources. Mark exactly one word with `*stars*`. Fills use the
 theme's palette by hue name. New doodle: add strokes and fills to `doodles.ts`. Example: `briefs/examples/sketch-bleeding-gums.yaml`.
