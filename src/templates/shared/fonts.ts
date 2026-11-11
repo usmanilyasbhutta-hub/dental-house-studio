@@ -7,6 +7,7 @@ const FACES: [family: string, file: string, weight: string, style: string][] = [
   ["JetBrains Mono", "jetbrains-mono-latin-500-normal.woff2", "500", "normal"],
   ["Caveat", "caveat-latin-700-normal.woff2", "700", "normal"],
   ["Patrick Hand", "patrick-hand-latin-400-normal.woff2", "400", "normal"],
+  ...(["400", "500", "700", "900"] as const).map((w): [string, string, string, string] => ["Roboto", `roboto-latin-${w}-normal.woff2`, w, "normal"]),
 ];
 
 let started = false;

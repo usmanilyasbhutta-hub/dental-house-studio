@@ -358,16 +358,23 @@ export const sketchBrief = base.extend({
 export type SketchBrief = z.infer<typeof sketchBrief>;
 
 /**
- * Promo reel (offer with proof): hook on frame 1 → real before/after (same box, unwarped) with a small honesty note →
- * up to 3 value points → price card (regular struck through, save badge, valid-till) → light end card with a WhatsApp keyword.
- * `season` adds a seasonal accent on top of the brand look (wedding = maroon for the bride, ivory for the groom).
+ * Promo reel in the "carousel" look (owner, Nov 2026: "design like whitening carousel previously made"): light paper pages that
+ * swipe like an Instagram carousel. Hook (readable on frame 0, optional hero photo) → real before/after in identical boxes →
+ * what's included (line icons) → price (odometer roll, strike, save stamp) → optional clinic photo → WhatsApp keyword end card.
+ * `season: wedding` adds the maroon accent (3 uses only: strike, save tag, keyword).
  */
+const eyebrow = line(44);
+export const PROMO_ICONS = ["dentist", "shield", "polish", "tooth", "calendar"] as const;
 export const promoBrief = base.extend({
   type: z.literal("promo"),
   season: z.enum(["none", "wedding"]).default("none"),
-  /** Small mono line above the hook, e.g. "Wedding season · teeth whitening". */
-  kicker: line(40).optional(),
+  /** Small spaced label above the hook, e.g. "Brides · Grooms · Families". */
+  kicker: eyebrow.optional(),
+  /** Decorative photo under the hook (fabric, props: never a patient, never a "result"). Returns faintly on the end card. */
+  hero: z.object({ src: publicAsset, source: z.string().min(3) }).optional(),
   proof: z.object({
+    eyebrow: eyebrow.default("Actual case"),
+    title: line(24).default("Real care."),
     case_id: z.string().regex(/^[a-z0-9-]+$/),
     before: publicAsset,
     after: publicAsset,
@@ -377,22 +384,40 @@ export const promoBrief = base.extend({
     /** Photos not received yet: draw labelled placeholders. Only allowed in demo briefs. */
     pending: z.boolean().default(false),
     consent: z
-      .object({ file: z.string(), signed_on: isoDate, scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1) })
+      .object({
+        /** written = signed form in assets/cases/<id>/; verbal = recorded here (who took it, when). */
+        method: z.enum(["written", "verbal"]).default("written"),
+        file: z.string().optional(),
+        taken_on: isoDate,
+        taken_by: z.string().min(2),
+        scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1),
+        /** Face/name hidden in the photos (retractor close-up). */
+        identity_hidden: z.boolean().default(false),
+      })
       .optional(),
   }),
-  value: z.object({ title: line(28).optional(), points: z.array(line(30)).min(1).max(3) }),
+  value: z.object({
+    eyebrow: eyebrow.optional(),
+    title: line(24),
+    points: z.array(z.object({ title: line(30), sub: line(44).optional(), icon: z.enum(PROMO_ICONS).optional() })).min(1).max(3),
+  }),
   price: z.object({
-    label: line(28),
+    eyebrow: eyebrow,
     service: line(24),
     now: line(16),
     was: line(16).optional(),
     was_label: line(12).default("Regular"),
     save: line(12).optional(),
     valid_until: isoDate,
-    valid_label: line(16).default("Valid till"),
+    valid_label: line(16).default("Valid until"),
+    /** One small line under the validity, e.g. "Scaling + polish included". */
+    extra: line(40).optional(),
   }),
   /** Owner confirmed these prices on this date (prices are clinic facts). */
   prices_confirmed_on: isoDate.optional(),
+  /** Optional clinic photo beat before the end card (the clinic's own room, never stock). */
+  visit: z.object({ photo: publicAsset, eyebrow: eyebrow.default("Your visit"), title: line(24).default("See you here.") }).optional(),
+  end: z.object({ eyebrow: eyebrow.optional(), disclaimer: line(70).optional() }).default({}),
   /** Keyword people send on WhatsApp, e.g. WHITE. */
   whatsapp_keyword: z.string().regex(/^[A-Z0-9]{2,12}$/).optional(),
   /** Short address on the end card (must be part of the address in src/brand.ts). */

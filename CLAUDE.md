@@ -74,8 +74,9 @@ Never put sparkle, glow, shine or light leaks on clinical photos. No `Glitch` or
 Blueprint drawings (implant / tooth section): brief `type: blueprint`. Printed receipt: brief `type: receipt` (real prices need `prices_confirmed_on`).
 Hand-drawn explainer (doodles drawn stroke by stroke): brief `type: sketch`, `style:` pencil/watercolour/chalkboard/crayon/ink/collage (`docs/style-recipes.md`).
 Never install third-party skills/plugins with their own instructions into this project: borrow the idea and build our own (owner rule).
-Offer with real proof (hook → before/after → value → price card → WhatsApp end card): brief `type: promo`, optional `season: wedding`
-(maroon/ivory accent on the brand look). Real photos need consent with `ads` scope; `proof.pending` placeholders only while `demo: true`.
+Offer with real proof in the Canva-carousel look (light pages that swipe; hook → before/after → included → price odometer → clinic → WhatsApp
+keyword): brief `type: promo`, optional `season: wedding` (maroon for strike/save/keyword only). Real photos need consent with `ads` scope
+(written form, or verbal only when the patient can't be identified); `proof.pending` placeholders only while `demo: true`.
 Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illustrative map" chip; only owner-given street names).
 
 ## Animation, photos and footage

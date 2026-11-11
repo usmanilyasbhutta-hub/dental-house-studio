@@ -234,13 +234,18 @@ describe("promo brief", () => {
     expect(durationSeconds(b)).toBeLessThanOrEqual(20);
   });
   it("blocks publishing with placeholder photos", () => {
-    const b = clone(promo());
-    b.demo = false;
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.proof.pending = true;
     expect(errors(b).map((f) => f.rule)).toContain("proof");
+  });
+  it("accepts verbal consent only when the patient cannot be identified", () => {
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.proof.consent!.identity_hidden = false;
+    expect(errors(b).map((f) => f.rule)).toContain("consent");
   });
   it("flags shade/speed claims and wrong savings maths", () => {
     const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
-    b.value.points = ["8 shades whiter"];
+    b.value.points = [{ title: "8 shades whiter" }];
     b.price.save = "Save 40%";
     const rules = errors(b).map((f) => f.rule);
     expect(rules).toContain("claims");
@@ -248,8 +253,7 @@ describe("promo brief", () => {
   });
   it("needs consent covering ads once real photos are used", () => {
     const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
-    b.demo = false;
-    b.proof.pending = false;
+    b.proof.consent = undefined;
     expect(errors(b).map((f) => f.rule)).toContain("consent");
   });
 });

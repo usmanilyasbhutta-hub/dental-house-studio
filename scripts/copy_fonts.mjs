@@ -8,6 +8,8 @@ const files = {
   // hand-drawn explainer (type: sketch); both SIL Open Font License
   "caveat-latin-700-normal.woff2": "@fontsource/caveat/files/caveat-latin-700-normal.woff2",
   "patrick-hand-latin-400-normal.woff2": "@fontsource/patrick-hand/files/patrick-hand-latin-400-normal.woff2",
+  // carousel look (type: promo, look: carousel); Apache License 2.0
+  ...Object.fromEntries([400, 500, 700, 900].map((w) => [`roboto-latin-${w}-normal.woff2`, `@fontsource/roboto/files/roboto-latin-${w}-normal.woff2`])),
 };
 mkdirSync("public/fonts", { recursive: true });
 for (const [out, src] of Object.entries(files)) {

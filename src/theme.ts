@@ -70,3 +70,17 @@ export const seasons: Record<SeasonName, Season> = {
   none: { primary: colors.bronze, primaryDeep: colors.bronzeDark, light: colors.white, lightEdge: colors.mist, ink: colors.slate, trim: colors.bronzeLight },
   wedding: { primary: "#7A1F2E", primaryDeep: "#4F121C", light: "#F5EDE0", lightEdge: "#E6D9C3", ink: colors.slate, trim: colors.bronzeLight },
 };
+
+/**
+ * "Carousel" look (owner, Nov 2026: "design like whitening carousel previously made"): light paper pages, slate type,
+ * bronze italics and line icons, hairlines; the seasonal accent (maroon) only for strike, save tag and keyword.
+ */
+export const carousel = {
+  paper: "#FBF7F0",
+  ink: colors.slate,
+  soft: "#6B736F",
+  line: "#D9CFBD",
+  bronze: colors.bronze,
+  photoBg: "#E8DCC6",
+  headline: "Roboto",
+} as const;
