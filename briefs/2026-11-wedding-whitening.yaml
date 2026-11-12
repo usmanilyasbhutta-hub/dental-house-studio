@@ -9,8 +9,8 @@ theme: brand
 season: wedding
 tone: contemporary
 language: en
-fx: { transition: none, sfx: subtle }
-music: audio/wedding-santoor.mp3        # original, synthesised by scripts/make_santoor_music.py
+fx: { transition: none, sfx: none }      # owner: "No operation theater sound."
+music: audio/wedding-celebration.mp3    # original, synthesised by scripts/make_celebration_music.py
 label: Wedding season
 kicker: "Brides · Grooms · Families"
 hook:

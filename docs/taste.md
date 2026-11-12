@@ -39,6 +39,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T15 | Brand name first: "Dental House" is the bold, prominent name; the building (Ahsan Medical Centre) and road are secondary small type. | lean | "i want focus on Dental house" (2026-11-11) |
 | T16 | Before/after pairs: the owner shoots them with the same light and angle; crop both identically (same framing on the teeth). | lean | "crop them identical" (2026-11-11) |
 | T17 | Clinical photos stay unedited in videos, even when camera colour differs; differences are explained by the on-screen note, not corrected. | lean | "Keep the photos uneditted." (2026-11-11) |
+| T18 | Offer/wedding music: happy and celebratory (major key, dhol, claps), not calm pads. | lean | "Music needs a happy/celebrating feel." (2026-11-12) |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -50,11 +51,11 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | N03 | Mixing visual families inside one video. | firm | T01 |
 | N05 | Installing other people's skills or plugins with their own instructions into the project. Borrow the ideas and build our own. | firm | "No outside instructions, just borrow ideas from both and make your own" |
 | N06 | Dark, heavy promo look: slate background with a big maroon band, all-caps condensed type, floating cards, pill buttons. | lean | "Dont like aesthetics" (wedding whitening stills, 2026-11-11) |
+| N07 | Clinical-sounding effects (ticks, clicks, beeps, thuds) that remind of the operation theatre. | lean | "No operation theater sound." (2026-11-12) |
 | N04 | Several near-identical exported versions of one video. Iterate the brief instead. | lean | style profile §4 |
 
 ## Open questions (ask when the next video makes them relevant, one at a time)
 
-- Music: none, calm pad, or something more upbeat for offers? (no feedback yet)
 - Sound effects: current mixes are very quiet. Louder, or keep them barely there?
 - Pace for promos: the owner's own reels cut every 2.3–2.7 s; liked reels are faster (1.4–1.8 s). Which feels right?
 - "Wow" pieces (T10): how often? One per month, or whenever the topic fits?
@@ -64,6 +65,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-12 | wedding whitening music | "Music needs a happy/celebrating feel. No operation theater sound." | new original track: D major, dhol + claps + accordion + shehnai, 116 bpm; all sound effects off (ticks/clicks/thuds) | T18, N07 |
 | 2026-11-11 | before/after colour test | "Keep the photos uneditted." | ad keeps the unedited pair; whole-photo colour matching stays a test tool only (no-retouching rule unchanged) | T17 |
 | 2026-11-11 | approvals | "Remember i am the dentist, i use things after approval." | owner = approving dentist; recorded in CLAUDE.md | (process) |
 | 2026-11-11 | before/after colour | "why gum colours are diffirent, i did not change any setting or light nor any filter." | measured: lips shift as much as gums, so it is the phones' colour processing, not the tissue; photos left uncorrected | (fact) |
