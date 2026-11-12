@@ -21,7 +21,7 @@ const HUES: Record<Theme["name"], Record<Exclude<FillKey, "white" | "ink">, numb
   brand: { gold: 0, coral: 1, green: 2, blue: 3, pink: 4, yellow: 5 },
   editorial: { coral: 0, green: 1, gold: 2, yellow: 2, blue: 3, pink: 4 },
 };
-const fillColour = (t: Theme, k: FillKey) => (k === "white" ? "#FFFFFF" : k === "ink" ? t.end.text : t.map[HUES[t.name][k]]);
+const fillColour = (t: Theme, k: FillKey, m?: Medium) => m?.palette?.[k] ?? (k === "white" ? "#FFFFFF" : k === "ink" ? t.end.text : t.map[HUES[t.name][k]]);
 
 /** Hand-drawn explainer (reference: "Hand-Drawn Explainer" reel). Paper page, handwritten title, doodles drawn by a pencil. */
 export const Sketch: React.FC<{ brief: SketchBrief } & QcProps> = ({ brief, showSafeZones }) => {
@@ -122,6 +122,37 @@ const MediumDefs: React.FC<{ m: Medium }> = ({ m }) => {
           <feDisplacementMap in="grey" in2="n" scale="8" result="d" />
           <feGaussianBlur in="d" stdDeviation="1.2" />
         </filter>
+      ) : m.fill.mode === "clay" || m.fill.mode === "gloss" ? (
+        <filter id="md-fill" x="-15%" y="-15%" width="130%" height="130%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation={m.fill.mode === "clay" ? 9 : 4} result="b" />
+          <feSpecularLighting in="b" surfaceScale={m.fill.mode === "clay" ? 7 : 4} specularConstant={m.fill.mode === "clay" ? 0.8 : 1.3} specularExponent={m.fill.mode === "clay" ? 14 : 38} lightingColor="#ffffff" result="s">
+            <fePointLight x="80" y="-60" z="260" />
+          </feSpecularLighting>
+          <feComposite in="s" in2="SourceAlpha" operator="in" result="sp" />
+          <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="inner" />
+          <feComposite in="SourceAlpha" in2="inner" operator="arithmetic" k2="1" k3="-1" result="rim" />
+          <feFlood floodColor="#000" floodOpacity="0.18" />
+          <feComposite in2="rim" operator="in" result="rimc" />
+          <feComposite in="SourceGraphic" in2="sp" operator="arithmetic" k2="1" k3={m.fill.mode === "clay" ? 0.55 : 0.85} result="lit" />
+          <feMerge result="m">
+            <feMergeNode in="lit" />
+            <feMergeNode in="rimc" />
+          </feMerge>
+          <feDropShadow dx="6" dy="12" stdDeviation={m.fill.mode === "clay" ? 9 : 5} floodColor="#3A2F55" floodOpacity="0.25" />
+        </filter>
+      ) : m.fill.mode === "woodblock" ? (
+        <filter id="md-fill" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.006 0.22" numOctaves="2" seed="11" result="g" />
+          <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.9 0 0 0 -0.35" result="ga" />
+          <feComposite in="SourceGraphic" in2="ga" operator="arithmetic" k2="1" k1="-0.35" result="grain" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed="2" result="n" />
+          <feDisplacementMap in="grain" in2="n" scale="2" />
+        </filter>
+      ) : m.fill.mode === "halftone" || m.fill.mode === "flat" ? (
+        <filter id="md-fill" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="2" result="n" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale={m.line.wobble} />
+        </filter>
       ) : m.fill.mode === "paper" ? (
         <filter id="md-fill" x="-15%" y="-15%" width="130%" height="130%">
           <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="9" result="n" />
@@ -141,6 +172,19 @@ const MediumDefs: React.FC<{ m: Medium }> = ({ m }) => {
           ) : null}
         </filter>
       )}
+      <pattern id="md-dots" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(15)">
+        <circle cx="5" cy="5" r="3.4" fill="#fff" />
+      </pattern>
+      <mask id="md-dot-mask" maskUnits="userSpaceOnUse" x="-200" y="-200" width="800" height="800">
+        <rect x="-200" y="-200" width="800" height="800" fill="url(#md-dots)" />
+      </mask>
+      <linearGradient id="md-bokashi" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#fff" stopOpacity="1" />
+        <stop offset="1" stopColor="#fff" stopOpacity="0.55" />
+      </linearGradient>
+      <mask id="md-bokashi-mask" maskUnits="userSpaceOnUse" x="-200" y="-200" width="800" height="800">
+        <rect x="0" y="0" width="400" height="400" fill="url(#md-bokashi)" />
+      </mask>
       <pattern id="md-hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
         <rect width="4.5" height="9" fill="#fff" />
       </pattern>
@@ -301,7 +345,13 @@ const ColourLayer: React.FC<{ p: Placed; pi: number; fill: number; m: Medium; t:
   const mode = m.fill.mode;
   const id = `md-clip-${pi}`;
   const clip =
-    mode === "wash" ? <circle cx="200" cy="200" r={340 * fill} /> : mode === "hatch" || mode === "grain" ? <rect x="-20" y="-20" width={440 * fill} height="440" /> : null;
+    mode === "wash"
+      ? <circle cx="200" cy="200" r={340 * fill} />
+      : ["hatch", "grain", "halftone", "flat", "woodblock"].includes(mode)
+        ? <rect x="-20" y="-20" width={440 * fill} height="440" />
+        : null;
+  const pops = mode === "paper" || mode === "clay" || mode === "gloss";
+  const mask = mode === "hatch" ? "url(#md-hatch-mask)" : mode === "halftone" ? "url(#md-dot-mask)" : mode === "woodblock" ? "url(#md-bokashi-mask)" : undefined;
   return (
     <g transform={`translate(${ox} ${oy})`} opacity={mode === "marker" || mode === "tone" ? fill * m.fill.opacity : m.fill.opacity}>
       {clip ? (
@@ -309,18 +359,18 @@ const ColourLayer: React.FC<{ p: Placed; pi: number; fill: number; m: Medium; t:
           <clipPath id={id}>{clip}</clipPath>
         </defs>
       ) : null}
-      <g filter="url(#md-fill)" clipPath={clip ? `url(#${id})` : undefined} mask={mode === "hatch" ? "url(#md-hatch-mask)" : undefined}>
+      <g filter="url(#md-fill)" clipPath={clip ? `url(#${id})` : undefined} mask={mask} style={mode === "halftone" ? { mixBlendMode: "multiply" } : undefined}>
         {fills.map((f, fi) => {
-          if (mode === "paper") {
+          if (pops) {
             const k = ease(clamp01(fill * fills.length - fi));
             if (k <= 0) return null;
             return (
               <g key={fi} opacity={k} transform={`translate(${(1 - k) * 18} ${(1 - k) * -40}) rotate(${(1 - k) * -6} 200 200)`}>
-                <path d={f.d} fill={fillColour(t, f.fill)} />
+                <path d={f.d} fill={fillColour(t, f.fill, m)} />
               </g>
             );
           }
-          return <path key={fi} d={f.d} fill={fillColour(t, f.fill)} opacity={f.opacity ?? 0.9} />;
+          return <path key={fi} d={f.d} fill={fillColour(t, f.fill, m)} opacity={f.opacity ?? 0.9} />;
         })}
       </g>
     </g>

@@ -1,0 +1,11 @@
+id: example-diagram-flowchart
+type: diagram
+layout: flowchart
+title: "Toothache: what to do (demo)"
+demo: true
+hook: { lines: ["Toothache?", "What to do"], accent: "do" }
+label: "Toothache"
+items:
+  - { label: "Tooth pain?", question: true, no: "Keep regular check-ups" }
+  - { label: "Swelling or fever?", question: true, no: "Book a visit soon" }
+  - { label: "Call the clinic today", text: "Don't wait it out" }

@@ -1,0 +1,13 @@
+id: example-diagram-matrix
+type: diagram
+layout: matrix
+title: "Which treatment when (demo)"
+demo: true
+hook: { lines: ["Filling, crown", "or root canal?"], accent: "or" }
+subheading: "Simplified: your dentist decides after an exam"
+label: "Treatments"
+columns: ["Small cavity", "Big cavity", "Infected nerve"]
+items:
+  - { label: "Filling", text: "✓ | ✗ | ✗" }
+  - { label: "Crown", text: "✗ | ✓ | ✓" }
+  - { label: "Root canal", text: "✗ | ✗ | ✓" }

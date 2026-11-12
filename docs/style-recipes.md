@@ -14,6 +14,14 @@ painting" and "art-style motion" skills (Claude Drawing, Huashu Art Motion); **n
 | `chalkboard` | dark slate board, wooden frame, smudges | grainy chalk | diagonal chalk hatching | line → colour | slight sway | "lesson" topics, step lists, back-to-school | long captions (keep 1 line) |
 | `crayon` | cream paper with fibres | thick waxy, broken | waxy streaks wiped on | line → colour | line boils | children, parents, friendly offers | premium/implant topics |
 | `ink` | rice paper | thick brush ink with bleed | grey ink washes | line → colour | slight sway | elegant, minimal, culture days (Iqbal Day, Eid) | colour-coded explanations |
+| `risograph` | off-white, grain | riso blue | pink/blue/yellow halftone dots, misregistered | colour → line | slight sway | trendy promos, youth | fine clinical detail |
+| `ukiyoe` | washi paper, wood grain | indigo key line | flat pigments with a soft top-to-bottom gradient | line → colour | slight sway | culture days, elegant education | modern tech topics |
+| `midcentury` | warm paper, grain | thin brown | flat warm shapes knocked off the line | colour → line | floats | friendly promos, family | precise anatomy |
+| `ligneclaire` | clean white | one even black line | bright flat colour inside the line | line → colour | none | clear "how it works" education | moody topics |
+| `thickline` | light paper | very bold black, boiling | flat theme colours | line → colour | boil + sway | punchy tips, kids | premium/implant |
+| `clay` | pastel lilac | barely any line | puffy pastel shapes, highlight + shadow, pop in | colour → line | floats | friendly, soft, modern | serious/clinical |
+| `greasepencil` | grey paper | rough waxy dark | light scumbled colour | line → colour | boil | storyboards, "behind the scenes" | polished offers |
+| `y2k` | pale blue | navy | candy colours with gloss highlights, pop in | colour → line | floats | playful offers, events | education with sources |
 | `collage` | kraft card | thin dark line | cut-paper pieces drop in with shadow | colour → line | floats | promos, announcements, tactile look | clinical accuracy |
 
 ## Explainer grammars (how a video explains, not how it looks)
@@ -28,6 +36,10 @@ painting" and "art-style motion" skills (Claude Drawing, Huashu Art Motion); **n
 | Kinetic type | words carry the rhythm | `education`, `offer` |
 | Doctor-led | real person, captions, inserts | `talking-head` |
 | Front page / editorial | news-style authority | `Newspaper` (`EffectsGallery3`) |
+
+Art styles from AI-image prompt lists that need drawn characters or 3D scenes (anime, PS1/PS2, cyberpunk anime, vinyl toy,
+stop-motion clay/puppets, rubber-hose characters, dark deco, vaporwave chrome, cel-shaded noir) are **not** recipes here: they
+would need generated images of people. We don't use AI-generated people or "results" (golden rule 3).
 
 ## Rules for any recipe
 - One recipe per video. Don't mix media inside one video (taste N03).

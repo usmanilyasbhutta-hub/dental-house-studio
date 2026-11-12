@@ -1,0 +1,12 @@
+id: example-diagram-cycle
+type: diagram
+layout: cycle
+title: "The cavity cycle (demo)"
+demo: true
+hook: { lines: ["The cavity", "cycle"], accent: "cycle" }
+label: "Prevention"
+items:
+  - { label: "Sugar", text: "Snacks and sweet drinks", icon: candy }
+  - { label: "Bacteria feed", text: "Plaque bacteria use the sugar" }
+  - { label: "Acid forms", text: "Acid softens enamel" }
+  - { label: "Enamel weakens", text: "Repeated often, cavities start", icon: tooth-sad }

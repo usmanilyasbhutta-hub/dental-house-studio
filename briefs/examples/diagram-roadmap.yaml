@@ -1,0 +1,13 @@
+id: example-diagram-roadmap
+type: diagram
+layout: roadmap
+title: "Braces roadmap (demo)"
+demo: true
+hook: { lines: ["Braces,", "step by step"], accent: "step" }
+label: "Orthodontics"
+items:
+  - { tag: "Start", label: "Consultation", text: "Is it right for you?" }
+  - { label: "Records", text: "Photos, X-rays, plan" }
+  - { label: "Braces on", text: "Fitted in one visit" }
+  - { label: "Adjustments", text: "Regular short visits" }
+  - { tag: "Finish", label: "Retainers", text: "Keep the result" }

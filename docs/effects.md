@@ -143,6 +143,17 @@ or set `dimensions: null`. Notes are labels, not claims; the banned-words list s
 (crown prep, root canal, bridge...), add its strokes to `blueprint-subjects.ts`. Each stroke has a start and end as
 fractions of the drawing time, so `seconds` stretches the whole thing. Examples: `briefs/examples/blueprint-*.yaml`.
 
+| 39 | **Diagram explainer** | brief `type: diagram` (`src/templates/Diagram.tsx`) | `layout:` timeline, roadmap, flowchart (question diamonds with a "no" branch), cycle, layers, iceberg, tree, matrix (✓/✗ table), infographic (big numbers). Items reveal one by one, with optional doodle icons |
+
+**Diagram rules.** Items are education claims, so list sources. Tree: one root, children set `parent`. Matrix:
+`columns` plus each item's `text` holding the cells separated by `|`. Iceberg: `above` = items above the waterline.
+Flowchart: `question: true` makes a diamond, and `no:` is the side outcome. Examples: `briefs/examples/diagram-*.yaml`.
+
+### "Visual codes" mapping (study-anything formats)
+blueprint → `blueprint` · handwritten / sketchnotes → `sketch` · diagram → `anatomy-map` / `blueprint` · exploded-view → `Teardown` ·
+timeline, roadmap, flowchart, cycle, layers, iceberg, tree, decision-matrix (`matrix`), infographic → `diagram`.
+"canvas" (a one-page board) = `diagram layout: infographic`.
+
 **Map route rules.** The city is procedural, so it is an *illustration*, not directions. Keep the chip saying so
 ("Illustrative map · not to scale"); validation warns otherwise. Only label streets the owner names. The destination
 defaults to the clinic name, and the address comes from `src/brand.ts`. Route points are grid crossings `[col, row]`.
@@ -167,9 +178,20 @@ zoom-through = `ZoomThrough`, screen-in-screen = `PullBackReveal device="editor"
 | 46 | `PhoneFan` | phones fan out like cards, each with a clip (series, "watch the rest") |
 | 47 | `Shatter` | cracks, then the frame breaks into falling shards revealing the next shot (offers; not education) |
 | 48 | `RibbonWrap` | printed ribbon wraps around the speaker, text scrolling (front over, back behind) |
+| 50 | `Particles` | our own emitter: `spiral` (magic swirl), `burst`, `rise` (bubbles), `dust`. Promos and graphics only, **never over clinical photos/results** |
 | 49 | `HeadPopOut` | the shot shrinks into a card on a light page, the speaker's head pops out over the top |
 
 Clinical-photo rule still applies: these go on doctor/clinic footage and graphics, never to alter a clinical photo.
+
+## Footage tools (local, nothing uploaded)
+| Tool | What | Command |
+|---|---|---|
+| Rotobrush (isolate the person) | already built: u2net cut-out with alpha | talking-head `footage.cutout: true` (`scripts/footage_cutout.py`) |
+| Auto colour grade | white balance from neutral pixels + levels, then a look (`brand`, `film`, `editorial`, `warm`, `clinical`, `teal-orange`) | `npm run ff -- auto-grade in.mp4 out.mp4 --look brand` |
+| Clean-up | remove something in a box: `plate` (rebuild background from the clip, static camera), `inpaint` (small static things), `blur` (**privacy**: patient faces/names/records in b-roll) | `npm run ff -- cleanup in.mp4 out.mp4 --box x,y,w,h --mode blur` |
+
+Honesty: never grade, clean up or retouch clinical before/after material (golden rule 3). For privacy, blur. Don't
+"remove" anything from footage that documents treatment.
 
 ## Rules
 1. **Never put sparkles, glow, shine or light leaks on clinical photos** (before/after, intraoral). It can read as

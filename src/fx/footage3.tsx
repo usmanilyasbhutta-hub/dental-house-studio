@@ -343,3 +343,59 @@ export const HeadPopOut: React.FC<{ background: React.ReactNode; subject: React.
     </AbsoluteFill>
   );
 };
+
+/* 50 PARTICLES: our own emitter (idea from particle tools): spiral, burst, rise or dust, frame-driven and deterministic.
+ * For graphics and promos only: never over clinical photos or results (no sparkle on results). */
+export const Particles: React.FC<{ mode?: "spiral" | "burst" | "rise" | "dust"; x?: number; y?: number; count?: number; colors?: string[]; at?: number; seed?: string }> = ({
+  mode = "spiral", x = 540, y = 1000, count = 160, colors, at = 0, seed = "px",
+}) => {
+  const frame = useCurrentFrame() - at;
+  const t = useTheme();
+  const cols = colors ?? [t.accent, "#FFFFFF", t.map[3], t.map[4]];
+  if (frame < 0) return null;
+  const dots = Array.from({ length: count }, (_, i) => {
+    const r = (k: string) => random(`${seed}${k}${i}`);
+    const life = 40 + r("l") * 50;
+    const born = r("b") * (mode === "burst" ? 6 : 70);
+    const age = frame - born;
+    if (age < 0 || age > life) return null;
+    const u = age / life;
+    let px = x, py = y;
+    if (mode === "spiral") {
+      const ang = r("a") * Math.PI * 2 + age * 0.16;
+      const rad = 60 + u * 260 * (0.6 + r("r") * 0.6);
+      px = x + Math.cos(ang) * rad;
+      py = y - u * 620 + Math.sin(ang) * rad * 0.32;
+    } else if (mode === "burst") {
+      const ang = r("a") * Math.PI * 2, sp = 8 + r("s") * 16;
+      px = x + Math.cos(ang) * sp * age * (1 - u * 0.5);
+      py = y + Math.sin(ang) * sp * age * (1 - u * 0.5) + 0.25 * age * age * 0.1;
+    } else if (mode === "rise") {
+      px = x + (r("x") - 0.5) * 700 + Math.sin(age / 8 + r("p") * 6) * 18;
+      py = y + 300 - age * (3 + r("s") * 4);
+    } else {
+      px = 80 + r("x") * 920 + Math.sin(age / 20 + r("p") * 6) * 30;
+      py = 300 + r("y") * 1300 - age * 0.6;
+    }
+    const size = (mode === "dust" ? 2 : 3) + r("z") * (mode === "dust" ? 3 : 7);
+    const op = Math.sin(Math.PI * u) * (mode === "dust" ? 0.5 : 0.95);
+    return <circle key={i} cx={px} cy={py} r={size * (1 - u * 0.4)} fill={cols[i % cols.length]} opacity={op} />;
+  });
+  return (
+    <AbsoluteFill style={{ pointerEvents: "none", mixBlendMode: "screen" }}>
+      <svg width={W} height={H}>
+        <defs>
+          <filter id={`glow-${seed}`} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <g filter={`url(#glow-${seed})`}>{dots}</g>
+      </svg>
+    </AbsoluteFill>
+  );
+};

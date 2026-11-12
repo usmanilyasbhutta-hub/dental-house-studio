@@ -1,0 +1,13 @@
+id: example-diagram-iceberg
+type: diagram
+layout: iceberg
+title: "A cavity is an iceberg (demo)"
+demo: true
+hook: { lines: ["A cavity is", "an iceberg"], accent: "iceberg" }
+label: "Cavities"
+above: 1
+items:
+  - { label: "Small dark spot", text: "What you see" }
+  - { label: "Decay in dentin", text: "Spreads under the surface" }
+  - { label: "Close to the nerve", text: "Sensitivity starts" }
+  - { label: "Pain or infection", text: "If it's left untreated" }

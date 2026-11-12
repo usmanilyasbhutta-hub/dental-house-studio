@@ -1,0 +1,16 @@
+# Diagram explainer, layout: timeline. Demo: steps are general; a dentist confirms the wording for a real video.
+id: example-diagram-timeline
+type: diagram
+layout: timeline
+title: "Your implant journey (demo)"
+demo: true
+hook: { lines: ["Your implant", "journey"], accent: "journey" }
+subheading: "Every plan is personal: this is the usual order"
+label: "Implants"
+items:
+  - { tag: "Visit 1", label: "Consultation", text: "Check-up, X-ray, questions", icon: clinic }
+  - { tag: "Visit 2", label: "Implant placed", text: "Under local anaesthetic", icon: tooth-happy }
+  - { tag: "Healing", label: "Bone heals", text: "Time varies person to person", icon: clock }
+  - { tag: "Final visit", label: "Crown fitted", text: "Shade matched to your teeth", icon: check }
+  - { tag: "Ongoing", label: "Regular check-ups", text: "Brush, clean between, review", icon: calendar }
+footer: "Dental House · diagram notes"

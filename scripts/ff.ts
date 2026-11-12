@@ -29,7 +29,11 @@ export const GRADES: Record<string, string> = {
   clinical: "colorbalance=rs=-0.03:bs=0.03,eq=contrast=1.06:saturation=0.95:brightness=0.01", // clean, slightly cool, true whites
   "skin-fix": "colorbalance=rs=-0.08:gs=0.01:bs=0.04:rm=-0.06:bm=0.03,eq=saturation=0.88", // pulls back the red cast in our talking heads
   brand: "colorbalance=rs=0.03:bs=-0.02:rh=0.02,curves=preset=medium_contrast,eq=saturation=0.92", // warm bronze, soft contrast
+  film: "curves=all='0/0.05 0.5/0.5 1/0.96',colorbalance=rh=0.03:bh=-0.03:bs=0.02,eq=saturation=0.9", // lifted blacks, warm highlights
+  editorial: "curves=all='0/0.06 0.6/0.62 1/0.97',colorbalance=rm=0.02:bm=-0.03,eq=saturation=0.85", // soft cream, for the editorial theme
+  "teal-orange": "colorbalance=rs=-0.06:bs=0.08:rh=0.06:bh=-0.06,eq=saturation=1.08:contrast=1.05", // punchy, offers only
 };
+// Automatic correction (white balance from neutral pixels + levels, then a look): python3 scripts/autograde.py <in> <out> --look brand
 
 const recipes: Record<string, { help: string; run: (a: string[]) => void }> = {
   reframe: {
@@ -82,6 +86,23 @@ const recipes: Record<string, { help: string; run: (a: string[]) => void }> = {
       const vf = lut ? `lut3d=file='${lut}'` : GRADES[opt(a, "preset", "neutral")!];
       if (!vf) throw new Error(`unknown preset; use ${Object.keys(GRADES).join(", ")}`);
       ff("-i", inp, "-vf", vf, ...V, ...(hasAudio(inp) ? ["-c:a", "copy"] : ["-an"]), out);
+    },
+  },
+  "auto-grade": {
+    help: "auto-grade <in> <out> [--look brand|film|editorial|…] [--strength 1]   white balance + levels from the footage itself, then a look",
+    run: (a) => {
+      const [inp, out] = pos(a);
+      guard(inp, out);
+      execFileSync("python3", ["scripts/autograde.py", inp, out, "--look", opt(a, "look", "none")!, "--strength", opt(a, "strength", "1")!], { stdio: "inherit" });
+    },
+  },
+  cleanup: {
+    help: "cleanup <in> <out> --box x,y,w,h [--mode plate|inpaint|blur] [--from s --to s]   remove/blur something in a box (blur for privacy)",
+    run: (a) => {
+      const [inp, out] = pos(a);
+      guard(inp, out);
+      const extra = a.filter((x, i) => ["--box", "--mode", "--from", "--to", "--feather"].includes(a[i - 1] ?? "") || ["--box", "--mode", "--from", "--to", "--feather"].includes(x));
+      execFileSync("python3", ["scripts/cleanup.py", inp, out, ...extra], { stdio: "inherit" });
     },
   },
   kenburns: {

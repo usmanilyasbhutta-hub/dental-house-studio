@@ -1,0 +1,13 @@
+id: example-diagram-tree
+type: diagram
+layout: tree
+title: "Replacing a missing tooth (demo)"
+demo: true
+hook: { lines: ["Missing a", "tooth?"], accent: "tooth?" }
+subheading: "Your dentist explains which suits you"
+label: "Options"
+items:
+  - { label: "Missing tooth" }
+  - { label: "Implant", text: "Fixed, single tooth", parent: 0 }
+  - { label: "Bridge", text: "Fixed to neighbours", parent: 0 }
+  - { label: "Denture", text: "Removable", parent: 0 }

@@ -1,0 +1,12 @@
+id: example-diagram-infographic
+type: diagram
+layout: infographic
+title: "Brushing by the numbers (demo)"
+demo: true
+hook: { lines: ["Brushing by", "the numbers"], accent: "numbers" }
+label: "Daily care"
+items:
+  - { tag: "2×", label: "A day", text: "Morning and night", icon: toothbrush }
+  - { tag: "2 min", label: "Each time", text: "All surfaces", icon: clock }
+  - { tag: "Daily", label: "Between teeth", text: "Floss or brushes", icon: floss }
+  - { tag: "Regular", label: "Check-ups", text: "Ask how often for you", icon: calendar }

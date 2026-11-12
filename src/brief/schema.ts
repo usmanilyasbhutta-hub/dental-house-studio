@@ -357,7 +357,44 @@ export const sketchBrief = base.extend({
 });
 export type SketchBrief = z.infer<typeof sketchBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief]);
+/**
+ * Diagram explainer ("visual codes"): one idea laid out as a timeline, roadmap, flowchart, cycle, layers, iceberg,
+ * tree, decision matrix or infographic. Items reveal one by one; optional doodle icons. Title = hook.
+ */
+export const DIAGRAM_LAYOUTS = ["timeline", "roadmap", "flowchart", "cycle", "layers", "iceberg", "tree", "matrix", "infographic"] as const;
+export const diagramBrief = base.extend({
+  type: z.literal("diagram"),
+  layout: z.enum(DIAGRAM_LAYOUTS),
+  subheading: line(60).optional(),
+  items: z
+    .array(
+      z.object({
+        label: line(26),
+        text: line(70).optional(),
+        /** timeline date / roadmap step / infographic big number ("2×", "6 mo"). */
+        tag: line(14).optional(),
+        icon: z.enum(DOODLES as [string, ...string[]]).optional(),
+        /** tree: index of the parent item (root has none). */
+        parent: z.number().int().min(0).optional(),
+        /** flowchart: a question (diamond). `no` = the side branch's outcome; "yes" continues down. */
+        question: z.boolean().default(false),
+        no: line(26).optional(),
+      }),
+    )
+    .min(2)
+    .max(8),
+  /** iceberg: how many items sit above the waterline. */
+  above: z.number().int().min(1).max(3).default(1),
+  /** matrix: column headers; each item's `text` holds the cells separated by " | " (use ✓ / ✗ / short words). */
+  columns: z.array(line(14)).min(2).max(4).optional(),
+  seconds_per_item: z.number().min(0.8).max(4).default(1.5),
+  hold: z.number().min(1.5).max(5).default(2.6),
+  footer: line(40).optional(),
+  sources: z.array(z.string()).default([]),
+});
+export type DiagramBrief = z.infer<typeof diagramBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, diagramBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

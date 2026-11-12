@@ -30,6 +30,7 @@ export function sceneCount(b: Brief): number {
     case "blueprint":
     case "receipt":
     case "sketch":
+    case "diagram":
       return 1;
   }
 }
@@ -50,6 +51,8 @@ function rawSeconds(b: Brief): number {
     }
     case "anatomy-map":
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
+    case "diagram":
+      return DIAGRAM_INTRO + b.items.length * b.seconds_per_item + b.hold + scenes.offer.end;
     case "sketch":
       return SKETCH_INTRO + b.scenes.length * b.seconds_per_scene + scenes.offer.end;
     case "receipt": {
@@ -99,3 +102,6 @@ export function receiptTimes(b: Extract<Brief, { type: "receipt" }>) {
 
 /** Sketch explainer: the handwritten title writes itself first, then one scene per seconds_per_scene. */
 export const SKETCH_INTRO = 1.6;
+
+/** Diagram explainer: title first, then one item per seconds_per_item, then a hold on the whole diagram. */
+export const DIAGRAM_INTRO = 1.4;

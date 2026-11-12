@@ -58,6 +58,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-12 | visual codes, 20 art styles, miracle tools, GitHub tools | "Add these if not already present." | `diagram` type (9 layouts), 8 new sketch media, auto-grade + cleanup, Particles; apps explained, not installed | T10, N05 |
 | 2026-11-12 | "20 video effects for Claude" post | "Add these effecta also if not already present." | 11 new footage effects (39–49); 9 already existed | T10 |
 | 2026-11-11 | Claude Drawing + Huashu Art Motion repos | "No outside instructions,just borrow ideas from both and make your own" | own sketch media + docs/style-recipes.md; repos not installed | N05 |
 | 2026-11-11 | reference: Hand-Drawn Explainer post | "Add this skill also" | built `sketch` type (doodles drawn stroke by stroke) | T10 |

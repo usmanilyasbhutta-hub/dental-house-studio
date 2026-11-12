@@ -8,6 +8,7 @@ import { MapRoute } from "./templates/MapRoute";
 import { Blueprint } from "./templates/Blueprint";
 import { Receipt } from "./templates/Receipt";
 import { Sketch } from "./templates/Sketch";
+import { Diagram } from "./templates/Diagram";
 import { ClinicalCase } from "./templates/ClinicalCase";
 import { Education } from "./templates/Education";
 import { Offer } from "./templates/Offer";
@@ -24,6 +25,8 @@ export const Video: React.FC<VideoProps> = ({ brief, words, sizes, showSafeZones
       return <Education brief={brief} showSafeZones={showSafeZones} />;
     case "case":
       return <ClinicalCase brief={brief} showSafeZones={showSafeZones} />;
+    case "diagram":
+      return <Diagram brief={brief} showSafeZones={showSafeZones} />;
     case "sketch":
       return <Sketch brief={brief} showSafeZones={showSafeZones} />;
     case "receipt":

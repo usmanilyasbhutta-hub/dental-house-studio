@@ -27,6 +27,7 @@ function allText(b: Brief): string[] {
   if (b.type === "anatomy-map")
     t.push(...b.scenes.flatMap((sc) => [sc.title.text, ...sc.regions.flatMap((r) => (r.label ? [r.label.bold, r.label.text ?? ""] : []))]));
   if (b.type === "photo-layout") t.push(...b.annotations.map((a) => a.label), ...b.photos.map((p) => p.label ?? ""), b.caption ?? "");
+  if (b.type === "diagram") t.push(b.subheading ?? "", b.footer ?? "", ...(b.columns ?? []), ...b.items.flatMap((i) => [i.label, i.text ?? "", i.tag ?? "", i.no ?? ""]));
   if (b.type === "sketch") t.push(b.subheading ?? "", b.footer ?? "", ...b.scenes.flatMap((sc) => [sc.caption.replace(/\*/g, ""), sc.tag?.text ?? ""]));
   if (b.type === "receipt") t.push(...b.items.flatMap((i) => [i.text, i.value]), b.total.label, b.total.value, ...b.footer);
   if (b.type === "blueprint") t.push(b.figure ?? "", ...b.note, b.dimensions?.length ?? "", b.dimensions?.diameter ?? "");
@@ -109,6 +110,28 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (!env.fileExists(b.transcript)) err("footage", `transcript not found: ${b.transcript}`);
     if (!b.sources.length)
       warn("sources", "no sources listed: clinical-reviewer must check every spoken claim against evidence");
+  }
+
+  if (b.type === "diagram") {
+    const n = b.items.length;
+    if (b.layout === "tree") {
+      const roots = b.items.filter((i) => i.parent === undefined).length;
+      if (roots !== 1) err("diagram", `tree needs exactly one root (item without parent), found ${roots}`);
+      b.items.forEach((i, k) => {
+        if (i.parent !== undefined && (i.parent >= n || i.parent === k)) err("diagram", `item ${k + 1}: parent ${i.parent} is not another item`);
+      });
+    }
+    if (b.layout === "matrix") {
+      if (!b.columns) err("diagram", "matrix needs `columns`");
+      else
+        b.items.forEach((i, k) => {
+          const cells = (i.text ?? "").split("|").length;
+          if (cells !== b.columns!.length) err("diagram", `matrix row ${k + 1} has ${cells} cells, expected ${b.columns!.length} (separate with " | ")`);
+        });
+    }
+    if (b.layout === "iceberg" && b.above >= n) err("diagram", "iceberg: `above` must leave items below the waterline");
+    if (b.layout !== "flowchart" && b.items.some((i) => i.question)) warn("diagram", "`question` is only drawn in the flowchart layout");
+    if (!b.sources.length && !b.demo) warn("sources", "education claims: add PubMed sources so clinical-reviewer can check each item");
   }
 
   if (b.type === "sketch") {

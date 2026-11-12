@@ -6,7 +6,7 @@ import { headline, mono } from "../templates/shared/text";
 import { ThemeContext, themes } from "../theme";
 import { BrandDuotone } from "./footage2";
 import { PhotoLayer, Subject } from "./footage";
-import { CubeSpin, GridDive, HeadPopOut, InfiniteZoom, LiquidGlass, MagnifyLens, PhoneFan, Portal, RibbonWrap, Shatter, TileTunnel } from "./footage3";
+import { CubeSpin, GridDive, Particles, HeadPopOut, InfiniteZoom, LiquidGlass, MagnifyLens, PhoneFan, Portal, RibbonWrap, Shatter, TileTunnel } from "./footage3";
 
 export const FX3F_SEG = 90;
 const CLIP = "footage/th-bleeding-gums.webm";
@@ -26,6 +26,7 @@ const DEMOS: { name: string; node: React.ReactNode }[] = [
   { name: "46 Phone fan", node: <PhoneFan screen={(i) => (i === 2 ? <Scene start={240} /> : i % 2 ? <Photo /> : <Room />)} /> },
   { name: "47 Shatter", node: <Shatter from={<Scene start={270} />} to={<Photo />} at={30} /> },
   { name: "48 Ribbon wrap", node: <RibbonWrap background={<Room />} subject={<Doc start={300} />} text="HEALTHY GUMS" /> },
+  { name: "50 Particles", node: <><Room /><Particles mode="spiral" /><Particles mode="dust" seed="d" count={60} /></> },
   { name: "49 Head pop-out", node: <HeadPopOut background={<Room />} subject={<Doc start={330} />} /> },
 ];
 export const footageGallery3Frames = DEMOS.length * FX3F_SEG;

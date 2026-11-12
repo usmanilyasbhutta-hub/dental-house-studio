@@ -223,3 +223,25 @@ describe("sketch media", () => {
     expect(brief.safeParse({ ...b, style: "oil" }).success).toBe(false);
   });
 });
+
+describe("diagram", () => {
+  const files = ["timeline", "roadmap", "flowchart", "cycle", "layers", "iceberg", "tree", "matrix", "infographic"];
+  for (const f of files)
+    it(`diagram-${f} example is valid`, () => expect(errors(loadBrief(`briefs/examples/diagram-${f}.yaml`))).toEqual([]));
+  it("tree needs exactly one root", () => {
+    const b = clone(loadBrief("briefs/examples/diagram-tree.yaml")) as Extract<Brief, { type: "diagram" }>;
+    b.items[1].parent = undefined;
+    expect(errors(b).some((x) => x.rule === "diagram")).toBe(true);
+  });
+  it("matrix rows must match the columns", () => {
+    const b = clone(loadBrief("briefs/examples/diagram-matrix.yaml")) as Extract<Brief, { type: "diagram" }>;
+    b.items[0].text = "✓ | ✗";
+    expect(errors(b).some((x) => x.rule === "diagram")).toBe(true);
+  });
+  it("iceberg keeps items below the waterline", () => {
+    const b = clone(loadBrief("briefs/examples/diagram-iceberg.yaml")) as Extract<Brief, { type: "diagram" }>;
+    b.above = 3;
+    b.items = b.items.slice(0, 3);
+    expect(errors(b).some((x) => x.rule === "diagram")).toBe(true);
+  });
+});

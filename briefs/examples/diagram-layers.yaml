@@ -1,0 +1,14 @@
+id: example-diagram-layers
+type: diagram
+layout: layers
+theme: editorial
+title: "Layers of a tooth (demo)"
+demo: true
+hook: { lines: ["Layers of", "a tooth"], accent: "tooth" }
+label: "Know your teeth"
+items:
+  - { label: "Enamel", text: "Hard outer shell of the crown" }
+  - { label: "Dentin", text: "Softer layer under the enamel" }
+  - { label: "Pulp", text: "Nerves and blood vessels" }
+  - { label: "Cementum", text: "Covers the root" }
+  - { label: "Bone", text: "Holds the root in place" }
