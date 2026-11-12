@@ -11,6 +11,7 @@ import { EffectsGallery, galleryFrames } from "./fx/Gallery";
 import { FootageGallery, footageGalleryFrames } from "./fx/FootageGallery";
 import { FootageGallery2, footageGallery2Frames } from "./fx/FootageGallery2";
 import { EffectsGallery3, effectsGallery3Frames } from "./fx/EffectsGallery3";
+import { FootageGallery3, footageGallery3Frames } from "./fx/FootageGallery3";
 import { photoSizes } from "./templates/PhotoLayout";
 
 loadBrandFonts();
@@ -39,6 +40,7 @@ export const Root: React.FC = () => (
     <Composition id="ClinicalCase" {...common} defaultProps={{ brief: demoCase }} />
     <Composition id="FootageFxGallery" component={FootageGallery} fps={video.fps} width={video.width} height={video.height} durationInFrames={footageGalleryFrames} />
     <Composition id="FootageFxGallery2" component={FootageGallery2} fps={video.fps} width={video.width} height={video.height} durationInFrames={footageGallery2Frames} />
+    <Composition id="FootageFxGallery3" component={FootageGallery3} fps={video.fps} width={video.width} height={video.height} durationInFrames={footageGallery3Frames} />
     <Composition id="EffectsGallery3" component={EffectsGallery3} fps={video.fps} width={video.width} height={video.height} durationInFrames={effectsGallery3Frames} />
     <Composition id="EffectsGallery" component={EffectsGallery} fps={video.fps} width={video.width} height={video.height} durationInFrames={galleryFrames} />
   </>

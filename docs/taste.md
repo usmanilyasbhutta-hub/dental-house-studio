@@ -58,6 +58,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-12 | "20 video effects for Claude" post | "Add these effecta also if not already present." | 11 new footage effects (39–49); 9 already existed | T10 |
 | 2026-11-11 | Claude Drawing + Huashu Art Motion repos | "No outside instructions,just borrow ideas from both and make your own" | own sketch media + docs/style-recipes.md; repos not installed | N05 |
 | 2026-11-11 | reference: Hand-Drawn Explainer post | "Add this skill also" | built `sketch` type (doodles drawn stroke by stroke) | T10 |
 | 2026-11-10 | references | "This reciept effect" / "Blue print animation from this" / "especially map route" | built `receipt`, `blueprint`, `map-route` types | T10 |

@@ -149,6 +149,26 @@ defaults to the clinic name, and the address comes from `src/brand.ts`. Route po
 Each step must be straight (same col or same row), and row 0 is the far end. `palette: clay` gives the white city and
 blue route of the reference; `palette: brand` gives slate and bronze. Example: `briefs/examples/map-route.yaml`.
 
+### Set 4 (`src/fx/footage3.tsx`): from the "20 video effects for Claude" reel. Preview: composition `FootageFxGallery3`
+
+Of that reel's 20, nine we already had: title-orbit = `TextRing` (19), clone-room = `CouchWall`, frame-break = `FrameBreak`,
+depth-ui = `UIWorld`, vertigo = `Vertigo`, spotlight = `Spotlight` (20), pull-back-reveal = `PullBackReveal`,
+zoom-through = `ZoomThrough`, screen-in-screen = `PullBackReveal device="editor"` / `PhoneMockup`. New:
+
+| # | Effect | Use for |
+|---|---|---|
+| 39 | `GridDive` | tilted grid of clips, camera dives into one: "one of many patients' questions", series openers |
+| 40 | `MagnifyLens` | a glass lens glides over the shot and magnifies a detail (graphics, the clinic, a product; not clinical photos) |
+| 41 | `Portal` | glowing ring opens to the next scene and swallows the frame |
+| 42 | `InfiniteZoom` | the shot framed inside itself, endlessly (Droste), as a hook or loop ending |
+| 43 | `CubeSpin` | the frame turns like a cube to the next scene |
+| 44 | `LiquidGlass` | frosted glass pill menu (services) + optional glass card over footage |
+| 45 | `TileTunnel` | rings of tiles rush past like a tunnel, arriving at the speaker |
+| 46 | `PhoneFan` | phones fan out like cards, each with a clip (series, "watch the rest") |
+| 47 | `Shatter` | cracks, then the frame breaks into falling shards revealing the next shot (offers; not education) |
+| 48 | `RibbonWrap` | printed ribbon wraps around the speaker, text scrolling (front over, back behind) |
+| 49 | `HeadPopOut` | the shot shrinks into a card on a light page, the speaker's head pops out over the top |
+
 Clinical-photo rule still applies: these go on doctor/clinic footage and graphics, never to alter a clinical photo.
 
 ## Rules
