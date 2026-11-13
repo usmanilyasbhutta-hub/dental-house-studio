@@ -1,0 +1,42 @@
+[
+  {
+    "progress": 0,
+    "visible_pixels": 0,
+    "front_lead_source_pixels": 0
+  },
+  {
+    "progress": 0.005,
+    "visible_pixels": 1127,
+    "front_lead_source_pixels": 0.0
+  },
+  {
+    "progress": 0.1,
+    "visible_pixels": 13178,
+    "front_lead_source_pixels": 0.0
+  },
+  {
+    "progress": 0.25,
+    "visible_pixels": 32461,
+    "front_lead_source_pixels": 0.0
+  },
+  {
+    "progress": 0.5,
+    "visible_pixels": 62490,
+    "front_lead_source_pixels": 0.0
+  },
+  {
+    "progress": 0.75,
+    "visible_pixels": 89219,
+    "front_lead_source_pixels": 0.0
+  },
+  {
+    "progress": 0.99,
+    "visible_pixels": 111269,
+    "front_lead_source_pixels": 0.0
+  },
+  {
+    "progress": 1,
+    "visible_pixels": 111893,
+    "front_lead_source_pixels": 0.0
+  }
+]

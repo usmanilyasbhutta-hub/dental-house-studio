@@ -1,0 +1,41 @@
+{
+  "export": "DHS_Whitening_Clinical_v9.mp4",
+  "status": "private review export; not approved by a dentist, not for publication",
+  "v8_findings": {
+    "method": "Opened the six v8 Blender scenes, read every build/render script, rendered the v8 check stills and compared models and frames with the reference crops in Reference_vs_Model_v8.jpg. Reference hosts were unreachable from the build sandbox, so photographs were not re-downloaded.",
+    "shape_and_proportion": [
+      "Radii-Cal CX body about half its real diameter relative to its length; far end rendered dark grey because all lights sat near the working end.",
+      "Surgitip had a double dog-leg instead of one elbow; green insert too thin and long.",
+      "FX57 head was a flat cylinder; neck straight and the body sat on the wrong side of the head for a contra-angle; stepped neck/body junction; lettering mirrored in the comparison.",
+      "Barrier syringe push rod about 40 % of barrel width against about 60 % in the photograph; label text much smaller than the product's.",
+      "Pola hub was a plain cylinder wider than the photograph's ribbed cone; delivery end about 18 mm against about 11-13 mm."
+    ],
+    "angles_and_contact": [
+      "All non-scaler poses used a positive X tilt, which sends the handle away from the camera, into the patient. The polisher handle ended about 28 mm behind the tooth plane.",
+      "Polisher was seen from behind the head, hiding the brush contact.",
+      "Suction and syringes lay almost flat in the image plane, so they read as flat pipes with the suction opening facing up the screen rather than the enamel.",
+      "Crown outlines and barrier path were up to about 1.5 mm off the gingival margin on some teeth (the barrier path crossed the enamel of the first illustrated tooth)."
+    ],
+    "material_behaviour": [
+      "Barrier was a constant-width flat ribbon whose apical edge mirrored every scallop; the clinical reference shows a lumpy band that fills the papillae.",
+      "Gel was a grey-blue tint at 32 % that dulled the enamel, with a hard straight lower edge; the clinical reference shows a clear wet coating.",
+      "Clear plastics were a flat 24 % transparency mix and read as a ghosted overlay.",
+      "Instrument renders were 850 px enlarged about 3x at 24 samples without denoising: soft and grainy in frame."
+    ]
+  },
+  "creative_fit": {
+    "status": "pending_owner_and_dentist_review",
+    "evidence": "See v9_checks.",
+    "limits": "Visual reconstructions, not manufacturer CAD. Hidden dimensions, the barrier cannula bend and the scaler handpiece remain inferred. Pola in-use and ACTEON tip photographs were not re-inspected in v9."
+  },
+  "motion_playback": {
+    "status": "incomplete",
+    "reason": "Continuous normal-speed visual playback was not verified. Sampled encoded frames do not replace this gate."
+  },
+  "audio_playback": {
+    "status": "not_applicable",
+    "reason": "Intentionally silent; no audio track or listening claim."
+  },
+  "equipment_scale": "Millimetre models, 80 mm asset-camera span, 32 px/mm on screen from an assumed 8.5 mm central incisor. Not a measured patient calibration.",
+  "literal_facts": "Initial/final photographs and tooth colours unchanged. Scaling -> barrier -> cure -> gel -> aspirate -> polish order and timings retained. Only six upper anterior crowns illustrated; rinse and barrier removal omitted with a clean cut."
+}

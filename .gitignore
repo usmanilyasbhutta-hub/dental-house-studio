@@ -16,3 +16,12 @@ references/*
 
 # Clinic footage (large; processed copies are rebuilt by scripts/prep_footage.py)
 public/footage/*
+
+# Clinical 3D animations: real case photographs and anything rendered over them stay out of git
+clinical-3d/*/assets/before.jpg
+clinical-3d/*/assets/after.jpg
+clinical-3d/*/checks/
+clinical-3d/*/reference_photos/
+clinical-3d/*/Reference_vs_Model_*.jpg
+clinical-3d/*/assets/gel_volume.png
+__pycache__/
