@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Stand-in for the `blender` command line in sessions without a desktop Blender.
+# Accepts the usual form:  scripts/blender -b --python script.py -- <script args>
+# If a real `blender` is on PATH and BLENDER_USE_SYSTEM=1, that is used instead.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ "${BLENDER_USE_SYSTEM:-0}" = 1 ] && command -v blender >/dev/null; then exec blender "$@"; fi
+PYBIN="$ROOT/.cache/blender/bin/python"
+[ -x "$PYBIN" ] || bash "$ROOT/scripts/setup_blender.sh" >&2
+SCRIPT=""; REST=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --python|-P) SCRIPT="$2"; shift 2 ;;
+    --) shift; REST=(-- "$@"); break ;;
+    *) shift ;;   # -b, -noaudio, --factory-startup: always true here
+  esac
+done
+[ -n "$SCRIPT" ] || { echo "usage: scripts/blender -b --python <script.py> [-- args]" >&2; exit 2; }
+exec "$PYBIN" "$SCRIPT" "${REST[@]}"

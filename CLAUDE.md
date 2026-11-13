@@ -83,6 +83,11 @@ Use the project skill `dental-animation` (`.claude/skills/dental-animation/SKILL
 (`type: procedure`), photo layouts (`type: photo-layout`: annotate / split / grid, loupe), and the ffmpeg toolkit
 (`npm run ff -- help`). Overview: `docs/animation-toolkit.md`. 3D videos keep the "Illustration · not to scale" label.
 
+## Blender (photoreal clinical 3D)
+Use the project skill `blender-clinical` (`.claude/skills/blender-clinical/SKILL.md`) for instrument models, `.blend` files and
+Cycles renders over case photographs. `npm run blender:setup` installs Blender 4.3 as a Python module; `scripts/blender -b --python x.py`
+runs it. Projects live in `clinical-3d/<name>/`; their case photos, check frames and videos are gitignored. Three.js stays first choice (T11).
+
 ## Style profile
 Read `docs/style-profile.md` before writing a brief or changing a template. It records what the owner likes (real footage, doctor cut-outs,
 kinetic type + serif accent word, numbered structure, Roman-Urdu word captions, annotated clinical close-ups) and the mistakes to avoid

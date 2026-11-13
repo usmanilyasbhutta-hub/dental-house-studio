@@ -18,7 +18,9 @@
     "prep": "tsx scripts/prep_footage.ts",
     "gallery": "remotion render src/index.ts EffectsGallery out/effects-gallery.mp4 ${REMOTION_BROWSER:+--browser-executable=$REMOTION_BROWSER}",
     "sfx": "python3 scripts/make_sfx.py",
-    "ff": "tsx scripts/ff.ts"
+    "ff": "tsx scripts/ff.ts",
+    "blender:setup": "bash scripts/setup_blender.sh",
+    "blender": "bash scripts/blender"
   },
   "dependencies": {
     "@fontsource/instrument-serif": "^5.3.0",

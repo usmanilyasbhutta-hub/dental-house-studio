@@ -27,7 +27,7 @@ A review of v8 against the reference photographs (see `REVIEW.json` → `v8_find
 
 ## Rebuild
 
-Dependencies: Blender 4.3 (or the `bpy==4.3.0` Python module on Python 3.11) with Cycles CPU, Python 3 with Pillow
+Dependencies: Blender 4.3 with Cycles CPU (in this repo: `npm run blender:setup`, then use `../../scripts/blender` wherever `blender` appears below), Python 3 with Pillow
 and NumPy, FFmpeg/libx264. The comparison sheet optionally uses PyMuPDF.
 
 ```bash
