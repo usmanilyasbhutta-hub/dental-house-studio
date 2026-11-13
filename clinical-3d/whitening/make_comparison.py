@@ -16,7 +16,7 @@ SM=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',16)
 V8=P/'Reference_vs_Model_v8.jpg';v8=Image.open(V8) if V8.exists() else None
 items=[('SDI Gingival Barrier','barrier.jpg','barrier_syringe',0,(300,85,440,425)),
        ('SDI Pola Office+ — assembled working nozzle','pola.jpg','syringe',0,(305,485,430,825)),
-       ('NSK FX57 + soft screw-in brush','fx57.png','polisher',-90,(60,960,680,1150)),
+       ('NSK FX57 + soft screw-in brush','fx57.png','polisher',90,(60,960,680,1150)),
        ('SDI Radii-Cal CX — handpiece, stand omitted','light.jpg','curing_light',180,(280,1285,460,1625)),
        ('COLTENE ROEKO Surgitip','suction.jpg','suction',115,(170,1685,570,2025))]
 clinical=[('Clinical barrier appearance — SDI-hosted report',(270,2180,470,2315),17.5),('Clinical gel appearance — SDI-hosted report',(270,2580,470,2715),29.5)]

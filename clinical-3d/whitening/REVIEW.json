@@ -37,5 +37,70 @@
     "reason": "Intentionally silent; no audio track or listening claim."
   },
   "equipment_scale": "Millimetre models, 80 mm asset-camera span, 32 px/mm on screen from an assumed 8.5 mm central incisor. Not a measured patient calibration.",
-  "literal_facts": "Initial/final photographs and tooth colours unchanged. Scaling -> barrier -> cure -> gel -> aspirate -> polish order and timings retained. Only six upper anterior crowns illustrated; rinse and barrier removal omitted with a clean cut."
+  "literal_facts": "Initial/final photographs and tooth colours unchanged. Scaling -> barrier -> cure -> gel -> aspirate -> polish order and timings retained. Only six upper anterior crowns illustrated; rinse and barrier removal omitted with a clean cut.",
+  "v9_checks": {
+    "inspected": "Neutral comparison renders of all six models against the reference crops; 16 composited check stills; a one-frame-per-second contact sheet cut from the encoded file (qc/whitening_v9/contact.jpg).",
+    "seen": "Sequence and timings as approved. Barrier appears only behind the cannula outlet and follows the retraced margin. Curing shows a blue wash around the head. Gel reads as a clear wet coating that follows the outlet and is removed behind the suction opening. Brush contact is visible on both polished incisors. Initial and final photographs unaltered.",
+    "known_limits": [
+      "FX57 neck/body junction still shows a small notch in the neutral side view.",
+      "Radii-Cal body at true scale covers up to a quarter of the frame during curing.",
+      "Suction elbow is mostly out of frame, so the tip can still read as a straight tube.",
+      "Comparison sheet orientation of the curing light differs from the reference photograph."
+    ],
+    "barrier_deposition_check": [
+      {
+        "progress": 0,
+        "visible_pixels": 0,
+        "front_lead_source_pixels": 0
+      },
+      {
+        "progress": 0.005,
+        "visible_pixels": 448,
+        "front_lead_source_pixels": 0.0
+      },
+      {
+        "progress": 0.1,
+        "visible_pixels": 10376,
+        "front_lead_source_pixels": 0.0
+      },
+      {
+        "progress": 0.25,
+        "visible_pixels": 35162,
+        "front_lead_source_pixels": 0.0
+      },
+      {
+        "progress": 0.5,
+        "visible_pixels": 77962,
+        "front_lead_source_pixels": 0.0
+      },
+      {
+        "progress": 0.75,
+        "visible_pixels": 115990,
+        "front_lead_source_pixels": 0.0
+      },
+      {
+        "progress": 0.99,
+        "visible_pixels": 146511,
+        "front_lead_source_pixels": 0.0
+      },
+      {
+        "progress": 1,
+        "visible_pixels": 146829,
+        "front_lead_source_pixels": 0.0
+      }
+    ]
+  },
+  "technical_export": {
+    "status": "passed",
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "frame_rate": 24,
+    "frame_count": 984,
+    "duration_seconds": 41,
+    "audio_streams": 0,
+    "codec": "h264 yuv420p",
+    "decode": "Complete ffmpeg decode without errors"
+  }
 }
