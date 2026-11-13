@@ -94,9 +94,9 @@ all_enamel=Image.new('L',(W,H))
 for m in masks:all_enamel=ImageChops.lighter(all_enamel,m)
 # Clear wet gel: a faint cool film plus surface reflections. The photographed
 # enamel colour stays visible; nothing is recoloured or whitened by the gel.
-gel_thick=Image.open(A/'gel_thickness.png').convert('L').point(lambda v:round(255*min(1,v/170)**.45))
-gel_tint=Image.new('RGBA',(W,H),(206,231,245,0));gel_tint.putalpha(ImageChops.multiply(gel_thick,all_enamel).point(lambda a:round(a*.21)))
-gel_spec=Image.open(A/'gel_spec.png').convert('RGB').point(lambda v:max(0,min(255,round((v-22)*.62))))
+gel_thick=Image.open(A/'gel_thickness.png').convert('L').point(lambda v:round(255*min(1,v/170)**.45)).filter(ImageFilter.MaxFilter(13)).filter(ImageFilter.GaussianBlur(2.5))
+gel_tint=Image.new('RGBA',(W,H),(206,231,245,0));gel_tint.putalpha(ImageChops.multiply(gel_thick,all_enamel).point(lambda a:round(a*.13)))
+gel_spec=Image.open(A/'gel_spec.png').convert('RGB').point(lambda v:max(0,min(255,round((v-24)*.48))))
 # The dispensing path covers each crown with overlapping narrow ribbons.
 gelp=[];gel_owner=[]
 for owner,poly in enumerate(crowns):
@@ -245,9 +245,12 @@ def frame(t):
   phase=max(0,min(1,(t-17.36)/3.28));p=walk(bp,ease(phase))[-1];p=(p[0],p[1]-4);xx,yy=point(p)
   activity=ease((t-17.3)/.2)*ease((20.7-t)/.2)
   glow=Image.new('RGBA',im.size);d=ImageDraw.Draw(glow)
-  for rr,aa in [(250,34),(175,58),(110,92)]:d.ellipse((xx-rr,yy-rr*.9,xx+rr,yy+rr*.9),fill=(40,96,255,round(aa*activity)))
-  glow=glow.filter(ImageFilter.GaussianBlur(34));im.alpha_composite(glow)
+  for rr,aa in [(330,46),(240,80),(160,120)]:d.ellipse((xx-rr,yy-rr*.85,xx+rr,yy+rr*.85),fill=(36,92,255,round(aa*activity)))
+  glow=glow.filter(ImageFilter.GaussianBlur(26));im.alpha_composite(glow)
   posed_tool(im,'light',p,t,17,21)
+  # Faint spill on the underside of the head itself.
+  spill=Image.new('RGBA',im.size);ImageDraw.Draw(spill).ellipse((xx-150,yy-130,xx+150,yy+130),fill=(60,120,255,round(46*activity)))
+  im.alpha_composite(spill.filter(ImageFilter.GaussianBlur(40)))
  if 21<=t<33:
   if t<29:posed_tool(im,'gel',gp_now,t,21,29)
   if t>=30:posed_tool(im,'suction',suc,t,30,33)
@@ -285,7 +288,7 @@ if __name__=='__main__' and '--timing-check' in sys.argv:
  (P/'barrier_timing_check.json').write_text(json.dumps(rows,indent=2));print(json.dumps(rows))
 elif __name__=='__main__' and '--stills' in sys.argv:
  (P/'checks').mkdir(exist_ok=True)
- for t in [1,4,9,13,15.5,18,19.8,23,26,28.4,29.5,31.2,34,36,39]:frame(t).save(P/'checks'/f'check_{t}.jpg',quality=92)
+ for t in [1,4,9,13,15.5,17.5,18,19.8,23,26,28.4,29.5,31.2,34,36,39]:frame(t).save(P/'checks'/f'check_{t}.jpg',quality=92)
 elif __name__=='__main__':
  OUT=P.parents[1]/'out';OUT.mkdir(exist_ok=True);out=OUT/('Whitening_v9_Proof.mp4' if '--proof' in sys.argv else 'DHS_Whitening_Clinical_v9.mp4');q=subprocess.Popen(['ffmpeg','-v','error','-y','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-an','-c:v','libx264','-crf','18','-preset','fast','-pix_fmt','yuv420p','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  import multiprocessing as mp

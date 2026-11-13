@@ -6,37 +6,37 @@
   },
   {
     "progress": 0.005,
-    "visible_pixels": 1127,
+    "visible_pixels": 448,
     "front_lead_source_pixels": 0.0
   },
   {
     "progress": 0.1,
-    "visible_pixels": 13178,
+    "visible_pixels": 10376,
     "front_lead_source_pixels": 0.0
   },
   {
     "progress": 0.25,
-    "visible_pixels": 32461,
+    "visible_pixels": 35162,
     "front_lead_source_pixels": 0.0
   },
   {
     "progress": 0.5,
-    "visible_pixels": 62490,
+    "visible_pixels": 77962,
     "front_lead_source_pixels": 0.0
   },
   {
     "progress": 0.75,
-    "visible_pixels": 89219,
+    "visible_pixels": 115990,
     "front_lead_source_pixels": 0.0
   },
   {
     "progress": 0.99,
-    "visible_pixels": 111269,
+    "visible_pixels": 146511,
     "front_lead_source_pixels": 0.0
   },
   {
     "progress": 1,
-    "visible_pixels": 111893,
+    "visible_pixels": 146829,
     "front_lead_source_pixels": 0.0
   }
 ]
