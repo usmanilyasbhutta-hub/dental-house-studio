@@ -19,10 +19,10 @@ The user specified Pola Office+ and SDI barrier. Other device models are selecte
 
 ## v9 review notes
 
-The v9 review compared each model with the reference crops embedded in `Reference_vs_Model_v8.jpg`; the source hosts
-could not be reached from the build sandbox, so the photographs were not re-downloaded. Two references named above were
-therefore **not** re-inspected in v9 and their v8 treatment is carried forward: the Pola Office+ in-use photograph and the
-ACTEON No.1 tip photographs.
+The first v9 pass compared each model with the reference crops embedded in `Reference_vs_Model_v8.jpg`. In the second
+pass the hosts were reachable and every photograph fetched by `fetch_references.py` was re-inspected at full resolution;
+that changed the gel tint (pale translucent blue), the static mixer (crossed red baffles) and the clear collar under the
+bent delivery end. The ACTEON No.1 tip photographs are still **not** re-inspected: the script has no entry for them.
 
 Proportions read off the reference crops and applied in v9 (all approximate, scaled from one assumed dimension each):
 
