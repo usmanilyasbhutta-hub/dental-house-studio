@@ -26,6 +26,23 @@ reading it. The live-Blender connector only works when the owner has Blender ope
 Never name a script after a standard-library module (`inspect.py`, `random.py`, ...): Blender imports it
 by accident and crashes on start.
 
+## Detailing library (`scripts/blender_detail.py`)
+
+Our own helpers for the surface detail real instruments have. Import in a build script with
+`sys.path.insert(0, <repo>/scripts); import blender_detail as D`.
+
+| Helper | Use for |
+|---|---|
+| `D.studio_world(scene)` | Graded studio environment so metal and gloss reflect something believable |
+| `D.moulded_plastic(mat)` | Injection-moulded polymer: slight scatter, fine texture, thin gloss |
+| `D.brushed_metal(mat, direction)` | Satin aluminium / steel with stretched highlights and brush streaks |
+| `D.polished_metal(mat)` | Mirror stainless with faint handling marks |
+| `D.soft_bevel(obj)` | Rounded manufactured edges with clean shading |
+
+Add a helper here when a new kind of detail is needed (knurling, printed scales, rubber). Keep them
+subtle: after adding detail, re-check exposure, because a brighter environment easily blows out white
+plastic. Detail must never be added to clinical photographs, only to synthetic models.
+
 ## Working method (in this order)
 
 1. **Read before changing.** Open every existing scene and script, render the current stills, and put
