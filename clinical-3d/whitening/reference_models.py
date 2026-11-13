@@ -230,7 +230,7 @@ render_set('curing_light',compare_roll=90)
 ax1=Vector((0,-20.5,3.0)).normalized()
 sweep([(0,0,.15),tuple(ax1*20.5+Vector((0,0,.15)))],[1.8,3.05],green,.4,'Green tapered insert, 2.8 mm lumen',steps=2)
 cyl(tuple(ax1*.05+Vector((0,0,.15))),tuple(ax1*.9+Vector((0,0,.15))),1.86,green,1.9,bevel=.12)  # rolled rim of the opening
-el=math.radians(45);side2=Vector((.55,0,.83)).normalized();d2=(ax1*math.cos(el)+side2*math.sin(el)).normalized()
+el=math.radians(45);side2=Vector((.94,0,.34)).normalized();d2=(ax1*math.cos(el)+side2*math.sin(el)).normalized()
 p1=ax1*19+Vector((0,0,.15));k0=p1+ax1*13.5;mid=(ax1+d2).normalized()
 sweep([tuple(p1),tuple(p1+ax1*7),tuple(k0),tuple(k0+mid*5),tuple(k0+mid*5+d2*6),tuple(k0+d2*40),tuple(k0+d2*112)],[3.3]*7,pearl,.55,'White cannula with single elbow')
 cyl(tuple(p1-ax1*.2),tuple(p1+ax1*1.6),3.42,pearl,bevel=.2)  # sleeve lip over the insert
