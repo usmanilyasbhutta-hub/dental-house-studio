@@ -10,7 +10,7 @@ labelwhite=mat('Pola white wrap label',(.86,.88,.88),0,.40)
 aluminium=mat('NSK satin aluminium reference',(.78,.80,.81),.88,.36)
 navy=mat('SDI cobalt blue polymer',(.012,.11,.42),0,.27)
 skyblue=mat('Radii blue activation button',(.10,.42,.80),0,.25)
-orange=mat('Orange-red static mixer',(.76,.10,.025),0,.31)
+orange=mat('Orange-red static mixer',(.80,.045,.012),0,.35)
 green=mat('ROEKO green tip',(.03,.24,.07),0,.33)
 nylon=mat('Young soft white nylon',(.86,.87,.84),0,.50)
 printmat=mat('Printed graphite',(.012,.018,.022),0,.65)
@@ -26,6 +26,7 @@ def clear_polymer(name,tint,body=.13,edge=.85):
  nt.links.new(lw.outputs['Facing'],ramp.inputs['Value']);nt.links.new(ramp.outputs['Result'],mix.inputs[0]);nt.links.new(tr.outputs[0],mix.inputs[1]);nt.links.new(bs.outputs[0],mix.inputs[2]);nt.links.new(mix.outputs[0],out.inputs['Surface'])
  return m
 clear=clear_polymer('Clear moulded polypropylene',(.80,.88,.92))
+clearthin=clear_polymer('Thin clear mixer housing',(.85,.90,.93),.04,.70)
 
 def text(s,loc,size,material=printmat,rot=0,bold=False):
  c=bpy.data.curves.new('Reference label','FONT');c.body=s;c.size=size;c.extrude=.004;c.align_x='CENTER';c.align_y='CENTER'
@@ -153,13 +154,13 @@ render_set('barrier_syringe',plunger=plunger)
 # mixer with red element, short fine delivery end bent about 55 degrees.
 BX,BZ=-5.2,6.4  # mixer axis; the delivery end bends down to the outlet at the origin
 sweep([(0,0,.15),(-1.5,-1.8,1.9),(-3.3,-3.9,4.2),(BX+.5,-5.6,5.9),(BX,-7.5,BZ),(BX,-12,BZ)],[.48,.52,.6,.72,.95,1.5],clear,.16,'Angled fine delivery end')
-sweep([(BX,-12,BZ),(BX,-36,BZ)],[2.0,2.25],clear,.2,'Clear mixer housing',steps=2)
-helix=[]
-for k in range(193):
- y=-13-22*k/192;a=k/192*math.tau*8;helix.append((BX+math.cos(a)*1.15,y,BZ+math.sin(a)*1.15))
-c=bpy.data.curves.new('Static mixer element','CURVE');c.dimensions='3D';c.bevel_depth=.42;c.bevel_resolution=4;s=c.splines.new('POLY');s.points.add(len(helix)-1)
-for q,p in zip(s.points,helix):q.co=(*p,1)
-o=bpy.data.objects.new('Red static mixer element',c);scene.collection.objects.link(o);o.data.materials.append(orange)
+sweep([(BX,-12,BZ),(BX,-36,BZ)],[2.0,2.25],clearthin,.2,'Clear mixer housing',steps=2)
+cyl((BX,-11.2,BZ),(BX,-13.2,BZ),2.0,clear,2.75)  # flared clear collar under the bent end
+# Static mixer as photographed: a stack of alternating crossed red baffles on a
+# central spine (v9 first pass drew a helix).
+for k in range(11):
+ o=dome((BX,-14-k*2.05,BZ),1.55,.24,orange,'Red static mixer baffle');o.scale=(1.55,1.75,.24)
+ o.rotation_euler=(math.radians(52 if k%2 else -52),math.radians(90 if k%4>1 else 0),0)
 cyl((BX,-13,BZ),(BX,-35,BZ),.5,orange)
 cyl((BX,-36,BZ),(BX,-49,BZ),3.0,navy,5.6)
 for k in range(18):
@@ -186,7 +187,7 @@ render_set('syringe',plunger=plunger)
 cyl((0,0,6.4),(0,0,14.6),4.0,aluminium,bevel=.5);dome((0,0,14.5),3.95,2.3,aluminium,'Domed head cap')
 cyl((0,0,16.55),(0,0,16.95),1.9,aluminium,bevel=.1)
 cyl((0,0,4.5),(0,0,6.6),1.75,steel,2.6)
-loft([(-2.6,0,11.3,3.05,3.2),(-7,0,11.0,3.1,2.9),(-15,0,9.9,3.3,2.8),(-25,0,8.1,4.2,3.6),(-33,0,6.6,5.4,5.2),(-37,0,6.0,5.8,5.8),(-42,0,5.8,5.6,5.6)],aluminium,'FX57 flattened tapered neck',caps=False)
+loft([(-2.6,0,11.3,3.05,3.2),(-7,0,11.0,3.1,2.9),(-15,0,9.9,3.3,2.8),(-25,0,8.1,4.2,3.6),(-32,0,6.8,5.0,4.9),(-37,0,6.0,4.9,4.9),(-42,0,5.8,4.6,4.6)],aluminium,'FX57 flattened tapered neck',caps=False)
 sweep([(0,-36,6.0),(0,-45,5.7),(0,-62,5.5),(0,-78,5.5),(0,-82,5.5)],[6.05,6.2,6.8,7.75,8.0],aluminium,None,'FX57 flared body')
 cyl((0,-82,5.5),(0,-84,5.5),7.2,dark)
 text('NSK  FX57  4:1',(6.75,-60,6.2),2.3,printmat,0).rotation_euler=(math.radians(90),0,math.radians(90))

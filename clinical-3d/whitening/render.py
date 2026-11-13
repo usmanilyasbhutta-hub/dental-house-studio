@@ -95,7 +95,7 @@ for m in masks:all_enamel=ImageChops.lighter(all_enamel,m)
 # Clear wet gel: a faint cool film plus surface reflections. The photographed
 # enamel colour stays visible; nothing is recoloured or whitened by the gel.
 gel_thick=Image.open(A/'gel_thickness.png').convert('L').point(lambda v:round(255*min(1,v/170)**.45)).filter(ImageFilter.MaxFilter(13)).filter(ImageFilter.GaussianBlur(2.5))
-gel_tint=Image.new('RGBA',(W,H),(206,231,245,0));gel_tint.putalpha(ImageChops.multiply(gel_thick,all_enamel).point(lambda a:round(a*.13)))
+gel_tint=Image.new('RGBA',(W,H),(150,198,238,0))  # pale translucent blue, as in the in-use photograph;gel_tint.putalpha(ImageChops.multiply(gel_thick,all_enamel).point(lambda a:round(a*.20)))
 gel_spec=Image.open(A/'gel_spec.png').convert('RGB').point(lambda v:max(0,min(255,round((v-24)*.48))))
 # The dispensing path covers each crown with overlapping narrow ribbons.
 gelp=[];gel_owner=[]
@@ -232,7 +232,7 @@ def frame(t):
   if 21.36<t<28.64:
    # A small clear bead at the advancing outlet.
    wet=Image.new('RGBA',im.size);d=ImageDraw.Draw(wet);xx,yy=point(gp_now)
-   d.ellipse((xx-13,yy-9,xx+13,yy+9),fill=(196,226,242,84))
+   d.ellipse((xx-13,yy-9,xx+13,yy+9),fill=(150,198,238,110))
    d.arc((xx-9,yy-6,xx+9,yy+5),200,320,fill=(250,253,255,170),width=2)
    wet.putalpha(ImageChops.multiply(wet.getchannel('A'),all_enamel));im.alpha_composite(wet)
  if 12<=t<33:
