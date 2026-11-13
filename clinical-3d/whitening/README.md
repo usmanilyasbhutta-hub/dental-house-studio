@@ -18,11 +18,12 @@ A review of v8 against the reference photographs (see `REVIEW.json` → `v8_find
 | SDI barrier syringe | Thin push rod, small label text | Rod ~60 % of barrel width, ribbed black luer hub, bold mint label, black SDI block, flat flange |
 | Pola Office+ | Ghosted semi-transparent nozzle, cylinder hub, delivery end ~18 mm | Clear plastic with opaque edges, ribbed conical blue hub, ~11 mm end bent ~55°, stacked POLA lettering, cobalt chamber |
 | NSK FX57 | Flat cylinder head, straight neck on the wrong side of the body, stepped junction | Domed head, contra-angle neck, body flaring 12→16 mm; shown side-on so the brush and its contact are visible |
-| Radii-Cal CX | Body about half real diameter, far end rendered dark grey | Slim angled head widening to a ~22 mm body, bezel, button, collar; even lighting |
-| Surgitip | Double dog-leg, thin over-long green insert, shown as a flat pipe | Single ~40° elbow, 22 mm tapered insert with 2.8 mm lumen, held obliquely with the opening on enamel |
+| Radii-Cal CX | Body about half real diameter, far end rendered dark grey | Slim angled head widening to a ~17 mm body (owner asked for slightly slimmer than the ~22 mm product), bezel, button, collar; even lighting |
+| Surgitip | Double dog-leg, thin over-long green insert, shown as a flat pipe | Single tight ~45° elbow, 20 mm tapered insert with 2.8 mm lumen, held steeply so insert, sleeve and elbow stay in frame |
 | Barrier material | Constant-width flat ribbon mirroring every scallop | Lumpy glossy resin band 2–6 mm tall that fills the papillae and seals ~0.2 mm onto enamel |
 | Gel material | Grey-blue tint that dulled the teeth, hard straight lower edge | Clear wet coating: faint cool film plus surface reflections, enamel colour left visible |
 | Curing | Fast there-and-back sweep, glow hidden under the head | One slow pass, blue wash visible on the barrier around the head |
+| Surface detail | Flat single-colour materials | In-house detailing library (`scripts/blender_detail.py`): moulded plastic, brushed and polished metal, studio reflections |
 | Image quality | 850 px renders enlarged 3×, 24 samples, no denoising | 2048 px renders (1.25× enlargement), denoised |
 
 ## Rebuild

@@ -42,11 +42,11 @@
     "inspected": "Neutral comparison renders of all six models against the reference crops; 16 composited check stills; a one-frame-per-second contact sheet cut from the encoded file (qc/whitening_v9/contact.jpg).",
     "seen": "Sequence and timings as approved. Barrier appears only behind the cannula outlet and follows the retraced margin. Curing shows a blue wash around the head. Gel reads as a clear wet coating that follows the outlet and is removed behind the suction opening. Brush contact is visible on both polished incisors. Initial and final photographs unaltered.",
     "known_limits": [
-      "Radii-Cal body at true scale covers up to a quarter of the frame during curing (owner decision pending).",
-      "Suction elbow is mostly out of frame, so the tip can still read as a straight tube.",
+      "Curing light body is deliberately slimmer than the product (owner decision).",
       "FX57 body starts with a small shoulder where the neck enters it.",
       "ACTEON No.1 tip photograph still not re-inspected (no entry in fetch_references.py).",
-      "In-use photograph shows a different Pola Office+ label layout from the product photograph; the model follows the product photograph."
+      "In-use photograph shows a different Pola Office+ label layout from the product photograph; the model follows the product photograph.",
+      "Static mixer baffles read as red blobs rather than distinct crosses in frame."
     ],
     "barrier_deposition_check": [
       {
@@ -90,7 +90,8 @@
         "front_lead_source_pixels": 0.0
       }
     ],
-    "second_pass": "Reference hosts were allowed and all photographs re-downloaded at full resolution. From them: gel tinted pale translucent blue (in-use photograph), static mixer rebuilt as crossed red baffles with a clear collar under the bent end, FX57 neck/body notch removed. Stills, contact sheet and comparison sheet regenerated from the re-encoded file."
+    "second_pass": "Reference hosts were allowed and all photographs re-downloaded at full resolution. From them: gel tinted pale translucent blue (in-use photograph), static mixer rebuilt as crossed red baffles with a clear collar under the bent end, FX57 neck/body notch removed. Stills, contact sheet and comparison sheet regenerated from the re-encoded file.",
+    "third_pass": "Owner requests: curing light body slimmed from about 22 mm to about 17 mm (head unchanged; no longer true scale); Surgitip rebuilt from the full-resolution photograph (20 mm insert nearly flush with the cannula, 12 mm sleeve, tight 45 degree elbow) and held steeper so insert, sleeve and elbow stay in frame and the tube exits downward. All six instruments re-rendered with the in-house detailing library (moulded plastic, brushed and polished metal, graded studio environment). Checked on frames cut from the encoded file: suction shot at 9 moments, curing shot at 6, plus a one-per-second contact sheet from an earlier encode of this pass."
   },
   "technical_export": {
     "status": "passed",
