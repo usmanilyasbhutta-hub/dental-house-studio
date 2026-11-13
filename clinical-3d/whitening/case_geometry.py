@@ -58,7 +58,7 @@ POSES = {
     'polisher': lambda i: (-16, 52, -30 + 15 * i),
     'curing_light': lambda i: (22, -10 + 5 * i, -30 + 15 * i),
     # Steeper and swung in-plane so the elbow stays inside the frame.
-    'suction': lambda i: (-50, -8 + 4 * i, 35 - 17.5 * i),
+    'suction': lambda i: (-50, -8 + 4 * i, -20 - 5 * i),
 }
 SCALER_POSES = [(0, -10, 10), (0, 8, -12)]
 # Model-space point (mm) that is pinned to the treatment path.
