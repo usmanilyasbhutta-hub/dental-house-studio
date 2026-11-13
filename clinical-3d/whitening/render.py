@@ -66,7 +66,7 @@ def posed_tool(im,kind,p,t,start,end,spin=False):
  # Select a solid 3D depth view, then align its in-plane angle exactly
  # around the model origin. Crossfading displaced silhouettes is forbidden.
  name=MODEL[kind];u=max(0,min(1,(p[0]-390)/240))*4;i=round(u)
- delta=(u-i)*15;angles=G.POSES[name](i)
+ angles=G.POSES[name](i);delta=(u-i)*(G.POSES[name](1)[2]-G.POSES[name](0)[2])
  suffix=f'_{int(t*24)%4}' if spin else ''
  if kind in ['barrier','gel']:
   v=Image.new('RGBA',(ASSET,ASSET));progress=max(0,min(1,(t-start-.36)/(end-start-.72)))

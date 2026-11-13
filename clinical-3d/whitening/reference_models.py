@@ -16,6 +16,9 @@ nylon=mat('Young soft white nylon',(.86,.87,.84),0,.50)
 printmat=mat('Printed graphite',(.012,.018,.022),0,.65)
 printwhite=mat('Printed white',(.85,.86,.86),0,.6)
 gelblue=mat('Pola chamber contents',(.012,.10,.42),0,.22)
+# Surface detail from scripts/blender_detail.py (moulded texture, brushed metal).
+for m in (black,pearl,navy,green,skyblue,labelwhite):D.moulded_plastic(m)
+D.moulded_plastic(mint,0,.02,180);D.brushed_metal(aluminium,(0,1,0),.09,.6)
 def clear_polymer(name,tint,body=.13,edge=.85):
  # Clear moulded polypropylene: see-through face-on, bright and opaque at the
  # grazing edges. v8 used one flat 24 % mix, which read as a ghosted overlay.
@@ -206,25 +209,31 @@ render_set('polisher',rotor=rotor,compare_roll=90)
 # roughly half this body diameter; the slim head and neck are what enter frame.
 bd=Vector((0,-math.sin(math.radians(40)),math.cos(math.radians(40))));e=Vector((0,-2.2,15.5))
 pts=[(0,0,1.0),(0,0,7),(0,-.6,12),tuple(e)]+[tuple(e+bd*d) for d in (10,30,58,84,112,150,206)]
-sweep(pts,[5.0,5.15,5.4,5.9,6.4,7.4,9.3,10.7,11.0,11.0,10.8],pearl,None,'Integrated curved handpiece body')
-cyl((0,0,.25),(0,0,1.3),5.15,steel,bevel=.2);cyl((0,0,.18),(0,0,.5),4.25,dark,bevel=.05)
+# Owner request: drawn slightly slimmer than the ~22 mm product body (about 17 mm) so more of the barrier stays visible.
+sweep(pts,[4.8,4.9,5.0,5.3,5.6,6.2,7.4,8.4,8.6,8.6,8.4],pearl,None,'Integrated curved handpiece body')
+cyl((0,0,.25),(0,0,1.3),4.95,steel,bevel=.2);cyl((0,0,.18),(0,0,.5),4.1,dark,bevel=.05)
 led=mat('Radii curing window',(.06,.10,.22),0,.12);b=led.node_tree.nodes.get('Principled BSDF');b.inputs['Emission Color'].default_value=(.02,.10,.75,1);b.inputs['Emission Strength'].default_value=.8
-cyl((0,0,.1),(0,0,.2),3.9,led,bevel=.02)
-ring=e+bd*112;cyl(tuple(ring),tuple(ring+bd*2.6),11.15,steel,bevel=.2)
+cyl((0,0,.1),(0,0,.2),3.75,led,bevel=.02)
+ring=e+bd*112;cyl(tuple(ring),tuple(ring+bd*2.6),8.75,steel,bevel=.2)
 side=Vector((1,0,0));btn=e+bd*84
-o=dome(tuple(btn+side*10.3),2.6,5.2,skyblue,'Blue side activation button');o.rotation_euler=bd.to_track_quat('Z','Y').to_euler();o.scale=(1.0,2.6,5.2)
+o=dome(tuple(btn+side*8.05),2.6,5.2,skyblue,'Blue side activation button');o.rotation_euler=bd.to_track_quat('Z','Y').to_euler();o.scale=(1.0,2.3,4.6)
 up=bd.cross(side).normalized()
-t=text('RADII-CAL CX',tuple(e+bd*62+up*-9.75),2.6,printmat);t.rotation_euler=(-up).to_track_quat('Z','Y').to_euler();t.rotation_euler.rotate_axis('Z',math.radians(90))
+t=text('RADII-CAL CX',tuple(e+bd*62+up*-7.72),2.3,printmat);t.rotation_euler=(-up).to_track_quat('Z','Y').to_euler();t.rotation_euler.rotate_axis('Z',math.radians(90))
 render_set('curing_light',compare_roll=90)
 
 # --- COLTENE ROEKO Surgitip -------------------------------------------------
 # Reference: thick white cannula with ONE smooth elbow of about 40 degrees,
 # short white sleeve cut over a tapered green insert, open 2.8 mm lumen.
 # v8 had a double dog-leg and a thin, over-long green insert.
-sweep([(0,0,.15),(0,-21,3.2)],[1.8,2.95],green,.4,'Green tapered insert, 2.8 mm lumen',steps=2)
-el=math.radians(40);d2=Vector((math.sin(el)*.55,-math.cos(el),math.sin(el)*.83)).normalized();p1=Vector((0,-19.5,2.95));ax1=Vector((0,-21,3.05)).normalized()
-k0=p1+ax1*13
-sweep([tuple(p1),tuple(p1+ax1*6),tuple(k0),tuple(k0+(ax1+d2).normalized()*7),tuple(k0+(ax1+d2).normalized()*7+d2*8),tuple(k0+d2*45),tuple(k0+d2*128)],[3.15,3.2,3.2,3.2,3.2,3.2,3.2],pearl,.55,'White cannula with single elbow')
+# Second pass from the full-resolution photograph: insert about 20 mm, almost
+# flush with the cannula at its base; ~12 mm straight sleeve; tight ~45 degree elbow.
+ax1=Vector((0,-20.5,3.0)).normalized()
+sweep([(0,0,.15),tuple(ax1*20.5+Vector((0,0,.15)))],[1.8,3.05],green,.4,'Green tapered insert, 2.8 mm lumen',steps=2)
+cyl(tuple(ax1*.05+Vector((0,0,.15))),tuple(ax1*.9+Vector((0,0,.15))),1.86,green,1.9,bevel=.12)  # rolled rim of the opening
+el=math.radians(45);side2=Vector((.55,0,.83)).normalized();d2=(ax1*math.cos(el)+side2*math.sin(el)).normalized()
+p1=ax1*19+Vector((0,0,.15));k0=p1+ax1*13.5;mid=(ax1+d2).normalized()
+sweep([tuple(p1),tuple(p1+ax1*7),tuple(k0),tuple(k0+mid*5),tuple(k0+mid*5+d2*6),tuple(k0+d2*40),tuple(k0+d2*112)],[3.3]*7,pearl,.55,'White cannula with single elbow')
+cyl(tuple(p1-ax1*.2),tuple(p1+ax1*1.6),3.42,pearl,bevel=.2)  # sleeve lip over the insert
 render_set('suction')
 
 # --- ACTEON original No.1 on a white handpiece ------------------------------
