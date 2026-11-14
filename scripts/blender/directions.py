@@ -73,6 +73,9 @@ def tooth_mesh(name, root=True, scale=1.0, inner=0.0, down=False):
             zz = z
             if v > 0.97 and inner == 0:  # mamelons on the incisal edge
                 zz += 0.025 * math.sin(3 * math.pi * (x / max(w, 1e-3) + 1) / 2) * (v - 0.97) / 0.03
+            if v > 0.82 and inner > 0:  # dentin core: three mamelon lobes instead of a straight edge
+                lobe = abs(math.sin(3 * math.pi * (x / max(w, 1e-3) + 1) / 2))
+                zz -= 0.12 * (1 - lobe) * ((v - 0.82) / 0.18) ** 1.5
             verts.append((x * scale, y * scale, -zz * scale if down else zz * scale))
     for j in range(nv):
         for i in range(nu):
@@ -257,19 +260,55 @@ incisal_translucency(enamel)
 
 if direction == "A":
     world((0.004, 0.004, 0.005), 1)
+    # layered tooth: translucent enamel shell over a warm dentin core that stops short of the incisal edge
+    shell = material("enamel_shell", (0.93, 0.91, 0.87), rough=0.22, sss=0.15, sss_r=(1.0, 0.8, 0.6), coat=0.45, trans=0.55, bump="perikymata")
+    shell.node_tree.nodes["Principled BSDF"].inputs["IOR"].default_value = 1.63
+    core = material("dentin_core", (0.88, 0.72, 0.5), rough=0.5, sss=1.0, sss_r=(1.0, 0.6, 0.3))
     cx = [-1.36, -0.47, 0.47, 1.36]
     for k, x in enumerate(cx):
         lateral = abs(x) > 1
-        t = tooth_mesh(f"t{k}", root=False, down=True, scale=0.84 if lateral else 1.0)
-        t.location = (x, 0.22 if lateral else 0, 0.04 if lateral else 0)
-        t.rotation_euler = (math.radians(-6), 0, math.radians((-24 if x < 0 else 24) if lateral else (-4 if x < 0 else 4)))
-        assign(t, enamel)
+        sc = 0.84 if lateral else 1.0
+        loc = (x, 0.22 if lateral else 0, 0.04 if lateral else 0)
+        rot = (math.radians(-6), 0, math.radians((-24 if x < 0 else 24) if lateral else (-4 if x < 0 else 4)))
+        t = tooth_mesh(f"t{k}", root=False, down=True, scale=sc)
+        d = tooth_mesh(f"d{k}", root=False, down=True, scale=sc, inner=0.2)
+        d.scale = (1, 1, 0.84)  # dentin ends above the edge: the incisal third stays translucent
+        for ob in (t, d):
+            ob.location = loc
+            ob.rotation_euler = rot
+        assign(t, shell)
+        assign(d, core)
+    # gum: stippled, matte, lighter coral at the margin, deeper red higher up
     g = gum_band("gum", cx, w=0.47)
     g.location.y = 0.1
-    assign(g, gum)
-    area("key", (2.0, -5.5, 2.0), (65, 0, 20), 2.5, 520, (1, 0.96, 0.9))
-    area("rim", (-3.0, 2.0, 1.0), (70, 0, -130), 1.5, 1000, (0.75, 0.85, 1.0))
-    area("fill", (-2, -5, -2.5), (110, 0, -15), 4, 70)
+    gm = material("gum2", (0.66, 0.3, 0.3), rough=0.78, sss=0.6, sss_r=(1.0, 0.3, 0.2), coat=0.0)
+    nt = gm.node_tree
+    pb = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    vor = nt.nodes.new("ShaderNodeTexVoronoi")
+    vor.inputs["Scale"].default_value = 140
+    nt.links.new(tc.outputs["Object"], vor.inputs["Vector"])
+    bn = nt.nodes.new("ShaderNodeBump")
+    bn.inputs["Strength"].default_value = 0.08
+    nt.links.new(vor.outputs["Distance"], bn.inputs["Height"])
+    nt.links.new(bn.outputs["Normal"], pb.inputs["Normal"])
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(tc.outputs["Object"], sep.inputs[0])
+    mr = nt.nodes.new("ShaderNodeMapRange")
+    mr.inputs["From Min"].default_value = -0.3
+    mr.inputs["From Max"].default_value = 1.2
+    nt.links.new(sep.outputs["Z"], mr.inputs["Value"])
+    mix = nt.nodes.new("ShaderNodeMix")
+    mix.data_type = "RGBA"
+    mix.inputs[6].default_value = (0.78, 0.38, 0.36, 1)  # attached gingiva at the margin: coral
+    mix.inputs[7].default_value = (0.5, 0.12, 0.15, 1)  # higher up: deeper red mucosa
+    nt.links.new(mr.outputs["Result"], mix.inputs[0])
+    nt.links.new(mix.outputs[2], pb.inputs["Base Color"])
+    assign(g, gm)
+    area("key", (2.0, -5.5, 2.0), (65, 0, 20), 2.5, 480, (1, 0.96, 0.9))
+    area("rim", (-3.0, 2.0, 1.0), (70, 0, -130), 1.5, 900, (0.75, 0.85, 1.0))
+    area("back", (0.0, 3.5, -2.2), (-115, 0, 0), 3, 700, (1.0, 0.95, 0.88))  # behind/below: lights up the incisal translucency
+    area("fill", (-2, -5, -2.5), (110, 0, -15), 4, 60)
     camera((0.3, -6.2, -0.9), (0, 0, -0.62), lens=60, fstop=2.8, focus=5.9)
 
 elif direction == "B":

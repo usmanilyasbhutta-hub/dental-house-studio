@@ -13,6 +13,11 @@ Three.js gives us fast, clean procedure animations. For close-up, photoreal deta
 
 The procedural models set lighting, materials and camera. **Detail** comes next.
 
+**Chosen look: A (owner, 2026-11-14).** Detailed in code, no Tripo for now: layered tooth (translucent enamel shell, IOR 1.63,
+over a warm dentin core with three mamelon lobes that stops short of the edge, so the incisal third glows with a halo),
+perikymata bump, matte stippled gum graded from coral at the margin to deeper red, and a backlight for translucency.
+Full quality: 540×960 at 128 samples ≈ 2 min/frame on this CPU; previews at 32 samples ≈ 15 s.
+
 ## Where Tripo fits
 - **Instruments and products** (generic, unbranded): handpiece, curing light, composite syringe, matrix band, mirror,
   probe, aligner, toothbrush. Text → mesh, then decimate, clean, and re-material in Blender with our recipes.

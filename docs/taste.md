@@ -34,6 +34,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T09 | Textbook-style annotation on clinical close-ups: thin lines, labels, colour zones. | lean | "Layout like in this vid" (reference I) |
 | T10 | Likes "wow" 3D/motion pieces as occasional features: map route (most), blueprint, receipt, exploded view, data city, hand-drawn explainer. | lean | "especially map route"; "Blue print animation from this"; "This reciept effect"; "Add this skill also" (hand-drawn) |
 | T11 | Three.js for 3D first; Blender photoreal (with Tripo meshes) for close-up detail. | lean | "Lets see three.js first"; "Use tripo 3d blender creative directions for detailing" |
+| T13 | Photoreal 3D close-ups use the clinical-macro look: dark field, wet natural enamel, warm key + cool rim, shallow focus. | lean | picked direction A (2026-11-14) |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -58,6 +59,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-14 | 3D detail direction | picked "A Clinical macro"; Tripo "Not now" | detail A in Blender code (layered enamel/dentin, gum stippling); no Tripo credits | T13 |
 | 2026-11-14 | 3D detail | "Use tripo 3d blender creative directions for detailing" | Blender directions A/B/C + Tripo pipeline doc | T11 |
 | 2026-11-12 | visual codes, 20 art styles, miracle tools, GitHub tools | "Add these if not already present." | `diagram` type (9 layouts), 8 new sketch media, auto-grade + cleanup, Particles; apps explained, not installed | T10, N05 |
 | 2026-11-12 | "20 video effects for Claude" post | "Add these effecta also if not already present." | 11 new footage effects (39–49); 9 already existed | T10 |
