@@ -1,6 +1,8 @@
 """modelgen: our own text → 3D generator for dental objects (headless Blender, pure code, no AI service, no uploads).
 
   python3 scripts/blender/modelgen.py "<description>" [--out public/models/x.glb] [--preview out/x.png] [--size 800] [--samples 64] [--view auto|occlusal|front|lingual]
+      [--look default|chrome|crystal|lowpoly|toy|hologram|particles]
+      [--clip out/x.mp4 --move orbit|dolly_in|dolly_out|low_arc|crane|tilt|pendulum|ground_skim|close_up|snap_zoom|fpv|static --frames 36 --fps 12]
   python3 scripts/blender/modelgen.py --list
 
 Understands (keywords, any order):
@@ -641,7 +643,127 @@ def bounds():
     return lo, hi
 
 
-def preview(spec, path, size, samples, view="auto"):
+LOOKS = ["default", "chrome", "crystal", "lowpoly", "toy", "hologram", "particles"]
+MOVES = ["static", "dolly_in", "dolly_out", "orbit", "low_arc", "crane", "tilt", "pendulum", "ground_skim", "close_up", "snap_zoom", "fpv"]
+
+
+def apply_look(look):
+    """Restyle every mesh (our own "animation styles" for 3D): chrome, crystal, low poly, toy, hologram, particles."""
+    if look == "default":
+        return
+    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+
+    def override(o, m):
+        o.data.materials.clear()
+        o.data.materials.append(m)
+
+    def faces_of(o):
+        dg = bpy.context.evaluated_depsgraph_get()
+        return max(1, len(o.evaluated_get(dg).data.polygons))
+
+    def facet(o, target):
+        """Decimate to about `target` faces (density-independent), flat shaded."""
+        dm = o.modifiers.new("dec", "DECIMATE")
+        dm.ratio = min(1.0, target / faces_of(o))
+        bake(o)
+        for p in o.data.polygons:
+            p.use_smooth = False
+
+    if look == "chrome":
+        m = mat("look_chrome", (0.92, 0.93, 0.96), rough=0.04, metal=1.0)
+        for o in meshes:
+            override(o, m)
+    elif look == "crystal":
+        m = mat("look_crystal", (1, 1, 1), rough=0.0, trans=1.0, ior=1.9)
+        for o in meshes:
+            facet(o, 260)
+            override(o, m)
+    elif look == "lowpoly":
+        for o in meshes:
+            base = o.data.materials[0].node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value[:3] if o.data.materials else (0.8, 0.8, 0.8)
+            metal = o.data.materials[0].node_tree.nodes["Principled BSDF"].inputs["Metallic"].default_value if o.data.materials else 0
+            facet(o, 70)
+            override(o, mat("lp_" + o.name, (0.62, 0.66, 0.72) if metal > 0.5 else base, rough=0.75))
+    elif look == "toy":
+        for o in meshes:
+            src = o.data.materials[0].node_tree.nodes["Principled BSDF"] if o.data.materials else None
+            base = src.inputs["Base Color"].default_value[:3] if src else (0.9, 0.9, 0.9)
+            metal = src.inputs["Metallic"].default_value if src else 0
+            override(o, mat("toy_" + o.name, (0.55, 0.68, 0.9) if metal > 0.5 else base, rough=0.28, coat=1.0, sss=0.2))
+    elif look == "hologram":
+        m = mat("look_holo", (0.0, 0.02, 0.03), rough=0.4, emit=((0.15, 0.8, 1.0), 5.0))
+        for o in meshes:
+            dm = o.modifiers.new("dec", "DECIMATE")
+            dm.ratio = min(1.0, 420 / faces_of(o))
+            wf = o.modifiers.new("wire", "WIREFRAME")
+            wf.thickness = 0.008
+            bake(o)
+            override(o, m)
+    elif look == "particles":
+        m = mat("look_particles", (0.0, 0.0, 0.0), emit=((1.0, 0.75, 0.45), 6.0))
+        pts = []
+        dg = bpy.context.evaluated_depsgraph_get()
+        for o in meshes:
+            ev = o.evaluated_get(dg)
+            me = ev.to_mesh()
+            step = max(1, len(me.vertices) // 900)
+            pts += [ev.matrix_world @ me.vertices[i].co for i in range(0, len(me.vertices), step)]
+            ev.to_mesh_clear()
+        for o in meshes:
+            bpy.data.objects.remove(o)
+        verts, faces = [], []
+        r = 0.008
+        import random
+        rnd = random.Random(3)
+        for k, p in enumerate(pts):
+            p = p + Vector((rnd.gauss(0, 0.02), rnd.gauss(0, 0.02), rnd.gauss(0, 0.02)))
+            b = len(verts)
+            verts += [(p.x + r, p.y, p.z), (p.x - r, p.y, p.z), (p.x, p.y + r, p.z), (p.x, p.y - r, p.z), (p.x, p.y, p.z + r), (p.x, p.y, p.z - r)]
+            faces += [(b, b + 2, b + 4), (b + 2, b + 1, b + 4), (b + 1, b + 3, b + 4), (b + 3, b, b + 4), (b + 2, b, b + 5), (b + 1, b + 2, b + 5), (b + 3, b + 1, b + 5), (b, b + 3, b + 5)]
+        new_obj("particles", verts, faces, m, smooth=False)
+
+
+def camera_move(move, t, c, d, dist, R, up):
+    """Camera moves (names from film grammar). t 0→1. Returns (position, look-at point, lens mm)."""
+    e = t * t * (3 - 2 * t)  # ease in-out
+    side = Vector((-d.y, d.x, 0)).normalized()
+    Z = Vector((0, 0, 1))
+
+    def orbit(a, elev=0.0, k=1.0):
+        q = Matrix.Rotation(a, 4, "Z") @ d
+        q = (q + Z * elev).normalized()
+        return c + q * dist * k
+
+    if move == "dolly_in":
+        return c + d * dist * (1.35 - 0.6 * e), c, 85
+    if move == "dolly_out":
+        return c + d * dist * (0.75 + 0.6 * e), c, 85
+    if move == "orbit":
+        return orbit(math.radians(-50 + 100 * e)), c, 85
+    flat = Vector((d.x, d.y, 0)).normalized()
+    if move == "low_arc":  # low, just above the subject's centre, sweeping round it
+        q = (Matrix.Rotation(math.radians(-45 + 90 * e), 4, "Z") @ flat + Z * 0.12 * up).normalized()
+        return c + q * dist * 0.9, c, 60
+    if move == "crane":  # rises from eye level to looking down
+        return c + (flat + Z * (0.05 + 1.4 * e) * up).normalized() * dist, c, 85
+    if move == "tilt":
+        return c + d * dist * 0.8, c + Z * R * (-0.9 + 1.8 * e) * up, 85
+    if move == "pendulum":
+        return orbit(math.radians(28 * math.sin(t * math.pi * 2))), c, 85
+    if move == "ground_skim":
+        return c + (flat + Z * 0.2 * up) * dist * 0.8 + side * R * (-0.9 + 1.8 * e), c + side * R * (-0.4 + 0.8 * e), 50
+    if move == "close_up":
+        return c + d * dist * 0.5 + side * R * 0.05 * math.sin(t * math.pi * 2), c + Z * R * 0.2 * up, 110
+    if move == "snap_zoom":
+        k = 0 if t < 0.45 else min(1, (t - 0.45) / 0.12)
+        return c + d * dist, c, 60 + 90 * (1 - (1 - k) ** 3)
+    if move == "fpv":
+        a = math.radians(-70 + 150 * e)
+        return orbit(a, elev=0.35 * math.sin(t * math.pi) * up, k=0.85 - 0.35 * math.sin(t * math.pi)), c, 40
+    return c + d * dist, c, 85  # static
+
+
+def preview(spec, path, size, samples, view="auto", look="default", move=None, frames=36, fps=12):
     sc = bpy.context.scene
     sc.render.engine = "CYCLES"
     sc.cycles.device = "CPU"
@@ -653,14 +775,38 @@ def preview(spec, path, size, samples, view="auto"):
     w = bpy.data.worlds.new("w")
     sc.world = w
     w.use_nodes = True
-    w.node_tree.nodes["Background"].inputs[0].default_value = (0.012, 0.014, 0.016, 1)
+    bg = {"toy": (0.2, 0.32, 0.5), "chrome": (0.03, 0.035, 0.05), "hologram": (0.0, 0.004, 0.01), "particles": (0.004, 0.003, 0.002)}.get(look, (0.012, 0.014, 0.016))
+    w.node_tree.nodes["Background"].inputs[0].default_value = (*bg, 1)
+    if look in ("chrome", "crystal"):  # something to reflect and refract: a studio gradient instead of black
+        nt = w.node_tree
+        grad = nt.nodes.new("ShaderNodeTexGradient")
+        tc = nt.nodes.new("ShaderNodeTexCoord")
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        ramp = nt.nodes.new("ShaderNodeValToRGB")
+        el = ramp.color_ramp.elements
+        el[0].color, el[0].position = (0.22, 0.23, 0.26, 1), 0.0  # floor bounce
+        el[1].color, el[1].position = (0.95, 0.96, 1.0, 1), 1.0  # bright sky
+        mid = el.new(0.5)
+        mid.color = (0.01, 0.012, 0.02, 1)  # dark horizon band: gives chrome its contrast line
+        hi = el.new(0.62)
+        hi.color = (0.6, 0.62, 0.7, 1)
+        mr = nt.nodes.new("ShaderNodeMapRange")
+        mr.inputs["From Min"].default_value = -1.0
+        mr.inputs["From Max"].default_value = 1.0
+        nt.links.new(tc.outputs["Generated"], sep.inputs[0])
+        nt.links.new(sep.outputs["Z"], mr.inputs["Value"])
+        nt.links.new(mr.outputs["Result"], ramp.inputs["Fac"])
+        nt.links.new(ramp.outputs["Color"], nt.nodes["Background"].inputs[0])
+        nt.nodes["Background"].inputs[1].default_value = 1.2
+        del grad
+    apply_look(look)
     lo, hi = bounds()
     c = (lo + hi) / 2
     R = (hi - lo).length / 2
     is_tooth = spec["kind"] in TOOTH
-    if not is_tooth:  # dark floor for a soft contact shadow
+    if not is_tooth or look == "toy":  # floor for a soft contact shadow
         bpy.ops.mesh.primitive_plane_add(size=R * 40, location=(c.x, c.y, lo.z - 0.02))
-        bpy.context.active_object.data.materials.append(mat("floor", (0.004, 0.005, 0.005), rough=0.9))
+        bpy.context.active_object.data.materials.append(mat("floor", (0.3, 0.42, 0.6) if look == "toy" else (0.004, 0.005, 0.005), rough=0.9))
     upper = spec.get("arch") == "upper"
     up = -1 if upper else 1
     d = Vector((0.55, -1, 0.5 if not is_tooth else 0.68 * up)).normalized()
@@ -675,12 +821,15 @@ def preview(spec, path, size, samples, view="auto"):
     ob = bpy.data.objects.new("cam", cam)
     sc.collection.objects.link(ob)
     dist = R / math.tan(math.atan(18 / 85)) * 1.12
-    ob.location = c + d * dist
-    ob.rotation_euler = (c - ob.location).to_track_quat("-Z", "Y").to_euler()
     cam.dof.use_dof = True
-    cam.dof.focus_distance = dist
-    cam.dof.aperture_fstop = 8 if not is_tooth else 5.6
+    cam.dof.aperture_fstop = 1.2 if look == "toy" else (8 if not is_tooth else 5.6)  # toy: miniature tilt-shift feel
     sc.camera = ob
+
+    def aim(pos, look_at, lens):
+        ob.location = pos
+        ob.rotation_euler = (look_at - pos).to_track_quat("-Z", "Y").to_euler()
+        cam.lens = lens
+        cam.dof.focus_distance = (c - pos).length
 
     def area(loc, power, color, sz):
         l = bpy.data.lights.new("l", "AREA")
@@ -692,13 +841,31 @@ def preview(spec, path, size, samples, view="auto"):
         o.location = c + Vector(loc) * R
         o.rotation_euler = (c - o.location).to_track_quat("-Z", "Y").to_euler()
 
-    area((2.2, -3.2, 2.6 * up), 420, (1, 0.96, 0.9), 2.2)  # warm key (from the crown side)
-    area((-3.0, 2.2, 1.4 * up), 650, (0.75, 0.85, 1.0), 1.4)  # cool rim
-    area((-2.0, -3.0, -0.6 * up), 60, (1, 1, 1), 3.0)  # fill
-    if is_tooth:
+    if look not in ("hologram", "particles"):
+        area((2.2, -3.2, 2.6 * up), 420, (1, 0.96, 0.9), 2.2)  # warm key (from the crown side)
+        area((-3.0, 2.2, 1.4 * up), 650, (0.75, 0.85, 1.0), 1.4)  # cool rim
+        area((-2.0, -3.0, -0.6 * up), 60, (1, 1, 1), 3.0)  # fill
+    if is_tooth and look == "default":
         area((0.0, 3.4, 2.0 * up), 380, (1.0, 0.95, 0.88), 2.0)  # behind the edge: shows the translucent enamel
-    sc.render.filepath = path
-    bpy.ops.render.render(write_still=True)
+    if look in ("crystal", "chrome"):  # coloured strips: rainbow glints in the facets / reflections
+        for k, col in enumerate([(1, 0.2, 0.2), (1, 0.8, 0.1), (0.2, 1, 0.4), (0.2, 0.5, 1), (0.8, 0.3, 1)]):
+            a = -1.2 + k * 0.6
+            area((3.2 * math.sin(a), 3.2 * math.cos(a), (0.6 + 0.5 * k) * up), 260, col, 0.5)
+    if not move:
+        aim(c + d * dist, c, 85)
+        sc.render.filepath = path
+        bpy.ops.render.render(write_still=True)
+        return
+    import os
+    import subprocess
+    import tempfile
+    tmp = tempfile.mkdtemp(prefix="modelgen-")
+    for f in range(frames):
+        aim(*camera_move(move, f / max(1, frames - 1), c, d, dist, R, up))
+        sc.render.filepath = os.path.join(tmp, f"{f:04d}.png")
+        bpy.ops.render.render(write_still=True)
+    subprocess.check_call(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", str(fps), "-i", os.path.join(tmp, "%04d.png"),
+                           "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", path])
 
 
 def selftest():
@@ -732,8 +899,13 @@ def main():
         print("model →", out)
     pv = opt("--preview")
     if pv:
-        preview(spec, pv, int(opt("--size", "800")), int(opt("--samples", "64")), opt("--view", "auto"))
+        preview(spec, pv, int(opt("--size", "800")), int(opt("--samples", "64")), opt("--view", "auto"), opt("--look", "default"))
         print("preview →", pv)
+    clip = opt("--clip")
+    if clip:  # animated camera move → mp4 (run without --preview, or the look is applied twice)
+        preview(spec, clip, int(opt("--size", "540")), int(opt("--samples", "24")), opt("--view", "auto"), opt("--look", "default") if not pv else "default",
+                opt("--move", "orbit"), int(opt("--frames", "36")), int(opt("--fps", "12")))
+        print("clip →", clip)
 
 
 if __name__ == "__main__":

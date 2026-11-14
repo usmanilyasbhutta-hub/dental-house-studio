@@ -59,6 +59,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-14 | 12 posts: animation styles, camera moves, repos (three.js, Blender MCP, librosa, physics, PixelFX…) | (screenshots) + "Continue" | modelgen looks (6) + 12 camera moves, beat finder; rest mapped to existing tools | T10, N05 |
 | 2026-11-14 | modelgen teeth | "Fix the upper molar and bring the direction-A enamel detail into all teeth." | layered enamel/dentin on all teeth, upper molar anatomy rebuilt, front teeth reshaped | T13 |
 | 2026-11-14 | 3D models | "First can you make your own trippo?" → "Yes" | built modelgen (text → 3D for teeth, implant, instruments), 15-model library | N05 |
 | 2026-11-14 | 3D detail direction | picked "A Clinical macro"; Tripo "Not now" | detail A in Blender code (layered enamel/dentin, gum stippling); no Tripo credits | T13 |

@@ -82,7 +82,7 @@ Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illus
 Use the project skill `dental-animation` (`.claude/skills/dental-animation/SKILL.md`): 3D procedure explainers
 (`type: procedure`), photo layouts (`type: photo-layout`: annotate / split / grid, loupe), and the ffmpeg toolkit
 (`npm run ff -- help`). Overview: `docs/animation-toolkit.md`. 3D videos keep the "Illustration · not to scale" label.
-Photoreal detailing: Blender Cycles directions (`scripts/blender/directions.py`) and **modelgen**, our own text → 3D generator for teeth, implants and instruments (`scripts/blender/modelgen.py "lower molar with occlusal decay"`, see `docs/3d-detailing.md`). Never send patient images to third-party 3D/AI services.
+Photoreal detailing: Blender Cycles directions (`scripts/blender/directions.py`) and **modelgen**, our own text → 3D generator for teeth, implants and instruments (`scripts/blender/modelgen.py "lower molar with occlusal decay"`, see `docs/3d-detailing.md`; `--look chrome|crystal|lowpoly|toy|hologram|particles`, `--clip … --move orbit|dolly_in|crane|…`). Beat sync: `python3 scripts/beats.py music.mp3`. Never send patient images to third-party 3D/AI services.
 
 ## Style profile
 Read `docs/style-profile.md` before writing a brief or changing a template. It records what the owner likes (real footage, doctor cut-outs,

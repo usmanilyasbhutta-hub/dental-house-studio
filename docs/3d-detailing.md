@@ -60,3 +60,14 @@ cavities cut through both layers. Upper molar rebuilt: rhomboid outline, four cu
 ridge, central and distal fossae, sharper fissures. Front teeth: narrow neck, cingulum, lingual fossa, labial lobes,
 square mesial and rounded distal corner. Preview views: `--view auto|occlusal|front|lingual`.
 Still rough: the upper molar's cusps look exaggerated from low side angles; roots are simple cones.
+
+## Looks and camera moves (from the "animation styles" and "camera moves" posts, our own code)
+`--look default|chrome|crystal|lowpoly|toy|hologram|particles` restyles any modelgen object:
+- **chrome**: mirror metal in a studio gradient · **crystal**: faceted glass (IOR 1.9) with rainbow glints
+- **lowpoly**: ~70 flat facets per part · **toy**: glossy vinyl on a blue set, very shallow focus (miniature look)
+- **hologram**: cyan wireframe glow · **particles**: the object as a cloud of warm glowing points
+Use them for promos and wow moments only; clinical explanations stay in the default (direction A) look.
+
+`--clip out/x.mp4 --move <move> [--frames 36 --fps 12 --size 540 --samples 24]` renders a camera move:
+static · dolly_in · dolly_out · orbit · low_arc · crane · tilt · pendulum · ground_skim · close_up · snap_zoom · fpv.
+Previews: ~1 s/frame at 320 px, 10 samples. Final quality: raise `--size`, `--samples`, `--fps 30`.

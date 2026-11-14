@@ -193,6 +193,11 @@ Clinical-photo rule still applies: these go on doctor/clinic footage and graphic
 Honesty: never grade, clean up or retouch clinical before/after material (golden rule 3). For privacy, blur. Don't
 "remove" anything from footage that documents treatment.
 
+## Beat sync
+`python3 scripts/beats.py music.mp3 --json beats.json` → BPM, beat times and beat frames at 30 fps (own numpy code, idea from
+librosa). Use the beat frames to place cuts, word pops or sound effects on the beat. Calm education videos usually
+don't need it; promos do. Checked: a 124 BPM test track reads 123 BPM, beats within about one frame.
+
 ## Rules
 1. **Never put sparkles, glow, shine or light leaks on clinical photos** (before/after, intraoral). It can read as
    an enhanced result. Effects go on text and graphics only.
