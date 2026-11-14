@@ -70,7 +70,7 @@ beats:
   - kind: clip
     step: 3
     title: Polish
-    caption: Each front tooth is polished, then rinsed.
+    caption: Each front tooth is polished smooth.
     from: 33.1
     to: 37.0
     speed: 1.1
