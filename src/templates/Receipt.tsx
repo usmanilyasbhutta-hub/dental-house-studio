@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Easing, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Easing, Sequence, useCurrentFrame, useVideoConfig } from "remotion";
 import { evolvePath } from "@remotion/paths";
 import { clinic, colors, fonts, video } from "../brand";
 import type { ReceiptBrief } from "../brief/schema";
@@ -172,7 +172,6 @@ const Printer: React.FC<{ y: number; led: boolean }> = ({ y, led }) => (
     />
     {/* slot */}
     <div style={{ position: "absolute", left: (PRINTER.width - PAPER_W - 40) / 2, width: PAPER_W + 40, bottom: 12, height: 12, borderRadius: 6, background: "#070605", boxShadow: "inset 0 3px 4px rgba(0,0,0,0.9), 0 1px 0 rgba(255,255,255,0.12)" }} />
-    <Img src={staticFile("brand/mark-white.png")} style={{ position: "absolute", left: 44, top: 30, height: 54, opacity: 0.55 }} />
     <div style={{ position: "absolute", right: 48, top: 48, width: 16, height: 16, borderRadius: 8, background: led ? "#7CF0A0" : "#2F4A38", boxShadow: led ? "0 0 14px #7CF0A0" : "none" }} />
   </div>
 );

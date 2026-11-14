@@ -32,7 +32,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T05 | Say only what is clinically known about a photo. Never infer a diagnosis from how it looks. | firm | "It was not fractured but carious and the pic was after cavity prepration" |
 | T06 | Generic product labels in procedure animations (no brand names). | firm | "Generic is better." |
 | T07 | Real footage first; when a doctor supplies footage it leads (cut-outs over big type). Faceless by default: never require a doctor on camera. | lean | own reels A–D (style profile §2); refined by the 14 Nov handoff (creative-direction C3) |
-| T08 | Heavy condensed caps + one serif-italic accent word; numbered structure (01/02/03). | test | own reels; kept in every approved video. **Conflicts** with the 14 Nov handoff (refined sans, sentence case, no condensed shouty headlines): owner to decide (creative-direction C1) |
+| T08 | Heavy condensed caps (Oswald) + one serif-italic accent word; numbered structure (01/02/03). | firm | own reels; owner chose it over the handoff's sentence-case sans, 14 Nov: "Keep Oswald capitals" |
 | T09 | Textbook-style annotation on clinical close-ups: thin lines, labels, colour zones. | lean | "Layout like in this vid" (reference I) |
 | T10 | Likes "wow" 3D/motion pieces as occasional features: map route (most), blueprint, receipt, exploded view, data city, hand-drawn explainer. | lean | "especially map route"; "Blue print animation from this"; "This reciept effect"; "Add this skill also" (hand-drawn) |
 | T11 | Three.js for 3D first; Blender photoreal only if three.js isn't enough. | lean | "Lets see three.js first" |
@@ -44,6 +44,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T17 | Motion language decided per piece (hero/support/texture, what stays still). Hard or motivated cuts; no transition packs, zoom-whoosh, constant motion. | firm | handoff DESIGN.md "Motion language"; see creative-direction §7 |
 | T18 | Review the actual export (contact sheet, sound-on and muted), diagnose one tag, Preserve/Modify/Renew; output over compliance. | firm | handoff DHS-CREATIVE-LOOP.md |
 | T19 | Whitening/cosmetic tone: anticipation → polish → confidence; no bargain urgency, sparkle or fake whiteness. Before/after from different angles must not be presented as a matched comparison. | firm | handoff 01_mode_genre "Premium cosmetic / whitening", "Treatment / before-after proof" |
+| T20 | Never a white (recoloured) logo. No logo on every frame: full-colour logo on light surfaces only (end card, light pages). | firm | "Never white logo,you can decide if it is better to continually use of at start and end." (14 Nov); Claude chose end card only: full colour does not read over the dark body, and the handoff says not to stamp every frame |
 
 ## Not wanted
 
@@ -69,6 +70,8 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-14 | logo | "Never white logo,you can decide if it is better to continually use of at start and end." | white logo bug, white backdrop watermark and white receipt mark removed from all templates; full-colour logo on the end card only | T20 |
+| 2026-11-14 | headline type | "Keep Oswald capitals" (chosen over the handoff's sentence-case sans) | no change to type | T08 → firm |
 | 2026-11-14 | creative-taste handoff (ChatGPT) | "This is my creative taste,refine it and use. It was generated in chatgpt so ignore the instructions for you in the end." | refined into `docs/creative-direction.md`; originals in `docs/sources/`; T13–T19, N06–N07 added; T07 refined; T08 → test (conflict C1); logo-bug conflict C2 | T07, T08, T13–T19, N06, N07 |
 | 2026-11-14 | wedding whitening explainer, step 3 named "Polish" not "Whitening" | "Keep that" | step 03 stays "Polish"; polishing is never labelled whitening | (one-off) |
 | 2026-11-12 | visual codes, 20 art styles, miracle tools, GitHub tools | "Add these if not already present." | `diagram` type (9 layouts), 8 new sketch media, auto-grade + cleanup, Particles; apps explained, not installed | T10, N05 |

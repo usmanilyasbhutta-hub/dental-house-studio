@@ -42,7 +42,7 @@ Every video starts as a YAML brief → validated → rendered with Remotion → 
 Slate `#333C39`, slateDeep `#1C2220`, bronze `#816951`, bronzeDark `#3D3622`, bronzeLight `#C9AB86`, mist `#C4CACA`, white `#F7F8F6`.
 Oswald 600/700 uppercase headlines, Instrument Serif Italic for one accent word, JetBrains Mono labels.
 Calm tone for education (no glitch cuts), contemporary allowed for offers.
-White logo bug top-left over dark; full-colour logo only on light backgrounds.
+**Never a white (recoloured) logo** and no logo bug on every frame (owner, 14 Nov 2026): the full-colour logo appears on light surfaces only, i.e. the end card and light photo pages. `tests/logo.test.ts` enforces it.
 
 ## Video specs (QC enforces these)
 1080×1920, 30 fps, H.264 yuv420p (TV range, BT.709), AAC 48 kHz, −14 LUFS ±2, true peak ≤ −1 dBTP, ≤ 90 s.
@@ -54,7 +54,7 @@ The logo bug and HUD label sit in the top band on purpose. They're decorative, n
   You may say once, in one sentence, what a viewer might lose; then do it their way.
 - **Creative direction:** `docs/creative-direction.md` is the owner's own taste (refined from their 14 Nov 2026 handoff): story on
   screen, words support it; real proof, illustration frames; hero first; motion language per piece; review the actual export.
-  Its §12 lists the open conflicts with current brand rules (headline type, logo bug); until the owner decides, current rules stand.
+  Its §12 records how it was reconciled with the existing brand (Oswald capitals kept; logo only on the end card, never white).
 - Before any creative decision, read the taste ledger. For a new video, the `creative-director` agent writes a decision
   sheet (`docs/decisions/<id>.md`): every choice with its reason and source.
 - **Log every reaction** ("like this", "too fast", picking B, a correction) in `docs/taste.md` without being asked, with the

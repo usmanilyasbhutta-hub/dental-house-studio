@@ -14,7 +14,7 @@ export const Hud: React.FC<{ label: string; total: number }> = ({ label, total }
     <AbsoluteFill style={{ pointerEvents: "none" }}>
       <AbsoluteFill style={{ height: 300, background: `linear-gradient(180deg, ${t.bgBottom}cc, transparent)` }} />
       <div style={{ position: "absolute", top: 0, left: 0, height: 6, width: `${p * 100}%`, background: t.accent }} />
-      <Img src={staticFile("brand/logo-white.png")} style={{ position: "absolute", top: 96, left: 64, width: 230 }} />
+      {/* No logo on every frame and never a white logo (owner, 14 Nov 2026): the full-colour logo is on the end card. */}
       <div style={{ position: "absolute", top: 128, right: 150, ...mono(24, t.muted) }}>
         <span style={{ color: t.accent }}>●</span> {label}
       </div>
@@ -38,11 +38,11 @@ export const DemoWatermark: React.FC = () => (
   </AbsoluteFill>
 );
 
-/** Minimal chrome for photo-led layouts: small logo bug + handle, nothing else. `light`: full-colour logo for light pages. */
+/** Minimal chrome for photo-led layouts: handle; on light pages also the full-colour logo (never a white logo). */
 export const MinimalBug: React.FC<{ light?: boolean }> = ({ light }) => (
   <AbsoluteFill style={{ pointerEvents: "none" }}>
     {light ? null : <AbsoluteFill style={{ height: 240, background: "linear-gradient(180deg, rgba(0,0,0,0.28), transparent)" }} />}
-    <Img src={staticFile(light ? "brand/logo.png" : "brand/logo-white.png")} style={{ position: "absolute", top: 100, left: 64, width: 190, opacity: 0.95 }} />
+    {light ? <Img src={staticFile("brand/logo.png")} style={{ position: "absolute", top: 100, left: 64, width: 190, opacity: 0.95 }} /> : null}
     <div style={{ position: "absolute", top: 128, right: 150, ...mono(22, light ? "#333C39" : "#F7F8F6"), textTransform: "none", letterSpacing: "0.06em", opacity: 0.9 }}>{clinic.instagram}</div>
   </AbsoluteFill>
 );

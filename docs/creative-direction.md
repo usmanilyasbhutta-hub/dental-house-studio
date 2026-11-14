@@ -131,15 +131,16 @@ one transition family; stagger only when it helps; and **what stays still**.
 
 - Type: one coherent family plus at most one role-based second; editorial serif only where it strengthens hierarchy
   and stays readable on a phone. Sentence case for longer headlines, explanations and subtitles; caps only for short
-  labels. Avoid generic default-looking type, thin faux-luxury scripts, novelty type (see §12 on condensed caps).
+  labels. Avoid generic default-looking type, thin faux-luxury scripts, novelty type. **Headlines stay Oswald capitals**
+  with one serif-italic accent word (owner's choice, §12 C1); keep them short so caps do not shout.
 - Captions: large, high contrast, short lines; no karaoke clutter unless it serves the concept (see §12).
 - Colour has roles: dominant field, supporting content, restrained emphasis, within the DHS palette
   (charcoal green `#333C39`, dark olive ≈ `#3A3521`, ivory/bone neutrals, plus the bronze accents in `src/brand.ts`).
   Test text on its real background; never rely on colour alone for meaning. Grade to unify, never to change
   clinical appearance; no heavy teal-orange.
-- Logo: the supplied master stays whole, undistorted, un-glowed, un-rotated, not redrawn, not boxed. Do not stamp it on
-  every frame: opening identity moment, final frame, an occasional anchor, a discreet watermark only when needed
-  (see §12 on the HUD bug).
+- Logo: the supplied master stays whole, undistorted, un-glowed, un-rotated, not redrawn, not boxed, and **never white
+  or otherwise recoloured**. Not on every frame: the full-colour logo appears on light surfaces only, normally the end
+  card (owner, 14 Nov; §12 C2).
 
 ## 9. Sound
 
@@ -181,12 +182,12 @@ and once muted. Then:
 - **Learning:** one good execution is a campaign lesson (log it in `docs/taste.md`), not a new rule. It graduates here
   only when it works across different briefs or the owner adopts it.
 
-## 12. Conflicts with current project rules (owner to decide; until then the current rule stands)
+## 12. How the handoff was reconciled with the existing project
 
 | # | Handoff says | Project currently does | Status |
 |---|---|---|---|
-| C1 | Refined grotesk/humanist sans, sentence case for longer lines; avoid condensed shouty fonts and generic giant sans headlines | Oswald 700 condensed uppercase headlines + serif-italic accent word (CLAUDE.md brand; T08) | **ask** |
-| C2 | Don't stamp the logo on every frame; never recolour the master | White logo bug top-left on every frame (HUD), a white derivative of the master | **ask** |
+| C1 | Refined grotesk/humanist sans, sentence case for longer lines; avoid condensed shouty fonts and generic giant sans headlines | Oswald 700 condensed uppercase headlines + serif-italic accent word | resolved by the owner: "Keep Oswald capitals" (T08 firm). Sentence case still applies to captions and longer lines |
+| C2 | Don't stamp the logo on every frame; never recolour the master | White logo bug on every frame, white backdrop watermark | resolved by the owner: "Never white logo"; placement left to Claude → end card only, full colour (T20) |
 | C3 | Faceless default; never require the owner on camera | T07 (lean): doctors and their cut-outs first | resolved: doctor footage leads when supplied; never required |
 | C4 | No karaoke-style captions unless they serve the concept | Style profile: Roman-Urdu word-by-word captions (lean, from own reels) | resolved: word captions only for talking heads where speech is the content; elsewhere stable lines |
 | C5 | Hard cuts / motivated transitions; avoid zoom-whoosh | Templates default to soft fades and optional whoosh/pop sfx | resolved: new work uses hard or motivated cuts and no whoosh; templates keep the options for old briefs |

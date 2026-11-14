@@ -2,19 +2,12 @@ import React from "react";
 import { useTheme } from "../../theme";
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 
-/** Dark brand backdrop: gradient, oversized house-mark watermark, grain, vignette. */
+/** Dark brand backdrop: gradient, grain, vignette. No logo watermark (owner, 14 Nov 2026: never a white logo). */
 export const Backdrop: React.FC<{ broll?: string; brollStart?: number }> = ({ broll }) => {
   const t = useTheme();
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-  const drift = interpolate(frame, [0, durationInFrames], [0, -60]);
   return (
     <AbsoluteFill style={{ background: `radial-gradient(120% 80% at 50% 30%, ${t.bgTop} 0%, ${t.bgBottom} 70%)` }}>
       {broll ? <KenBurns src={broll} /> : null}
-      <Img
-        src={staticFile("brand/mark-white.png")}
-        style={{ position: "absolute", width: 1500, left: -260, top: 520 + drift, opacity: 0.06 }}
-      />
       <Grain />
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%)" }} />
     </AbsoluteFill>
