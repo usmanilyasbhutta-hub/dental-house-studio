@@ -82,6 +82,7 @@ Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illus
 Use the project skill `dental-animation` (`.claude/skills/dental-animation/SKILL.md`): 3D procedure explainers
 (`type: procedure`), photo layouts (`type: photo-layout`: annotate / split / grid, loupe), and the ffmpeg toolkit
 (`npm run ff -- help`). Overview: `docs/animation-toolkit.md`. 3D videos keep the "Illustration · not to scale" label.
+Photoreal detailing: Blender Cycles directions (`scripts/blender/directions.py`) + Tripo meshes for instruments (`docs/3d-detailing.md`); never send patient images to Tripo.
 
 ## Style profile
 Read `docs/style-profile.md` before writing a brief or changing a template. It records what the owner likes (real footage, doctor cut-outs,
