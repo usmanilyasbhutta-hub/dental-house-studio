@@ -45,6 +45,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T18 | Review the actual export (contact sheet, sound-on and muted), diagnose one tag, Preserve/Modify/Renew; output over compliance. | firm | handoff DHS-CREATIVE-LOOP.md |
 | T19 | Whitening/cosmetic tone: anticipation → polish → confidence; no bargain urgency, sparkle or fake whiteness. Before/after from different angles must not be presented as a matched comparison. | firm | handoff 01_mode_genre "Premium cosmetic / whitening", "Treatment / before-after proof" |
 | T20 | Never a white (recoloured) logo. No logo on every frame: full-colour logo on light surfaces only (end card, light pages). | firm | "Never white logo,you can decide if it is better to continually use of at start and end." (14 Nov); Claude chose end card only: full colour does not read over the dark body, and the handoff says not to stamp every frame |
+| T21 | Patient-information videos: white/whitish background; explain what *we do* step by step (assessment first), not instrument showcases. | lean | "Background should be white or whitish. No need to present instruments. Its like an illustrative info for patients" (14 Nov, wedding whitening) |
 
 ## Not wanted
 
@@ -70,6 +71,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-14 | wedding whitening explainer, new direction | "Background should be white or whitish. No need to present instruments. Its like an illustrative info for patients like We assess dental mirror and perioprobe ... We check the initial shade ... We remove plaque and calculus ... We do the whitening process We polish the teeth. That is our offer. May b CTA page at end." | proposed: light patient-info version, steps = assess → shade → scale → whiten → polish → offer → CTA; 3D instrument showcase dropped | T21 |
 | 2026-11-14 | logo | "Never white logo,you can decide if it is better to continually use of at start and end." | white logo bug, white backdrop watermark and white receipt mark removed from all templates; full-colour logo on the end card only | T20 |
 | 2026-11-14 | headline type | "Keep Oswald capitals" (chosen over the handoff's sentence-case sans) | no change to type | T08 → firm |
 | 2026-11-14 | creative-taste handoff (ChatGPT) | "This is my creative taste,refine it and use. It was generated in chatgpt so ignore the instructions for you in the end." | refined into `docs/creative-direction.md`; originals in `docs/sources/`; T13–T19, N06–N07 added; T07 refined; T08 → test (conflict C1); logo-bug conflict C2 | T07, T08, T13–T19, N06, N07 |
