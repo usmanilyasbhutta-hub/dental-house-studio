@@ -36,3 +36,20 @@ Full quality: 540×960 at 128 samples ≈ 2 min/frame on this CPU; previews at 3
 Enamel: subsurface + incisal translucency gradient + perikymata bump + light coat (wet). Gum: SSS, matte, stippling noise.
 Metal: brushed anisotropic noise, bevels on every edge. Ceramic: glaze coat, slight translucency. Lighting per direction.
 Render 1080×1920 PNG sequence (or EXR), then composite labels and captions in Remotion.
+
+## modelgen: our own text → 3D generator (owner asked for "our own Tripo", 2026-11-14)
+`python3 scripts/blender/modelgen.py "<description>" --out public/models/x.glb --preview out/x.png` (`--list` shows the vocabulary).
+Pure code in headless Blender: no AI service, no credits, no uploads, same result every time.
+
+- **Teeth:** incisor / canine / premolar / molar, upper or lower, roots, cusps and fissures; a cavity at
+  occlusal / mesial / distal / cervical / incisal (small, large), as decay, prepared, or restored with composite.
+- **Implant:** `implant 4 x 10 with abutment and crown` (diameter × length in mm).
+- **Instruments (generic, no brands):** handpiece, curing light, composite syringe, mouth mirror, explorer.
+- Output: `.glb` (Blender and three.js) + a preview in the clinical-macro lighting.
+- Library: `scripts/blender/library.txt` lists name | description; `python3 scripts/blender/build_library.py` rebuilds
+  all 15 models (~2 min). `.glb` files are not committed because they are reproducible from the text.
+- Parser check: `python3 scripts/blender/modelgen.py --selftest`.
+- New object type: add a builder function + keywords in `KINDS`, then a line in `library.txt`.
+
+Limits: it only knows the objects it was taught (it cannot turn a photo into 3D), and shapes are idealised textbook
+anatomy, not any patient's tooth. Known rough spots in v1: the upper molar's occlusal surface, slightly blocky front teeth.

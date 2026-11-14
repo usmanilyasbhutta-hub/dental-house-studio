@@ -1,0 +1,16 @@
+# name | description   (python3 scripts/blender/build_library.py regenerates every model + preview from this list)
+incisor-upper | upper central incisor
+incisor-cavity | upper central incisor with mesial cavity
+incisor-restored | upper central incisor with mesial cavity restored
+canine-upper | upper canine
+premolar-lower | lower premolar
+molar-lower | lower first molar with deep fissures
+molar-lower-decay | lower molar with occlusal decay
+molar-lower-filled | lower molar with occlusal filling
+molar-upper | upper first molar
+implant-4x10 | implant 4 x 10 with abutment and crown
+handpiece | high speed handpiece
+curing-light | curing light
+composite-syringe | composite syringe with paste
+mouth-mirror | mouth mirror
+explorer | explorer probe

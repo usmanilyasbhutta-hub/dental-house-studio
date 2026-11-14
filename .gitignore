@@ -16,3 +16,4 @@ references/*
 
 # Clinic footage (large; processed copies are rebuilt by scripts/prep_footage.py)
 public/footage/*
+public/models/*.glb

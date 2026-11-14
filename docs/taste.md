@@ -59,6 +59,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-14 | 3D models | "First can you make your own trippo?" → "Yes" | built modelgen (text → 3D for teeth, implant, instruments), 15-model library | N05 |
 | 2026-11-14 | 3D detail direction | picked "A Clinical macro"; Tripo "Not now" | detail A in Blender code (layered enamel/dentin, gum stippling); no Tripo credits | T13 |
 | 2026-11-14 | 3D detail | "Use tripo 3d blender creative directions for detailing" | Blender directions A/B/C + Tripo pipeline doc | T11 |
 | 2026-11-12 | visual codes, 20 art styles, miracle tools, GitHub tools | "Add these if not already present." | `diagram` type (9 layouts), 8 new sketch media, auto-grade + cleanup, Particles; apps explained, not installed | T10, N05 |
