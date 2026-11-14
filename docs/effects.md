@@ -193,6 +193,13 @@ Clinical-photo rule still applies: these go on doctor/clinic footage and graphic
 Honesty: never grade, clean up or retouch clinical before/after material (golden rule 3). For privacy, blur. Don't
 "remove" anything from footage that documents treatment.
 
+## Whole-video looks (`fx.look` in any brief; preview: composition `LooksGallery`)
+`crt` (scanlines, colour fringes, flicker, rounded vignette) · `thermal` (heat-camera colours) · `matrix` (phosphor green +
+falling glyphs) · `pixel` (mosaic blocks) · `synthwave` (purple–magenta–orange duotone, scanlines) · `mono` (hard black and
+white with film grain). Doodle, paper and blueprint from the same "viral styles" list are `sketch`, `sketch style: collage`
+and `blueprint`. Validation **blocks** a look on clinical cases / clinical photo layouts and warns on calm education.
+Fur is a modelgen 3D look: `--look fur` (plush mascot tooth; not for clinical explanation).
+
 ## Beat sync
 `python3 scripts/beats.py music.mp3 --json beats.json` → BPM, beat times and beat frames at 30 fps (own numpy code, idea from
 librosa). Use the beat frames to place cuts, word pops or sound effects on the beat. Calm education videos usually

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRANSITIONS } from "../fx/context";
 import { DOODLES } from "../fx/doodles";
 import { MEDIA } from "../fx/media";
+import { LOOKS } from "../fx/looks";
 
 // ---- shared ---------------------------------------------------------------
 const line = (max: number) => z.string().min(1).max(max);
@@ -48,6 +49,8 @@ const base = z.object({
       transition: z.enum(TRANSITIONS).default("fade"),
       transition_frames: z.number().int().min(4).max(24).default(10),
       sfx: z.enum(["none", "subtle"]).default("none"),
+      /** Whole-video look (docs/effects.md): crt, thermal, matrix, pixel, synthwave, mono. Never on clinical material. */
+      look: z.enum(LOOKS).default("none"),
     })
     .default({}),
   /** Short note printed on the end card, e.g. "General information, not a diagnosis." */

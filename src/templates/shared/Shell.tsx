@@ -3,6 +3,7 @@ import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useVideoConfig 
 import type { Brief } from "../../brief/schema";
 import { ThemeContext, themes } from "../../theme";
 import { FxContext } from "../../fx/context";
+import { Look } from "../../fx/looks";
 import { Backdrop } from "./Backdrop";
 import { EndCard } from "./EndCard";
 import { DemoWatermark, Hud, MinimalBug } from "./Hud";
@@ -28,8 +29,10 @@ export const Shell: React.FC<{ brief: Brief; endSeconds: number; musicVolume?: n
     <FxContext.Provider value={{ transition: brief.fx.transition, transitionFrames: brief.fx.transition_frames, sfx: brief.fx.sfx }}>
     <AbsoluteFill style={{ color: theme.text }}>
       <Sequence durationInFrames={bodyFrames}>
-        <Backdrop broll={brief.broll[0]} />
-        {children}
+        <Look kind={brief.fx.look}>
+          <Backdrop broll={brief.broll[0]} />
+          {children}
+        </Look>
         {chrome === "full" ? <Hud label={brief.label} total={bodyFrames} /> : <MinimalBug light={chrome === "minimal-light"} />}
       </Sequence>
       <Sequence from={bodyFrames}>

@@ -643,7 +643,7 @@ def bounds():
     return lo, hi
 
 
-LOOKS = ["default", "chrome", "crystal", "lowpoly", "toy", "hologram", "particles"]
+LOOKS = ["default", "chrome", "crystal", "lowpoly", "toy", "hologram", "particles", "fur"]
 MOVES = ["static", "dolly_in", "dolly_out", "orbit", "low_arc", "crane", "tilt", "pendulum", "ground_skim", "close_up", "snap_zoom", "fpv"]
 
 
@@ -699,6 +699,28 @@ def apply_look(look):
             wf.thickness = 0.008
             bake(o)
             override(o, m)
+    elif look == "fur":  # soft plush fur (a playful "fluffy tooth" mascot look; never for clinical explanation)
+        fur = mat("look_fur", (0.96, 0.93, 0.88), rough=0.6, sss=0.3)
+        for o in meshes:
+            if o.name.startswith(("dentin", "root", "trunk")):
+                continue
+            override(o, fur)
+            ps = o.modifiers.new("fur", "PARTICLE_SYSTEM").particle_system.settings
+            ps.type = "HAIR"
+            ps.count = 9000
+            ps.hair_length = 0.24
+            ps.child_type = "INTERPOLATED"
+            ps.rendered_child_count = 12
+            ps.child_length = 0.9
+            ps.roughness_2 = 0.15
+            ps.kink = "CURL"
+            ps.kink_amplitude = 0.03
+            ps.root_radius = 0.012
+            ps.tip_radius = 0.0
+            ps.material = 1
+            o.data.materials.append(mat("look_fur_hair", (0.97, 0.94, 0.9), rough=0.5))
+        bpy.context.scene.render.hair_type = "STRIP"
+        bpy.context.scene.cycles_curves.shape = "THICK" if hasattr(bpy.context.scene, "cycles_curves") else None
     elif look == "particles":
         m = mat("look_particles", (0.0, 0.0, 0.0), emit=((1.0, 0.75, 0.45), 6.0))
         pts = []

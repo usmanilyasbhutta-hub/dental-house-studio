@@ -245,3 +245,14 @@ describe("diagram", () => {
     expect(errors(b).some((x) => x.rule === "diagram")).toBe(true);
   });
 });
+
+describe("fx.look", () => {
+  it("is allowed on an offer and blocked on a clinical case", () => {
+    const offer = clone(brief.parse(demoOffer));
+    offer.fx.look = "crt";
+    expect(errors(offer).some((f) => f.rule === "look")).toBe(false);
+    const c = clone(brief.parse(demoCase));
+    c.fx.look = "thermal";
+    expect(errors(c).some((f) => f.rule === "look")).toBe(true);
+  });
+});

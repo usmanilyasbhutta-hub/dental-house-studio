@@ -162,6 +162,12 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       warn("dimensions", "dimensions are only drawn for the implant subject");
   }
 
+  if (b.fx.look !== "none") {
+    const clinical = b.type === "case" || ((b.type === "photo-layout" || b.type === "anatomy-map") && b.clinical);
+    if (clinical) err("look", `fx.look "${b.fx.look}" changes colours and detail: never on clinical photos or results`);
+    if (b.type === "education" || b.theme === "editorial") warn("look", `fx.look "${b.fx.look}" on calm education: check it doesn't distract from the message`);
+  }
+
   if (b.type === "map-route") {
     const { cols, rows } = b.grid;
     const off = ([i, j]: [number, number]) => i > cols || j > rows;

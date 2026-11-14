@@ -74,6 +74,7 @@ Never put sparkle, glow, shine or light leaks on clinical photos. No `Glitch` or
 Blueprint drawings (implant / tooth section): brief `type: blueprint`. Printed receipt: brief `type: receipt` (real prices need `prices_confirmed_on`).
 Hand-drawn explainer (doodles drawn stroke by stroke): brief `type: sketch`, `style:` 14 media, e.g. pencil/watercolour/chalkboard/risograph/ukiyoe/clay (`docs/style-recipes.md`).
 Diagram explainers (timeline/roadmap/flowchart/cycle/layers/iceberg/tree/matrix/infographic): brief `type: diagram`.
+Whole-video looks: `fx.look` crt/thermal/matrix/pixel/synthwave/mono (blocked on clinical material).
 Footage tools: `npm run ff -- auto-grade` and `npm run ff -- cleanup` (blur for privacy; never retouch clinical material).
 Never install third-party skills/plugins with their own instructions into this project: borrow the idea and build our own (owner rule).
 Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illustrative map" chip; only owner-given street names).
