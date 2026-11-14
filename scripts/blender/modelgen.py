@@ -1,6 +1,6 @@
 """modelgen: our own text → 3D generator for dental objects (headless Blender, pure code, no AI service, no uploads).
 
-  python3 scripts/blender/modelgen.py "<description>" [--out public/models/x.glb] [--preview out/x.png] [--size 800] [--samples 64]
+  python3 scripts/blender/modelgen.py "<description>" [--out public/models/x.glb] [--preview out/x.png] [--size 800] [--samples 64] [--view auto|occlusal|front|lingual]
   python3 scripts/blender/modelgen.py --list
 
 Understands (keywords, any order):
@@ -113,7 +113,10 @@ def mat(name, base, rough=0.3, sss=0.0, sss_r=(1, 0.6, 0.4), coat=0.0, metal=0.0
 def M():
     """Material library (generic, no brands)."""
     return {
-        "enamel": mat("enamel", (0.9, 0.86, 0.76), rough=0.22, sss=0.5, sss_r=(1.0, 0.75, 0.55), coat=0.4, bump=((3, 3, 160), 0.08)),
+        # layered tooth (direction A): a translucent enamel shell over a warm dentin core; perikymata as fine horizontal bands
+        "enamel": mat("enamel", (0.93, 0.91, 0.87), rough=0.22, sss=0.12, sss_r=(1.0, 0.8, 0.6), coat=0.45, trans=0.68, ior=1.63, bump=((2, 2, 170), 0.1)),
+        "enamel_post": mat("enamel_post", (0.92, 0.9, 0.85), rough=0.24, sss=0.25, sss_r=(1.0, 0.8, 0.6), coat=0.4, trans=0.38, ior=1.63, bump=((2, 2, 170), 0.08)),
+        "core": mat("dentin_core", (0.86, 0.66, 0.4), rough=0.5, sss=1.0, sss_r=(1.0, 0.6, 0.3)),
         "root": mat("root", (0.86, 0.74, 0.55), rough=0.55, sss=0.4, bump=((60, 60, 60), 0.1)),
         "dentin": mat("dentin", (0.87, 0.72, 0.5), rough=0.5, sss=0.5),
         "decay": mat("decay", (0.16, 0.09, 0.05), rough=0.8, bump=((120, 120, 120), 0.5)),
@@ -255,26 +258,36 @@ def sellipse(w, d, th, n=2.4):
 
 
 def anterior_crown(kind, P, mats):
-    """Incisor/canine crown: wedge that thins to an incisal edge (incisor: mamelons; canine: one cusp tip)."""
-    nu, nv = 72, 60
+    """Incisor/canine crown: narrow neck, cingulum and lingual fossa, labial lobes, sharp mesial and rounded distal
+    corner (incisor: mamelons; canine: one cusp tip). Mesial = +x, labial = −y."""
+    nu, nv = 96, 72
     w, d, h = P["w"], P["d"], P["h"]
     verts, faces = [], []
     for j in range(nv + 1):
         v = j / nv
-        ww = w * (0.74 + 0.26 * math.sin(min(1, v * 1.3) * math.pi / 2)) - w * 1.3 * max(0, v - 0.88) ** 1.5
+        ww = w * (0.64 + 0.36 * math.sin(min(1, v * 1.25) * math.pi / 2))
         dd = d * (1 - 0.86 * v ** 1.25)
         if kind == "canine":
-            ww = w * (0.7 + 0.3 * math.sin(min(1, v * 1.6) * math.pi / 2)) * (1 - 0.6 * max(0, (v - 0.62) / 0.38) ** 1.5)
+            ww = w * (0.62 + 0.38 * math.sin(min(1, v * 1.6) * math.pi / 2)) * (1 - 0.6 * max(0, (v - 0.62) / 0.38) ** 1.5)
             dd = d * (1 - 0.8 * v ** 1.6)
         for i in range(nu):
-            x, y = sellipse(ww, dd, 2 * math.pi * i / nu, 2.0 if kind == "canine" else 2.25)
-            if y < 0:
-                y *= 1.0 + 0.16 * (1 - (x / max(ww, 1e-3)) ** 2)  # labial convexity
+            x, y = sellipse(ww, dd, 2 * math.pi * i / nu, 2.0)
+            u = x / max(ww, 1e-3)  # −1 distal … +1 mesial
+            if y < 0:  # labial: convex, with two faint developmental grooves between three lobes
+                y *= 1.0 + 0.16 * (1 - u * u)
+                y += 0.012 * (math.exp(-((u - 0.38) / 0.1) ** 2) + math.exp(-((u + 0.38) / 0.1) ** 2)) * math.sin(min(1, v * 1.4) * math.pi)
+            else:  # lingual: cingulum bulge near the neck, then a scooped fossa between marginal ridges
+                y *= 1.0 + 0.3 * math.exp(-((v - 0.22) / 0.16) ** 2) * (1 - u * u)
+                y -= 0.5 * dd * math.exp(-((v - 0.62) / 0.22) ** 2) * (1 - u * u) ** 2
             z = v * h
-            if kind == "incisor" and v > 0.96:
-                z += 0.022 * math.sin(3 * math.pi * (x / max(ww, 1e-3) + 1) / 2) * (v - 0.96) / 0.04
+            if kind == "incisor":
+                # incisal corners: mesial stays almost square, distal is rounded off
+                corner = max(0, u - 0.75) / 0.25 * 0.012 + max(0, -u - 0.6) / 0.4 * 0.06
+                z -= corner * max(0, (v - 0.7) / 0.3) ** 2 * h
+                if v > 0.96:
+                    z += 0.022 * math.sin(3 * math.pi * (u + 1) / 2) * (v - 0.96) / 0.04
             if kind == "canine" and v > 0.6:
-                z += 0.16 * (1 - abs(x) / max(ww, 1e-3)) * ((v - 0.6) / 0.4) ** 1.5
+                z += 0.16 * (1 - abs(u)) * ((v - 0.6) / 0.4) ** 1.5
             verts.append((x, y, z))
     for j in range(nv):
         for i in range(nu):
@@ -287,12 +300,17 @@ def anterior_crown(kind, P, mats):
 
 def occlusal(kind, arch, w, d, fissure):
     """Height field of the chewing surface: cusps (bumps) minus fissures (grooves) and a central fossa."""
+    ridges = []
     if kind == "premolar":
         cusps = [(0, -0.55 * d, 0.2), (0, 0.5 * d, 0.14 if arch == "upper" else 0.08)]
         grooves = [((-0.75 * w, 0), (0.75 * w, 0))]
-    elif arch == "upper":  # 4 cusps, oblique ridge, H-shaped fissures
-        cusps = [(0.5 * w, -0.5 * d, 0.2), (-0.5 * w, -0.5 * d, 0.18), (0.45 * w, 0.5 * d, 0.2), (-0.5 * w, 0.5 * d, 0.12)]
-        grooves = [((0.05 * w, -0.9 * d), (0.05 * w, -0.1 * d)), ((0.8 * w, 0), (0.05 * w, -0.1 * d)), ((-0.15 * w, 0.1 * d), (-0.8 * w, 0.05 * d)), ((-0.15 * w, 0.1 * d), (-0.15 * w, 0.9 * d))]
+    elif arch == "upper":
+        # 4 cusps: mesiobuccal, distobuccal, mesiopalatal (largest), distopalatal (smallest). An oblique ridge joins
+        # MP to DB and separates the central fossa (with the buccal groove) from the distal fossa (distopalatal groove).
+        cusps = [(0.5 * w, -0.52 * d, 0.19), (-0.48 * w, -0.5 * d, 0.17), (0.38 * w, 0.48 * d, 0.2), (-0.55 * w, 0.5 * d, 0.11)]
+        grooves = [((0.78 * w, -0.05 * d), (0.2 * w, -0.12 * d)), ((0.2 * w, -0.12 * d), (0.02 * w, -0.9 * d)),
+                   ((-0.82 * w, 0.12 * d), (-0.5 * w, 0.2 * d)), ((-0.5 * w, 0.2 * d), (-0.28 * w, 0.92 * d))]
+        ridges = [((0.3 * w, 0.4 * d), (-0.38 * w, -0.4 * d))]
     else:  # lower molar: 5 cusps (3 buccal, 2 lingual), + shaped fissures with a distal fork
         cusps = [(0.6 * w, -0.5 * d, 0.18), (0.0, -0.55 * d, 0.17), (-0.62 * w, -0.4 * d, 0.12), (0.5 * w, 0.5 * d, 0.2), (-0.45 * w, 0.5 * d, 0.19)]
         grooves = [((0.85 * w, 0), (-0.85 * w, 0)), ((0.3 * w, -0.9 * d), (0.3 * w, 0)), ((-0.32 * w, -0.9 * d), (-0.3 * w, 0)), ((0.02 * w, 0), (0.02 * w, 0.9 * d))]
@@ -306,16 +324,23 @@ def occlusal(kind, arch, w, d, fissure):
     def f(x, y):
         z = sum(a * math.exp(-(((x - cx) / (0.42 * w)) ** 2 + ((y - cy) / (0.42 * d)) ** 2)) for cx, cy, a in cusps)
         g = min(seg(x, y, a, b) for a, b in grooves)
-        z -= 0.075 * fissure * math.exp(-((g / 0.045) ** 2))  # sharp fissure
-        z -= 0.05 * math.exp(-((g / 0.14) ** 2))  # the valley it runs in
-        z -= 0.06 * math.exp(-((x / (0.5 * w)) ** 2 + (y / (0.5 * d)) ** 2))  # central fossa
+        z -= 0.085 * fissure * math.exp(-((g / 0.028) ** 2))  # sharp fissure
+        z -= 0.05 * math.exp(-((g / 0.13) ** 2))  # the valley it runs in
+        for a, b in ridges:
+            z += 0.05 * math.exp(-((seg(x, y, a, b) / 0.12) ** 2))
+        if not ridges:
+            z -= 0.06 * math.exp(-((x / (0.5 * w)) ** 2 + (y / (0.5 * d)) ** 2))  # central fossa
+        else:  # upper molar: a central fossa and a smaller distal fossa, either side of the oblique ridge
+            z -= 0.06 * math.exp(-(((x - 0.2 * w) / (0.36 * w)) ** 2 + ((y + 0.12 * d) / (0.36 * d)) ** 2))
+            z -= 0.04 * math.exp(-(((x + 0.5 * w) / (0.26 * w)) ** 2 + ((y - 0.2 * d) / (0.26 * d)) ** 2))
         return z
 
     return f
 
 
 def posterior_crown(kind, arch, P, mats, fissure):
-    nu, nv, nc = 96, 30, 26
+    nu, nv, nc = 128, 30, 40
+    shear = 0.16 if (kind == "molar" and arch == "upper") else 0.0  # upper molars are rhomboid, not square
     w, d, h = P["w"], P["d"], P["h"]
     occ = occlusal(kind, arch, w, d, fissure)
     verts, faces = [], []
@@ -325,7 +350,7 @@ def posterior_crown(kind, arch, P, mats, fissure):
         k = 0.8 + 0.22 * math.sin(min(1, v * 1.25) * math.pi * 0.62) - 0.1 * max(0, v - 0.75) / 0.25
         for i in range(nu):
             x, y = sellipse(w * k, d * k, 2 * math.pi * i / nu, 2.9 if kind == "molar" else 2.4)
-            verts.append((x, y, v * wall + (occ(x, y) * 0.9 if v == 1 else 0) * 0))
+            verts.append((x + shear * y * (0.4 + 0.6 * v), y, v * wall))
     rim_k = 0.8 + 0.22 * math.sin(math.pi * 0.62) - 0.1
     for j in range(nv):
         for i in range(nu):
@@ -337,7 +362,7 @@ def posterior_crown(kind, arch, P, mats, fissure):
         for i in range(nu):
             x, y = sellipse(w * rim_k * r, d * rim_k * r, 2 * math.pi * i / nu, 2.9 if kind == "molar" else 2.4)
             edge = 1 - r ** 5  # 0 at the rim (meets the wall), 1 inside
-            verts.append((x, y, wall + (0.02 + occ(x, y)) * edge + 0.05 * (1 - r ** 2) * 0))
+            verts.append((x + shear * y, y, wall + (0.02 + occ(x, y)) * edge))
     for c in range(nc - 1):
         r0 = nv * nu if c == 0 else base + (c - 1) * nu
         r1 = base + c * nu
@@ -349,7 +374,7 @@ def posterior_crown(kind, arch, P, mats, fissure):
     for i in range(nu):
         faces.append((last + i, last + (i + 1) % nu, centre))
     faces.append(tuple(range(nu - 1, -1, -1)))
-    return new_obj("crown", verts, faces, mats["enamel"], subsurf=1)
+    return new_obj("crown", verts, faces, mats["enamel_post"], subsurf=1)
 
 
 def root(name, w, d, length, mats, offset=(0, 0), lean=(0, 0), top=0.0):
@@ -377,8 +402,25 @@ def tooth(spec, mats):
         P = {k: v * (0.82 if k != "root" else 0.95) for k, v in P.items()}
     if kind == "molar" and arch == "lower":
         P["w"], P["d"] = 0.56, 0.5
+    if kind == "molar" and arch == "upper":
+        P["w"], P["d"] = 0.5, 0.57  # wider bucco-palatally
     crown = anterior_crown(kind, P, mats) if kind in ("incisor", "canine") else posterior_crown(kind, arch, P, mats, spec["fissures"])
-    parts = [crown]
+    # dentin core inside the enamel shell: stops short of the edge so the incisal / cusp tips stay translucent
+    core = crown.copy()
+    core.data = crown.data.copy()
+    core.name = "dentin"
+    bpy.context.collection.objects.link(core)
+    core.data.materials.clear()
+    core.data.materials.append(mats["core"])
+    ant = kind in ("incisor", "canine")
+    for vt in core.data.vertices:
+        x, y, z = vt.co
+        zk = z / P["h"]
+        if ant and kind == "incisor" and zk > 0.8:  # three mamelon lobes at the top of the core
+            lobe = abs(math.sin(3 * math.pi * (x / P["w"] + 1) / 2))
+            z -= 0.1 * (1 - lobe) * ((zk - 0.8) / 0.2) ** 1.5
+        vt.co = (x * 0.8, y * (0.72 if ant else 0.8), 0.02 + z * (0.84 if ant else 0.8))
+    parts = [crown, core]
     w, d, L = P["w"], P["d"], P["root"]
     if spec["root"]:
         if kind == "molar" and arch == "upper":  # two buccal roots + one palatal
@@ -404,6 +446,7 @@ def tooth(spec, mats):
             "incisal": ((w * 0.62, 0, h * 0.93), (0.22 * s, 0.3 * s, 0.2 * s)),
         }[cav["at"]]
         bake(crown)
+        bake(core)
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=4, radius=1, location=at[0])
         cutter = bpy.context.active_object
         cutter.name = "cutter"
@@ -424,8 +467,11 @@ def tooth(spec, mats):
             for p in fill.data.polygons:
                 p.material_index = 0
             parts.append(fill)
-        boolean(crown, cutter, "DIFFERENCE")
-        bake(crown)
+        for layer in (crown, core):
+            if layer is core:
+                core.data.materials.append(cutter.data.materials[0])
+            boolean(layer, cutter, "DIFFERENCE")
+            bake(layer)
         bpy.data.objects.remove(cutter)
     g = group(spec["kind"], parts)
     if arch == "upper":
@@ -595,7 +641,7 @@ def bounds():
     return lo, hi
 
 
-def preview(spec, path, size, samples):
+def preview(spec, path, size, samples, view="auto"):
     sc = bpy.context.scene
     sc.render.engine = "CYCLES"
     sc.cycles.device = "CPU"
@@ -616,7 +662,14 @@ def preview(spec, path, size, samples):
         bpy.ops.mesh.primitive_plane_add(size=R * 40, location=(c.x, c.y, lo.z - 0.02))
         bpy.context.active_object.data.materials.append(mat("floor", (0.004, 0.005, 0.005), rough=0.9))
     upper = spec.get("arch") == "upper"
-    d = Vector((0.55, -1, 0.5 if not is_tooth else (-0.75 if upper else 0.62))).normalized()
+    up = -1 if upper else 1
+    d = Vector((0.55, -1, 0.5 if not is_tooth else 0.68 * up)).normalized()
+    if view == "occlusal":
+        d = Vector((0.12, -0.35, 1.0 * up)).normalized()
+    elif view == "front":
+        d = Vector((0.1, -1, 0.12 * up)).normalized()
+    elif view == "lingual":
+        d = Vector((-0.35, 1, 0.3 * up)).normalized()
     cam = bpy.data.cameras.new("cam")
     cam.lens = 85
     ob = bpy.data.objects.new("cam", cam)
@@ -639,9 +692,11 @@ def preview(spec, path, size, samples):
         o.location = c + Vector(loc) * R
         o.rotation_euler = (c - o.location).to_track_quat("-Z", "Y").to_euler()
 
-    area((2.2, -3.2, 2.6), 420, (1, 0.96, 0.9), 2.2)  # warm key
-    area((-3.0, 2.2, 1.4), 650, (0.75, 0.85, 1.0), 1.4)  # cool rim
-    area((-2.0, -3.0, -0.6), 60, (1, 1, 1), 3.0)  # fill
+    area((2.2, -3.2, 2.6 * up), 420, (1, 0.96, 0.9), 2.2)  # warm key (from the crown side)
+    area((-3.0, 2.2, 1.4 * up), 650, (0.75, 0.85, 1.0), 1.4)  # cool rim
+    area((-2.0, -3.0, -0.6 * up), 60, (1, 1, 1), 3.0)  # fill
+    if is_tooth:
+        area((0.0, 3.4, 2.0 * up), 380, (1.0, 0.95, 0.88), 2.0)  # behind the edge: shows the translucent enamel
     sc.render.filepath = path
     bpy.ops.render.render(write_still=True)
 
@@ -677,7 +732,7 @@ def main():
         print("model →", out)
     pv = opt("--preview")
     if pv:
-        preview(spec, pv, int(opt("--size", "800")), int(opt("--samples", "64")))
+        preview(spec, pv, int(opt("--size", "800")), int(opt("--samples", "64")), opt("--view", "auto"))
         print("preview →", pv)
 
 

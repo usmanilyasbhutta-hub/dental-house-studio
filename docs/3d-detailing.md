@@ -52,4 +52,11 @@ Pure code in headless Blender: no AI service, no credits, no uploads, same resul
 - New object type: add a builder function + keywords in `KINDS`, then a line in `library.txt`.
 
 Limits: it only knows the objects it was taught (it cannot turn a photo into 3D), and shapes are idealised textbook
-anatomy, not any patient's tooth. Known rough spots in v1: the upper molar's occlusal surface, slightly blocky front teeth.
+anatomy, not any patient's tooth.
+
+**v2 (2026-11-14):** every tooth is layered like direction A: a translucent enamel shell (IOR 1.63, fine horizontal
+growth lines) over a warm dentin core that stops short of the edge, so incisal edges and cusp tips stay translucent;
+cavities cut through both layers. Upper molar rebuilt: rhomboid outline, four cusps (mesiopalatal largest), oblique
+ridge, central and distal fossae, sharper fissures. Front teeth: narrow neck, cingulum, lingual fossa, labial lobes,
+square mesial and rounded distal corner. Preview views: `--view auto|occlusal|front|lingual`.
+Still rough: the upper molar's cusps look exaggerated from low side angles; roots are simple cones.
