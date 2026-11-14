@@ -15,7 +15,7 @@ bleaching and whitening."
 | Result | Before and after photos shown whole (`objectFit: contain`) in identical boxes, "Same patient · photos not retouched · results vary" | Golden rule 3; claims rule (results vary) |
 | Included list | Dentist assessment first · Scaling + polishing · Gum protection · In-office whitening · About 45–60 min | Owner's package facts (WhatsApp skill); no price shown until the owner says so |
 | Price | Not shown | Clinic facts rule: the offer (PKR 21,000 until 15 Dec) is time-limited; owner to decide |
-| Step 03 name | "Polish" (not "Whitening") | Polishing smooths and brightens but does not whiten; naming it whitening would overclaim. **Open question to the owner** |
+| Step 03 name | "Polish" (not "Whitening") | Polishing smooths and brightens but does not whiten; naming it whitening would overclaim. Owner, 14 Nov: "Keep that" |
 | Pace | Spec beats 2.8–3 s, clips sped 1.1–1.7× (5–7 s) | Ledger open question; calm procedural pace (education-like) |
 | Music | `audio/pad-calm.mp3` | Existing original track; music preference still an open question |
 | Language | English on screen | As in previous procedure briefs; Roman Urdu possible on request |
