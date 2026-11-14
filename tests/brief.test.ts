@@ -88,7 +88,7 @@ describe("compliance", () => {
   });
   it("fx defaults are calm and unknown transitions are rejected", () => {
     const { fx: _f, ...noFx } = demoCase;
-    expect(brief.parse(noFx).fx).toEqual({ transition: "fade", transition_frames: 10, sfx: "none" });
+    expect(brief.parse(noFx).fx).toEqual({ transition: "fade", transition_frames: 10, sfx: "none", look: "none" });
     expect(brief.safeParse({ ...demoCase, fx: { transition: "ripple" } }).success).toBe(false); // WebGL ones are not offered
   });
   it("defaults to the brand theme and accepts editorial", () => {
