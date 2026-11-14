@@ -1,0 +1,97 @@
+# Technical explainer: wedding whitening package (scaling -> bleaching -> polish), built from the whitening project
+# (clinical-3d/whitening). Instruments are the generic GLB models (no brand names, taste T06); the clinical clip is the
+# unbranded render of the approved treatment sequence over the patient's real photo. Dentist checks the wording.
+id: wedding-whitening-explainer
+type: package-explainer
+title: Wedding whitening package, step by step
+theme: brand            # promo/package look (T01)
+tone: calm
+label: Wedding whitening
+hook: { lines: ["Wedding smile,", "step by step"], accent: smile }
+clip: cases/whitening-v9/procedure.mp4
+beats:
+  - kind: spec
+    step: 1
+    title: Scaling
+    subline: Tartar and surface stains are cleaned off first.
+    models: [scaler]
+    callouts:
+      - { at: [1.7, -1.2, 0], text: Fine tip vibrates }
+      - { at: [4.2, -14.5, 0.9], text: Water spray rinses }
+      - { at: [4.2, -70, 6], text: Ultrasonic handpiece }
+  - kind: clip
+    step: 1
+    title: Scaling
+    caption: Short strokes along each tooth, with a water spray.
+    from: 2.6
+    to: 11.6
+    speed: 1.5
+  - kind: spec
+    step: 2
+    title: Bleaching
+    subline: The gums are protected before any gel goes on.
+    models: [barrier_syringe, curing_light]
+    callouts:
+      - { model: 0, at: [0, -1.6, 0.75], text: Fine bent tip }
+      - { model: 0, at: [0, -42, 7.3], text: Gum barrier }
+      - { model: 1, at: [0, 0, 0.2], text: Blue light sets it }
+  - kind: clip
+    step: 2
+    title: Gum protection
+    caption: A protective layer along the gums, set with light.
+    from: 12.2
+    to: 20.9
+    speed: 1.6
+  - kind: spec
+    step: 2
+    title: Bleaching
+    subline: Whitening gel is mixed in the tip as it is applied.
+    models: [syringe, suction]
+    callouts:
+      - { model: 0, at: [0, -1.8, 1.9], text: Fine delivery tip }
+      - { model: 0, at: [-5.2, -24, 6.4], text: Mixing tip }
+      - { model: 1, at: [0, 0, 0.15], text: Suction tip removes gel }
+  - kind: clip
+    step: 2
+    title: Bleaching gel
+    caption: Gel on the front teeth for the set time, then removed.
+    from: 21.2
+    to: 33.0
+    speed: 1.7
+  - kind: spec
+    step: 3
+    title: Polish
+    subline: A soft brush polishes the enamel smooth.
+    models: [polisher]
+    callouts:
+      - { at: [0, 0, 2], text: Soft brush }
+      - { at: [0, 0, 13], text: Slow-speed handpiece }
+    seconds: 2.8
+  - kind: clip
+    step: 3
+    title: Polish
+    caption: Each front tooth is polished, then rinsed.
+    from: 33.1
+    to: 37.0
+    speed: 1.1
+results:
+  before: cases/whitening-v9/before.jpg
+  after: cases/whitening-v9/after.jpg
+  note: Same patient · photos not retouched · results vary
+# Signed form goes OUTSIDE git, e.g. assets/cases/whitening-v9/consent.pdf (needed before this can be rendered for posting).
+consent:
+  file: assets/cases/whitening-v9/consent.pdf
+  signed_on: 2026-11-01   # placeholder: replace with the real date from the form
+  scope: [social-media, ads]
+included:
+  title: What's included
+  items:
+    - Dentist assessment first
+    - Scaling + polishing
+    - Gum protection
+    - In-office whitening
+    - About 45–60 min in the chair
+cta: WhatsApp to book
+disclaimer: "Illustration on a real photo; instruments not to scale. Results vary. Assessment first."
+fx: { transition: none, sfx: subtle }
+music: audio/pad-calm.mp3

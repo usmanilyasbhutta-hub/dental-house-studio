@@ -394,7 +394,79 @@ export const diagramBrief = base.extend({
 });
 export type DiagramBrief = z.infer<typeof diagramBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, diagramBrief]);
+/** Instrument models exported from the Blender scenes (public/models/whitening/<name>.glb, generic labels). */
+export const INSTRUMENTS = ["scaler", "barrier_syringe", "curing_light", "syringe", "suction", "polisher"] as const;
+const vec3 = z.tuple([z.number(), z.number(), z.number()]);
+const consent = z.object({
+  /** Kept OUTSIDE git, e.g. assets/cases/<case_id>/consent.pdf */
+  file: z.string(),
+  signed_on: isoDate,
+  scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1),
+});
+
+/**
+ * Technical package explainer: numbered steps; each step shows its instruments as 3D models (GLB, three.js) with
+ * textbook callouts, then the matching part of the clinical illustration clip. Optional before/after (uncropped,
+ * same box) and a "what's included" card. Instruments are illustrations; brand names are never shown (T06).
+ */
+export const packageExplainerBrief = base.extend({
+  type: z.literal("package-explainer"),
+  /** Clinical illustration video, 16:9, inside public/ (gitignored case folder). */
+  clip: publicAsset,
+  /** Horizontal window of the 16:9 clip (source px, 0-1920) shown in the vertical frame. */
+  clip_window: z.tuple([z.number().min(0), z.number().max(1920)]).default([380, 1840]),
+  beats: z
+    .array(
+      z.discriminatedUnion("kind", [
+        z.object({
+          kind: z.literal("spec"),
+          step: z.number().int().min(1).max(9),
+          title: line(22),
+          subline: line(60),
+          models: z.array(z.enum(INSTRUMENTS)).min(1).max(2),
+          /** Thin leader-line labels; `at` is a point on the model in millimetres (model space). */
+          callouts: z.array(z.object({ model: z.number().int().min(0).max(1).default(0), at: vec3, text: line(26) })).max(4).default([]),
+          seconds: z.number().min(2).max(5).default(3),
+        }),
+        z.object({
+          kind: z.literal("clip"),
+          step: z.number().int().min(1).max(9),
+          title: line(22),
+          caption: line(60),
+          /** Seconds in the source clip. */
+          from: z.number().min(0),
+          to: z.number().min(0),
+          speed: z.number().min(0.5).max(3).default(1),
+        }),
+      ]),
+    )
+    .min(2)
+    .max(14),
+  /** Real result: both photos uncropped (contain) in the same box. Consent rules apply. */
+  results: z
+    .object({
+      before: publicAsset,
+      after: publicAsset,
+      note: line(60).default("Same patient · photos not retouched · results vary"),
+      seconds: z.number().min(3).max(7).default(5),
+    })
+    .optional(),
+  consent: consent.optional(),
+  included: z
+    .object({
+      title: line(28).default("What's included"),
+      items: z.array(line(36)).min(2).max(6),
+      /** Price line, e.g. "PKR 21,000". Needs prices_confirmed_on. */
+      price: line(24).optional(),
+      price_note: line(44).optional(),
+      prices_confirmed_on: isoDate.optional(),
+      seconds: z.number().min(3).max(7).default(4.5),
+    })
+    .optional(),
+});
+export type PackageExplainerBrief = z.infer<typeof packageExplainerBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, diagramBrief, packageExplainerBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

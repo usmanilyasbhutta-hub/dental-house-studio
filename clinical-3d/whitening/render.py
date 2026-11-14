@@ -2,6 +2,10 @@ from PIL import Image,ImageDraw,ImageFilter,ImageOps
 from pathlib import Path
 import math,subprocess,sys,json,hashlib
 P=Path(__file__).parent;A=P/'assets';W,H=1920,1080;FPS=24;DUR=41
+import os
+# WH_TOOLS: folder of instrument renders (default assets/; assets_generic/ for the unbranded set).
+# WH_NAME: output file stem in ../../out/.
+TOOLS=Path(os.environ.get('WH_TOOLS',str(A)));NAME=os.environ.get('WH_NAME','DHS_Whitening_Clinical_v9')
 sys.path.insert(0,str(P))
 import case_geometry as G
 # Clinical proportions: central incisor assumed 8.5 mm wide (~51 source px).
@@ -29,7 +33,7 @@ barrier=smooth(G.MARGIN)
 # The pose is rendered in 3D about the contact origin; no screen-space
 # rotation of a fixed billboard is used to imply a different working angle.
 tools={}
-def load(name):return Image.open(A/name).convert('RGBA')
+def load(name):return Image.open(TOOLS/name).convert('RGBA')
 for i in range(2):tools[f'scaler{i}']=load(f'scaler_pose{i}.png')
 for kind in ['light','suction']:
  for i in range(5):tools[f'{kind}{i}']=load(f'{MODEL[kind]}_pose{i}.png')
@@ -290,7 +294,7 @@ elif __name__=='__main__' and '--stills' in sys.argv:
  (P/'checks').mkdir(exist_ok=True)
  for t in [1,4,9,13,15.5,17.5,18,19.8,23,26,28.4,29.5,31.2,34,36,39]:frame(t).save(P/'checks'/f'check_{t}.jpg',quality=92)
 elif __name__=='__main__':
- OUT=P.parents[1]/'out';OUT.mkdir(exist_ok=True);out=OUT/('Whitening_v9_Proof.mp4' if '--proof' in sys.argv else 'DHS_Whitening_Clinical_v9.mp4');q=subprocess.Popen(['ffmpeg','-v','error','-y','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-an','-c:v','libx264','-crf','18','-preset','fast','-pix_fmt','yuv420p','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
+ OUT=P.parents[1]/'out';OUT.mkdir(exist_ok=True);out=OUT/(f'{NAME}_Proof.mp4' if '--proof' in sys.argv else f'{NAME}.mp4');q=subprocess.Popen(['ffmpeg','-v','error','-y','-f','rawvideo','-pix_fmt','rgb24','-s',f'{W}x{H}','-r',str(FPS),'-i','-','-an','-c:v','libx264','-crf','18','-preset','fast','-pix_fmt','yuv420p','-movflags','+faststart',str(out)],stdin=subprocess.PIPE)
  import multiprocessing as mp
  indices=[n for a,b in [(13,15),(17,19),(23,25),(30,32),(33,37)] for n in range(a*FPS,b*FPS)] if '--proof' in sys.argv else list(range(FPS*DUR))
  with mp.get_context('fork').Pool(4) as pool:

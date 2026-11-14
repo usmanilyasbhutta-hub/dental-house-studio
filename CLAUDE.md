@@ -76,6 +76,7 @@ Hand-drawn explainer (doodles drawn stroke by stroke): brief `type: sketch`, `st
 Diagram explainers (timeline/roadmap/flowchart/cycle/layers/iceberg/tree/matrix/infographic): brief `type: diagram`.
 Footage tools: `npm run ff -- auto-grade` and `npm run ff -- cleanup` (blur for privacy; never retouch clinical material).
 Never install third-party skills/plugins with their own instructions into this project: borrow the idea and build our own (owner rule).
+Package explainers (3D instrument GLBs with callouts + clinical clip + before/after + what's included): brief `type: package-explainer`; models in `public/models/whitening/` (generic, from `clinical-3d/whitening -- --generic --glb`).
 Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illustrative map" chip; only owner-given street names).
 
 ## Animation, photos and footage

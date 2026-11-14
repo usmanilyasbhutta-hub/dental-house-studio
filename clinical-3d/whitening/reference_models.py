@@ -32,6 +32,10 @@ clear=clear_polymer('Clear moulded polypropylene',(.80,.88,.92))
 clearthin=clear_polymer('Thin clear mixer housing',(.85,.90,.93),.04,.70)
 
 def text(s,loc,size,material=printmat,rot=0,bold=False):
+ # --generic: no brand or product names (taste T06: generic labels in procedure animations).
+ # An empty object keeps the call sites working.
+ if '--generic' in ARGS:
+  o=bpy.data.objects.new('Generic: label omitted',None);scene.collection.objects.link(o);return o
  c=bpy.data.curves.new('Reference label','FONT');c.body=s;c.size=size;c.extrude=.004;c.align_x='CENTER';c.align_y='CENTER'
  if bold:c.offset=size*.022
  o=bpy.data.objects.new('Printed product identification',c);scene.collection.objects.link(o);o.location=loc;o.rotation_euler.z=rot;o.data.materials.append(material)
@@ -107,11 +111,19 @@ def render_set(name,rotor=None,plunger=None,compare_roll=0):
  scene.camera.location=((lo[0]+hi[0])/2,(lo[1]+hi[1])/2,400);scene.camera.data.ortho_scale=max(hi[0]-lo[0],hi[1]-lo[1])*1.06
  if '--save-models' in ARGS:
   root.rotation_euler.y=0
-  model_dir=ROOT/'models';model_dir.mkdir(exist_ok=True)
+  model_dir=ROOT/('models_generic' if '--generic' in ARGS else 'models');model_dir.mkdir(exist_ok=True)
   bpy.ops.wm.save_as_mainfile(filepath=str(model_dir/f'{name}.blend'),compress=True)
+ if '--glb' in ARGS:
+  # GLB for three.js: 1 unit = 1 mm (the exporter ignores the scene unit scale), Y-up, working end at the origin, handle along -Y.
+  glb_dir=ROOT/'glb';glb_dir.mkdir(exist_ok=True)
+  root.rotation_euler=(0,0,0);bpy.context.view_layer.update()
+  for o in bpy.data.objects:o.select_set(o not in keep)
+  bpy.ops.export_scene.gltf(filepath=str(glb_dir/f'{name}.glb'),export_format='GLB',use_selection=True,export_apply=True,export_yup=True,export_cameras=False,export_lights=False,export_extras=False,export_animations=False)
+  scene.camera.location=(0,0,200);scene.camera.data.ortho_scale=G.ASSET_SPAN_MM;clean();return
+ if '--save-models' in ARGS:
   scene.camera.location=(0,0,200);scene.camera.data.ortho_scale=G.ASSET_SPAN_MM;clean();return
  scene.render.resolution_x=scene.render.resolution_y=1400
- scene.render.filepath=str(P/f'{name}_comparison.png');bpy.ops.render.render(write_still=True)
+ scene.render.filepath=str(OUTDIR/f'{name}_comparison.png');bpy.ops.render.render(write_still=True)
  scene.render.resolution_x=scene.render.resolution_y=RES
  root.rotation_euler=(0,0,0);scene.camera.location=(0,0,200);scene.camera.data.ortho_scale=G.ASSET_SPAN_MM
  if '--compare-only' in ARGS:clean();return
@@ -122,15 +134,15 @@ def render_set(name,rotor=None,plunger=None,compare_roll=0):
   if plunger:
    descendants=set(plunger.children_recursive);geom=[o for o in bpy.data.objects if o not in keep and o.type!='EMPTY']
    for o in descendants:o.hide_render=True
-   scene.render.filepath=str(P/f'{name}_pose{idx}_body.png');bpy.ops.render.render(write_still=True)
+   scene.render.filepath=str(OUTDIR/f'{name}_pose{idx}_body.png');bpy.ops.render.render(write_still=True)
    for o in geom:o.hide_render=o not in descendants
-   scene.render.filepath=str(P/f'{name}_pose{idx}_plunger.png');bpy.ops.render.render(write_still=True)
+   scene.render.filepath=str(OUTDIR/f'{name}_pose{idx}_plunger.png');bpy.ops.render.render(write_still=True)
    for o in geom:o.hide_render=False
   else:
    for phase in range(4 if rotor else 1):
     if rotor:rotor.rotation_euler.z=phase*math.tau/4/3  # bristle field repeats every 120 degrees
     suffix=f'_phase{phase}' if rotor else ''
-    scene.render.filepath=str(P/f'{name}_pose{idx}{suffix}.png');bpy.ops.render.render(write_still=True)
+    scene.render.filepath=str(OUTDIR/f'{name}_pose{idx}{suffix}.png');bpy.ops.render.render(write_still=True)
  clean()
 
 # --- SDI Gingival Barrier -------------------------------------------------

@@ -31,6 +31,7 @@ export function sceneCount(b: Brief): number {
     case "receipt":
     case "sketch":
     case "diagram":
+    case "package-explainer":
       return 1;
   }
 }
@@ -65,6 +66,8 @@ function rawSeconds(b: Brief): number {
       return MAP_ROUTE.lead + b.seconds + MAP_ROUTE.hold + scenes.offer.end;
     case "photo-layout":
       return 1.6 + Math.max(b.annotations.length, b.layout === "annotate" ? 0 : b.photos.length) * 1.3 + (b.loupe ? 1.6 : 0) + 2.4 + scenes.offer.end;
+    case "package-explainer":
+      return packageTimes(b).end + scenes.offer.end;
     case "procedure":
       return 2 + b.steps.length * b.seconds_per_step + (b.takeaway ? 2.6 : 0) + scenes.offer.end; // 2 s hook
     case "talking-head":
@@ -105,3 +108,20 @@ export const SKETCH_INTRO = 1.6;
 
 /** Diagram explainer: title first, then one item per seconds_per_item, then a hold on the whole diagram. */
 export const DIAGRAM_INTRO = 1.4;
+
+/** Package explainer timeline (seconds): hook, beats, results, included. */
+export const PACKAGE_HOOK = 2.4;
+export function packageTimes(b: Extract<Brief, { type: "package-explainer" }>) {
+  let t = PACKAGE_HOOK;
+  const beats = b.beats.map((x) => {
+    const len = x.kind === "spec" ? x.seconds : (x.to - x.from) / x.speed;
+    const r = { start: t, len };
+    t += len;
+    return r;
+  });
+  const results = b.results ? { start: t, len: b.results.seconds } : null;
+  if (results) t += results.len;
+  const included = b.included ? { start: t, len: b.included.seconds } : null;
+  if (included) t += included.len;
+  return { beats, results, included, end: t };
+}

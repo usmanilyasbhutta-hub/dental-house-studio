@@ -12,6 +12,7 @@ import { Diagram } from "./templates/Diagram";
 import { ClinicalCase } from "./templates/ClinicalCase";
 import { Education } from "./templates/Education";
 import { Offer } from "./templates/Offer";
+import { PackageExplainer } from "./templates/PackageExplainer";
 import type { QcProps } from "./templates/shared/Shell";
 
 export type VideoProps = { brief: Brief; words?: Word[]; sizes?: PhotoSize[] } & QcProps;
@@ -39,6 +40,8 @@ export const Video: React.FC<VideoProps> = ({ brief, words, sizes, showSafeZones
       return <AnatomyMap brief={brief} sizes={sizes} showSafeZones={showSafeZones} />;
     case "photo-layout":
       return <PhotoLayout brief={brief} sizes={sizes} showSafeZones={showSafeZones} />;
+    case "package-explainer":
+      return <PackageExplainer brief={brief} showSafeZones={showSafeZones} />;
     case "procedure":
       return <Procedure brief={brief} showSafeZones={showSafeZones} />;
     case "talking-head":

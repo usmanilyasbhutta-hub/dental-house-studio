@@ -25,3 +25,6 @@ clinical-3d/*/reference_photos/
 clinical-3d/*/Reference_vs_Model_*.jpg
 clinical-3d/*/assets/gel_volume.png
 __pycache__/
+# Regenerable from the Blender build (--generic): unbranded instrument renders and the GLB build folder (copied to public/models/)
+clinical-3d/*/assets_generic/
+clinical-3d/*/glb/

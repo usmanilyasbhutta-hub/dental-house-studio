@@ -6,6 +6,7 @@ import case_geometry as G
 sys.path.insert(0,str(ROOT.parents[1]/'scripts'))
 import blender_detail as D
 ARGS=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
+OUTDIR=Path(next((a.split('=',1)[1] for a in ARGS if a.startswith('--out=')),str(Path(__file__).parent/'assets')));OUTDIR.mkdir(parents=True,exist_ok=True)
 RES=next((int(a.split('=')[1]) for a in ARGS if a.startswith('--res=')),2048)
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 scene=bpy.context.scene;scene.unit_settings.system='METRIC';scene.unit_settings.scale_length=.001;scene.unit_settings.length_unit='MILLIMETERS'

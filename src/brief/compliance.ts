@@ -34,6 +34,12 @@ function allText(b: Brief): string[] {
   if (b.type === "map-route")
     t.push(b.chip, b.start?.label ?? "", b.destination.label ?? "", ...b.streets.map((x) => x.text));
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
+  if (b.type === "package-explainer")
+    t.push(
+      ...b.beats.flatMap((x) => (x.kind === "spec" ? [x.title, x.subline, ...x.callouts.map((c) => c.text)] : [x.title, x.caption])),
+      b.results?.note ?? "",
+      ...(b.included ? [b.included.title, ...b.included.items, b.included.price ?? "", b.included.price_note ?? ""] : []),
+    );
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
   return t.filter(Boolean);
@@ -152,6 +158,30 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (b.prices_confirmed_on) {
       const age = (Date.parse(env.today) - Date.parse(b.prices_confirmed_on)) / 86400000;
       if (age > 90) warn("prices", `prices were confirmed ${Math.round(age)} days ago: check they are still current`);
+    }
+  }
+
+  if (b.type === "package-explainer") {
+    for (const x of b.beats) if (x.kind === "clip" && x.to <= x.from) err("beats", `clip beat "${x.title}": to must be after from`);
+    if (b.results && !b.demo) {
+      if (!b.consent) err("consent", "before/after photos need written patient consent (consent.file)");
+      else {
+        if (!env.fileExists(b.consent.file)) err("consent", `consent file not found: ${b.consent.file}`);
+        if (b.consent.file.startsWith("public/")) err("consent", "consent forms must never be inside public/");
+        if (!b.consent.scope.some((s) => s === "social-media" || s === "ads")) err("consent", "consent scope does not cover social media or ads");
+      }
+    }
+    if (b.results && !/vary|varies/i.test(b.results.note)) err("claims", "before/after note must say results vary");
+    const inc = b.included;
+    if (inc && [inc.price ?? "", inc.price_note ?? ""].some((v) => /\d/.test(v))) {
+      if (!inc.prices_confirmed_on) {
+        const msg = "prices are clinic facts: use the owner's current price and set included.prices_confirmed_on";
+        if (b.demo) warn("prices", msg);
+        else err("prices", msg);
+      } else {
+        const age = (Date.parse(env.today) - Date.parse(inc.prices_confirmed_on)) / 86400000;
+        if (age > 30) warn("prices", `price confirmed ${Math.round(age)} days ago: check it is still current`);
+      }
     }
   }
 
