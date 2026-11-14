@@ -40,41 +40,53 @@ export const PackageExplainer: React.FC<{ brief: PackageExplainerBrief } & QcPro
   return (
     <Shell brief={brief} endSeconds={4.5} showSafeZones={showSafeZones}>
       <Sequence durationInFrames={f(PACKAGE_HOOK)}>
-        <Fade dur={f(PACKAGE_HOOK)}>
-          <Stage models={hookModels} dur={f(PACKAGE_HOOK)} callouts={[]} top={760} height={760} />
-          <div style={{ position: "absolute", left: LEFT, top: 255 }}>
-            <KineticHeadline lines={brief.hook.lines} accent={brief.hook.accent} width={W - LEFT - RIGHT} max={118} />
-          </div>
-        </Fade>
-        <Sfx name="whoosh" at={2} volume={0.35} />
+        {brief.opening ? (
+          // action-first opening (creative-direction §6): the treatment is already in progress
+          <>
+            <ClipWindow src={brief.clip} window={brief.clip_window} from={brief.opening.from} to={brief.opening.from + PACKAGE_HOOK * brief.opening.speed} speed={brief.opening.speed} dur={f(PACKAGE_HOOK)} />
+            <div style={{ position: "absolute", left: LEFT, top: 255 }}>
+              <KineticHeadline lines={brief.hook.lines} accent={brief.hook.accent} width={W - LEFT - RIGHT} max={84} />
+            </div>
+          </>
+        ) : (
+          <>
+            <Stage models={hookModels} dur={f(PACKAGE_HOOK)} callouts={[]} top={760} height={760} />
+            <div style={{ position: "absolute", left: LEFT, top: 255 }}>
+              <KineticHeadline lines={brief.hook.lines} accent={brief.hook.accent} width={W - LEFT - RIGHT} max={118} />
+            </div>
+          </>
+        )}
       </Sequence>
       {brief.beats.map((b, i) => (
         <Sequence key={i} from={f(tl.beats[i].start)} durationInFrames={f(tl.beats[i].len)}>
-          <Fade dur={f(tl.beats[i].len)}>
+          <Cut transition={brief.fx.transition} dur={f(tl.beats[i].len)}>
             {b.kind === "spec" ? <Spec beat={b} dur={f(tl.beats[i].len)} /> : <Clip beat={b} src={brief.clip} window={brief.clip_window} dur={f(tl.beats[i].len)} />}
             <StepHeader n={b.step} total={steps} title={b.title} />
-          </Fade>
-          <Sfx name={b.kind === "spec" ? "pop" : "whoosh"} at={3} volume={0.3} />
+          </Cut>
         </Sequence>
       ))}
       {brief.results && tl.results ? (
         <Sequence from={f(tl.results.start)} durationInFrames={f(tl.results.len)}>
-          <Fade dur={f(tl.results.len)}>
+          <Cut transition={brief.fx.transition} dur={f(tl.results.len)}>
             <Results before={brief.results.before} after={brief.results.after} note={brief.results.note} />
-          </Fade>
-          <Sfx name="thud" at={Math.round(fps * 1.2)} volume={0.35} />
+          </Cut>
+          {brief.fx.sfx !== "none" ? <Sfx name="thud" at={Math.round(fps * 1.2)} volume={0.35} /> : null}
         </Sequence>
       ) : null}
       {brief.included && tl.included ? (
         <Sequence from={f(tl.included.start)} durationInFrames={f(tl.included.len)}>
-          <Fade dur={f(tl.included.len)}>
+          <Cut transition={brief.fx.transition} dur={f(tl.included.len)}>
             <Included {...brief.included} />
-          </Fade>
+          </Cut>
         </Sequence>
       ) : null}
     </Shell>
   );
 };
+
+/** Scene boundary: a hard cut when the brief says transition none (default for new work, T17), else a short fade. */
+const Cut: React.FC<{ transition: string; dur: number; children: React.ReactNode }> = ({ transition, dur, children }) =>
+  transition === "none" ? <AbsoluteFill>{children}</AbsoluteFill> : <Fade dur={dur}>{children}</Fade>;
 
 const Fade: React.FC<{ dur: number; children: React.ReactNode }> = ({ dur, children }) => {
   const frame = useCurrentFrame();
@@ -113,7 +125,9 @@ const Spec: React.FC<{ beat: SpecBeat; dur: number }> = ({ beat, dur }) => {
   return (
     <>
       <Stage models={beat.models} callouts={beat.callouts} dur={dur} />
-      <div style={{ position: "absolute", left: LEFT, right: RIGHT, top: 1440, ...serif(50, t.accent), opacity: prog(frame, fps * 0.35, fps * 0.5) }}>{beat.subline}</div>
+      {beat.subline ? (
+        <div style={{ position: "absolute", left: LEFT, right: RIGHT, top: 1440, ...serif(50, t.accent), opacity: prog(frame, fps * 0.35, fps * 0.5) }}>{beat.subline}</div>
+      ) : null}
       <div style={{ position: "absolute", right: RIGHT + 10, top: STAGE.top - 6, ...mono(20, t.muted) }}>Illustration · not to scale</div>
     </>
   );
@@ -240,7 +254,7 @@ const Callouts: React.FC<{ items: { p: { x: number; y: number }; right: boolean;
 
 // ---- clip: the clinical illustration ------------------------------------------
 
-const Clip: React.FC<{ beat: ClipBeat; src: string; window: [number, number]; dur: number }> = ({ beat, src, window, dur }) => {
+const ClipWindow: React.FC<{ src: string; window: [number, number]; from: number; to: number; speed: number; dur: number }> = ({ src, window, from, to, speed, dur }) => {
   const t = useTheme();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -248,22 +262,32 @@ const Clip: React.FC<{ beat: ClipBeat; src: string; window: [number, number]; du
   const h = Math.round(1080 * k);
   const push = interpolate(frame, [0, dur], [1, 1.04]); // gentle push so the frame breathes
   return (
-    <>
-      <div style={{ position: "absolute", left: 0, top: CLIP_TOP, width: W, height: h, overflow: "hidden", borderTop: `2px solid ${t.rule}`, borderBottom: `2px solid ${t.rule}` }}>
-        <div style={{ position: "absolute", left: 0, top: 0, width: W, height: h, transform: `scale(${push})`, transformOrigin: "50% 45%" }}>
-          <OffthreadVideo
-            src={staticFile(src)}
-            muted
-            startFrom={Math.round(beat.from * fps)}
-            endAt={Math.round(beat.to * fps)}
-            playbackRate={beat.speed}
-            style={{ position: "absolute", left: -window[0] * k, top: 0, width: 1920 * k, height: h }}
-          />
-        </div>
-        <div style={{ position: "absolute", right: 24, bottom: 18, ...mono(18, "#F7F8F6"), opacity: 0.85, textShadow: "0 1px 3px rgba(0,0,0,.6)" }}>
-          Illustration on a real photo
-        </div>
+    <div style={{ position: "absolute", left: 0, top: CLIP_TOP, width: W, height: h, overflow: "hidden", borderTop: `2px solid ${t.rule}`, borderBottom: `2px solid ${t.rule}` }}>
+      <div style={{ position: "absolute", left: 0, top: 0, width: W, height: h, transform: `scale(${push})`, transformOrigin: "50% 45%" }}>
+        <OffthreadVideo
+          src={staticFile(src)}
+          muted
+          startFrom={Math.round(from * fps)}
+          endAt={Math.round(to * fps)}
+          playbackRate={speed}
+          style={{ position: "absolute", left: -window[0] * k, top: 0, width: 1920 * k, height: h }}
+        />
       </div>
+      <div style={{ position: "absolute", right: 24, bottom: 18, ...mono(18, "#F7F8F6"), opacity: 0.85, textShadow: "0 1px 3px rgba(0,0,0,.6)" }}>
+        Illustration on a real photo
+      </div>
+    </div>
+  );
+};
+
+const Clip: React.FC<{ beat: ClipBeat; src: string; window: [number, number]; dur: number }> = ({ beat, src, window, dur }) => {
+  const t = useTheme();
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const h = Math.round(1080 * (W / (window[1] - window[0])));
+  return (
+    <>
+      <ClipWindow src={src} window={window} from={beat.from} to={beat.to} speed={beat.speed} dur={dur} />
       <div style={{ position: "absolute", left: LEFT, right: RIGHT, top: CLIP_TOP + h + 50, ...serif(50, t.accent), opacity: prog(frame, fps * 0.3, fps * 0.5) }}>
         {beat.caption}
       </div>

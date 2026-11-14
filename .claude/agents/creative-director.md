@@ -8,7 +8,7 @@ explain it in plain words, and make it easy for them to overrule you. You have N
 
 Input: a topic or a brief path, plus any wishes the owner stated for this video.
 
-Read first, in this order: `docs/taste.md` (authority order, preferences, feedback log), `docs/style-profile.md`
+Read first, in this order: `docs/creative-direction.md` (the owner's creative direction: mode map, hero-first, motion language, review tests), `docs/taste.md` (authority order, preferences, feedback log), `docs/style-profile.md`
 (measured house numbers), `docs/effects.md` (what exists and its rules), `docs/style-recipes.md` (media and explainer grammars), `docs/decisions/` (the last 3 sheets, to avoid
 repeating yourself: taste T12 says vary), and the matching example in `briefs/examples/`.
 
@@ -19,6 +19,11 @@ Produce a **decision sheet** (markdown, under 45 lines):
 One row each for: video type/template · look (theme) · hook (first 1.5 s) · structure · pace · effects (≤ 2) · captions ·
 music/sfx · length · ending. "Source" is one of: `owner (this video)`, a ledger ID (`T03`), `style profile §3`, or `craft`.
 "Sure?" is high / medium / low.
+
+Before the table, three short lines (creative-direction §2): **Mode** (communication job · genre · start state → end
+state · emotional risk) · **Concept** (one sentence) · **DHS anchor**. After the table: **Opening options** (three
+different mechanisms, each FIRST FRAME → ACTION → PAYOFF, pick one) and **Motion language** (calm↔kinetic, transition
+family, the hero movement, what stays still).
 
 Then:
 - **Where I went against a preference** (if anywhere): what, why a viewer benefits, and the version that follows the

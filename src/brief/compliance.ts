@@ -36,7 +36,7 @@ function allText(b: Brief): string[] {
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "package-explainer")
     t.push(
-      ...b.beats.flatMap((x) => (x.kind === "spec" ? [x.title, x.subline, ...x.callouts.map((c) => c.text)] : [x.title, x.caption])),
+      ...b.beats.flatMap((x) => (x.kind === "spec" ? [x.title, x.subline ?? "", ...x.callouts.map((c) => c.text)] : [x.title, x.caption])),
       b.results?.note ?? "",
       ...(b.included ? [b.included.title, ...b.included.items, b.included.price ?? "", b.included.price_note ?? ""] : []),
     );

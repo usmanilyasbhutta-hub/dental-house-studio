@@ -14,5 +14,7 @@ Report each defect with frame file name, what's wrong and a suggested fix:
 - before/after photos stretched, cropped differently or misaligned
 - awkward timing: text unreadable for its duration, flashes, empty frames
 - end card: CTA, phone, doctors and address present and correct
+- AI-slop signs (creative-direction §11): glow, floating cards, implausible instruments or contact, visible composites, synthetic-looking teeth
+- before/after taken from different angles but presented as a matched comparison
 
 Rate it as PASS, MINOR or BLOCKER. Be honest. If everything looks fine, say so plainly. Never edit files.

@@ -413,6 +413,8 @@ export const packageExplainerBrief = base.extend({
   type: z.literal("package-explainer"),
   /** Clinical illustration video, 16:9, inside public/ (gitignored case folder). */
   clip: publicAsset,
+  /** Action-first opening: the hook plays this part of the clip (seconds in the source) under a small headline. */
+  opening: z.object({ from: z.number().min(0), speed: z.number().min(0.5).max(3).default(1) }).optional(),
   /** Horizontal window of the 16:9 clip (source px, 0-1920) shown in the vertical frame. */
   clip_window: z.tuple([z.number().min(0), z.number().max(1920)]).default([380, 1840]),
   beats: z
@@ -422,7 +424,8 @@ export const packageExplainerBrief = base.extend({
           kind: z.literal("spec"),
           step: z.number().int().min(1).max(9),
           title: line(22),
-          subline: line(60),
+          /** Optional; leave out when the clip caption that follows says it (words support, not repeat). */
+          subline: line(60).optional(),
           models: z.array(z.enum(INSTRUMENTS)).min(1).max(2),
           /** Thin leader-line labels; `at` is a point on the model in millimetres (model space). */
           callouts: z.array(z.object({ model: z.number().int().min(0).max(1).default(0), at: vec3, text: line(26) })).max(4).default([]),
@@ -447,7 +450,7 @@ export const packageExplainerBrief = base.extend({
     .object({
       before: publicAsset,
       after: publicAsset,
-      note: line(60).default("Same patient · photos not retouched · results vary"),
+      note: line(80).default("Same patient · photos not retouched · results vary"),
       seconds: z.number().min(3).max(7).default(5),
     })
     .optional(),

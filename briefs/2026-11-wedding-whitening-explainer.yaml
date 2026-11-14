@@ -1,6 +1,7 @@
 # Technical explainer: wedding whitening package (scaling -> bleaching -> polish), built from the whitening project
 # (clinical-3d/whitening). Instruments are the generic GLB models (no brand names, taste T06); the clinical clip is the
 # unbranded render of the approved treatment sequence over the patient's real photo. Dentist checks the wording.
+# Direction: docs/creative-direction.md (14 Nov) and docs/decisions/wedding-whitening-explainer.md.
 id: wedding-whitening-explainer
 type: package-explainer
 title: Wedding whitening package, step by step
@@ -9,12 +10,14 @@ tone: calm
 label: Wedding whitening
 hook: { lines: ["Wedding smile,", "step by step"], accent: smile }
 clip: cases/whitening-v9/procedure.mp4
+# Action-first opening (creative-direction §6, T13): scaling already in progress on the real photo.
+opening: { from: 3.0, speed: 1.2 }
 beats:
   - kind: spec
     step: 1
     title: Scaling
-    subline: Tartar and surface stains are cleaned off first.
     models: [scaler]
+    seconds: 2.6
     callouts:
       - { at: [1.7, -1.2, 0], text: Fine tip vibrates }
       - { at: [4.2, -14.5, 0.9], text: Water spray rinses }
@@ -22,15 +25,15 @@ beats:
   - kind: clip
     step: 1
     title: Scaling
-    caption: Short strokes along each tooth, with a water spray.
-    from: 2.6
+    caption: Tartar and stains cleaned off, with a water spray.
+    from: 5.9
     to: 11.6
-    speed: 1.5
+    speed: 1.4
   - kind: spec
     step: 2
     title: Bleaching
-    subline: The gums are protected before any gel goes on.
     models: [barrier_syringe, curing_light]
+    seconds: 2.8
     callouts:
       - { model: 0, at: [0, -1.6, 0.75], text: Fine bent tip }
       - { model: 0, at: [0, -42, 7.3], text: Gum barrier }
@@ -45,8 +48,8 @@ beats:
   - kind: spec
     step: 2
     title: Bleaching
-    subline: Whitening gel is mixed in the tip as it is applied.
     models: [syringe, suction]
+    seconds: 2.8
     callouts:
       - { model: 0, at: [0, -1.8, 1.9], text: Fine delivery tip }
       - { model: 0, at: [-5.2, -24, 6.4], text: Mixing tip }
@@ -61,12 +64,11 @@ beats:
   - kind: spec
     step: 3
     title: Polish
-    subline: A soft brush polishes the enamel smooth.
     models: [polisher]
     callouts:
       - { at: [0, 0, 2], text: Soft brush }
       - { at: [0, 0, 13], text: Slow-speed handpiece }
-    seconds: 2.8
+    seconds: 2.4
   - kind: clip
     step: 3
     title: Polish
@@ -77,7 +79,7 @@ beats:
 results:
   before: cases/whitening-v9/before.jpg
   after: cases/whitening-v9/after.jpg
-  note: Same patient · photos not retouched · results vary
+  note: Same patient · different photo angles · not retouched · results vary
 # Signed form goes OUTSIDE git, e.g. assets/cases/whitening-v9/consent.pdf (needed before this can be rendered for posting).
 consent:
   file: assets/cases/whitening-v9/consent.pdf
@@ -93,5 +95,5 @@ included:
     - About 45–60 min in the chair
 cta: WhatsApp to book
 disclaimer: "Illustration on a real photo; instruments not to scale. Results vary. Assessment first."
-fx: { transition: none, sfx: subtle }
+fx: { transition: none, sfx: none }   # hard cuts, no whoosh (T17); music carries the rhythm
 music: audio/pad-calm.mp3
