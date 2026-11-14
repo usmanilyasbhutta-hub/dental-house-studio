@@ -1,5 +1,5 @@
 import React from "react";
-import { useTheme } from "../../theme";
+import { isLight, useTheme } from "../../theme";
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 
 /** Dark brand backdrop: gradient, grain, vignette. No logo watermark (owner, 14 Nov 2026: never a white logo). */
@@ -9,7 +9,7 @@ export const Backdrop: React.FC<{ broll?: string; brollStart?: number }> = ({ br
     <AbsoluteFill style={{ background: `radial-gradient(120% 80% at 50% 30%, ${t.bgTop} 0%, ${t.bgBottom} 70%)` }}>
       {broll ? <KenBurns src={broll} /> : null}
       <Grain />
-      <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%)" }} />
+      <AbsoluteFill style={{ background: isLight(t) ? "radial-gradient(ellipse at center, transparent 65%, rgba(51,60,57,0.06) 100%)" : "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%)" }} />
     </AbsoluteFill>
   );
 };

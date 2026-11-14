@@ -127,7 +127,7 @@ def render_set(name,rotor=None,plunger=None,compare_roll=0):
  scene.render.resolution_x=scene.render.resolution_y=RES
  root.rotation_euler=(0,0,0);scene.camera.location=(0,0,200);scene.camera.data.ortho_scale=G.ASSET_SPAN_MM
  if '--compare-only' in ARGS:clean();return
- poses=G.SCALER_POSES if name=='scaler' else [G.POSES[name](i) for i in range(5)]
+ poses=G.SCALER_POSES if name=='scaler' else [G.POSES[name](i) for i in range(G.POSE_COUNT.get(name,5) if hasattr(G,'POSE_COUNT') else 5)]
  for idx,angles in enumerate(poses):
   if any(a.startswith('--pose=') for a in ARGS) and f'--pose={idx}' not in ARGS:continue
   root.rotation_euler=tuple(math.radians(x) for x in angles)
@@ -270,3 +270,48 @@ cyl((4.2,-12.9,0),(4.2,-19.5,0),.92,steel,1.1);cyl((4.2,-17.4,0),(4.2,-18.3,0),1
 cyl((4.2,-19.5,0),(4.2,-30,0),2.2,dark,5.7);cyl((4.2,-30,0),(4.2,-114,0),5.7,pearl,6.2)
 text('NEWTRON SLIM',(4.2,-66,6.05),2.2,printmat,math.pi/2)
 render_set('scaler')
+
+# --- Assessment: front-surface mouth mirror ----------------------------------
+# Standard size-4 head (Ø 22 mm) on a cone-socket shank and a 8 mm knurled steel handle.
+# Origin = head centre; the reflective face looks towards the camera (+Z).
+# The glass renders as a pure green key: the compositor fills it with a blurred reflection of the real photo.
+mirrorglass=mat('Front-surface mirror (key)',(0,0,0),0,1)
+mg=mirrorglass.node_tree.nodes.get('Principled BSDF');mg.inputs['Emission Color'].default_value=(0,1,0,1);mg.inputs['Emission Strength'].default_value=1.0
+cyl((0,0,-.7),(0,0,.6),11.0,steel,bevel=.35)
+cyl((0,0,.6),(0,0,.75),10.4,mirrorglass,bevel=.05)
+sweep([(0,-10.5,0),(0,-14,.8),(0,-20,2.8),(0,-30,5.5)],[1.1,1.15,1.3,1.6],steel,None,'Mirror shank')
+cyl((0,-30,5.5),(0,-36,6.6),1.6,steel,3.2)
+cyl((0,-36,6.6),(0,-135,23),4.0,steel,bevel=.3)
+for k in range(9):
+ y=-60-k*6;z=6.6+(23-6.6)*(-y-36)/99
+ cyl((0,y,z),(0,y-2.2,z+.36),4.08,dark,bevel=.15)
+render_set('mirror')
+
+# --- Assessment: periodontal probe (15 mm, colour-coded) ----------------------
+# Rounded 0.5 mm tip at the origin, tapered 15 mm working end along -Y with black bands at 4-5, 9-10 and 14-15 mm
+# (UNC-15 style), contra-angled shank, 8 mm steel handle.
+inkband=mat('Probe black band',(.02,.02,.025),.3,.35)
+sweep([(0,0,0),(0,-15,0)],[.25,.5],steel,None,'Probe working end',steps=2)
+dome((0,0,0),.25,.25,steel,'Rounded probe tip')
+for a,b in [(4,5),(9,10),(14,15)]:
+ cyl((0,-a,0),(0,-b,0),.27+.25*b/15,inkband,bevel=.02)
+for mm in [1,2,3,6,7,8,11,12,13]:
+ cyl((0,-mm+.06,0),(0,-mm-.06,0),.27+.25*mm/15,inkband,bevel=.01)
+sweep([(0,-15,0),(0,-19,.6),(0,-24,3.5),(0,-31,5.2),(0,-36,6)],[.5,.62,.75,.9,1.1],steel,None,'Probe shank')
+cyl((0,-36,6),(0,-42,6.9),1.1,steel,3.2)
+cyl((0,-42,6.9),(0,-140,21),4.0,steel,bevel=.3)
+for k in range(9):
+ y=-66-k*6;z=6.9+(21-6.9)*(-y-42)/98
+ cyl((0,y,z),(0,y-2.2,z+.33),4.08,dark,bevel=.15)
+render_set('probe')
+
+# --- Shade check: one shade-guide tab (no shade code shown) -------------------
+# Porcelain crown form ~9 mm wide, 11 mm long, held edge to edge (tab inverted: incisal edge at the origin, up),
+# on a metal pin and a flat plastic handle. Neutral tooth colour; no number or brand on screen.
+porcelain=mat('Shade tab porcelain',(.62,.52,.36),0,.22)
+b=porcelain.node_tree.nodes.get('Principled BSDF');b.inputs['Subsurface Weight'].default_value=.15;b.inputs['Subsurface Radius'].default_value=(1.0,.7,.45);b.inputs['Subsurface Scale'].default_value=.5;b.inputs['Coat Weight'].default_value=.4;b.inputs['Coat Roughness'].default_value=.08
+loft([(0,0,1.0,4.3,1.1),(-1.5,0,1.25,4.5,1.45),(-5,0,1.5,4.5,1.6),(-8.5,0,1.4,3.9,1.5),(-11,0,1.1,2.6,1.2)],porcelain,'Shade tab crown',.75)
+handlemat=mat('Shade guide handle',(.52,.55,.57),0,.4)
+cyl((0,-10.5,1.1),(0,-17,1.1),.7,steel,bevel=.05)
+loft([(-16.5,0,1.1,3.2,1.2),(-20,0,1.1,3.6,1.3),(-55,0,1.1,3.6,1.3),(-56.5,0,1.1,2.4,1.0)],handlemat,'Flat shade-guide handle',.85)
+render_set('shade_tab')

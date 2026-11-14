@@ -61,8 +61,19 @@ POSES = {
     'suction': lambda i: (-50, -8 + 4 * i, -20 - 5 * i),
 }
 SCALER_POSES = [(0, -10, 10), (0, 8, -12)]
+# Assessment and shade instruments (patient-information cut, 14 Nov 2026).
+POSES.update({
+    'probe': lambda i: (-30, -4 + 2 * i, -10 + 5 * i),   # along the tooth long axis, handle down and towards the operator
+    'mirror': lambda i: (-24, 52, 32),                   # face angled to the camera, retracting at the patient's right corner
+    'shade_tab': lambda i: (-12, 0, 0),                  # tab face to camera, edge to edge under the central incisor
+})
+POSE_COUNT = {'probe': 5, 'mirror': 1, 'shade_tab': 1}
 # Model-space point (mm) that is pinned to the treatment path.
 CONTACT = {
+    'probe': (0, 0, 0),             # rounded probe tip
+    'mirror': (0, 0, 0),            # centre of the mirror head
+    'shade_tab': (0, 0, 0),         # middle of the tab's incisal edge
+
     'barrier_syringe': (0, 0, .15),   # cannula outlet
     'syringe': (0, 0, .15),           # delivery outlet
     'polisher': (2.0, 0, .2),         # flexed bristle edge on enamel

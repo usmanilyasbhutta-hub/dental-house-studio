@@ -36,7 +36,7 @@ const base = z.object({
   /** Small mono label in the HUD. */
   label: line(24).default("Consult first"),
   /** Visual family: brand = slate/bronze (default), editorial = cream/deep green for doctor-led education. */
-  theme: z.enum(["brand", "editorial"]).default("brand"),
+  theme: z.enum(["brand", "editorial", "clinic"]).default("brand"),
   /** Tone controls motion: calm = no glitch cuts. */
   tone: z.enum(["calm", "contemporary"]).default("calm"),
   music: publicAsset.optional(),

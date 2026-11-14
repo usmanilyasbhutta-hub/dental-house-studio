@@ -1,0 +1,75 @@
+# Patient-information cut of the wedding whitening package (owner, 14 Nov 2026): white background, no instrument
+# showcase; what we do, step by step: assessment (mirror + probe) → starting shade (no number) → scaling → whitening →
+# polish → result → offer → booking. Clip = assessment/shade opening (render_intro.py) + the approved treatment
+# sequence, unbranded (clinical-3d/whitening). Direction: docs/creative-direction.md · decisions: docs/decisions/wedding-whitening-patient-info.md
+id: wedding-whitening-patient-info
+type: package-explainer
+title: Wedding whitening, what we do step by step
+theme: clinic            # white/bone (owner: "Background should be white or whitish", T21)
+tone: calm
+label: Wedding whitening
+hook: { lines: ["Wedding smile,", "step by step"], accent: smile }
+clip: cases/whitening-v9/procedure_full.mp4
+clip_window: [290, 1750]   # shifted left so the mirror at the patient's right corner stays in frame
+# Action-first opening (T13): the gum check is already under way on the real photo.
+opening: { from: 0.3, speed: 1.0 }
+beats:
+  - kind: clip
+    step: 1
+    title: Assessment first
+    caption: Mirror and probe check the health of gums and teeth.
+    from: 2.7
+    to: 4.8
+  - kind: clip
+    step: 2
+    title: Your starting shade
+    caption: We record your shade with a shade guide before we start.
+    from: 4.9
+    to: 8.0
+  - kind: clip
+    step: 3
+    title: Scaling
+    caption: Plaque and tartar are removed.
+    from: 10.6
+    to: 19.6
+    speed: 1.5
+  - kind: clip
+    step: 4
+    title: Whitening
+    caption: Gums protected, whitening gel applied, then removed.
+    from: 20.2
+    to: 41.0
+    speed: 2.2
+  - kind: clip
+    step: 5
+    title: Polish
+    caption: A soft brush polishes the enamel smooth.
+    from: 41.1
+    to: 45.0
+    speed: 1.1
+results:
+  # Matched teeth-only crops (same region, same scale; owner: "Crop real case pics to show teeth only-anterior view"),
+  # made by clinical-3d/whitening/crop_results.py. Not warped, not retouched.
+  before: cases/whitening-v9/before_teeth.jpg
+  after: cases/whitening-v9/after_teeth.jpg
+  note: Same patient · different photo angles · not retouched · results vary
+consent:
+  file: assets/cases/whitening-v9/consent.pdf
+  signed_on: 2026-11-01   # placeholder: replace with the real date from the form
+  scope: [social-media, ads]
+included:
+  title: Wedding whitening package
+  items:
+    - Dentist assessment
+    - Shade check
+    - Scaling + polishing
+    - Gum protection
+    - In-office whitening
+    - About 45–60 min in the chair
+  price: PKR 21,000
+  price_note: Regular PKR 30,000 · offer until 15 Dec 2026
+  prices_confirmed_on: 2026-11-14   # owner: "Yes same offer" (14 Nov). Re-confirm after 15 Dec.
+cta: WhatsApp to book
+disclaimer: "Illustration on a real photo. Results vary. Assessment first."
+fx: { transition: none, sfx: none }
+music: audio/pad-calm.mp3

@@ -25,7 +25,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | ID | Preference | Strength | Evidence |
 |---|---|---|---|
-| T01 | Two looks only: `brand` (slate/bronze) for promos/offers/cases, `editorial` (cream/green) for doctor-led education. No black/mint neon. | firm | owner decision, Nov 2026 |
+| T01 | Looks: `brand` (slate/bronze) for promos/offers/cases, `editorial` (cream/green) for doctor-led education, `clinic` (white/bone) for patient-information pieces. No black/mint neon. | firm | owner decision, Nov 2026; `clinic` added 14 Nov ("Background should be white or whitish") |
 | T02 | Captions follow what is spoken, word for word (English, Urdu or mixed). | firm | "default is whatever spoken either english,urdu or mixed" |
 | T03 | Tight talking-head edits: remove repeats, restarts and filler; keep only what carries the message. | firm | Dr. Ayesha: "Cut all redundant things." |
 | T04 | Anatomy on clinical photos must be **traced accurately**, especially gingival/cervical margins. Never eyeballed. | firm | "gingival margin/cervical tooth is not marked accurately" |
@@ -71,6 +71,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-14 | wedding whitening patient-info cut | "Yes same offer" · "Show without number" · "Crop real case pics to show teeth only-abterior view" | price PKR 21,000 (regular 30,000, until 15 Dec) shown; shade step without a code; matched teeth-only crops; golden rule 3 wording now allows matched crops | T01, T21 |
 | 2026-11-14 | wedding whitening explainer, new direction | "Background should be white or whitish. No need to present instruments. Its like an illustrative info for patients like We assess dental mirror and perioprobe ... We check the initial shade ... We remove plaque and calculus ... We do the whitening process We polish the teeth. That is our offer. May b CTA page at end." | proposed: light patient-info version, steps = assess → shade → scale → whiten → polish → offer → CTA; 3D instrument showcase dropped | T21 |
 | 2026-11-14 | logo | "Never white logo,you can decide if it is better to continually use of at start and end." | white logo bug, white backdrop watermark and white receipt mark removed from all templates; full-colour logo on the end card only | T20 |
 | 2026-11-14 | headline type | "Keep Oswald capitals" (chosen over the handoff's sentence-case sans) | no change to type | T08 → firm |

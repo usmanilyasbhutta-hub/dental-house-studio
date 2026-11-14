@@ -5,9 +5,10 @@ import { colors } from "./brand";
  * Visual families (decided Nov 2026, see docs/style-profile.md §6):
  * - brand: slate/bronze, the master look (logo colours). Promos, offers, cases.
  * - editorial: cream + deep green. Doctor-led education.
+ * - clinic: white/bone with slate type and bronze accents. Patient-information pieces (owner, 14 Nov 2026: "Background should be white or whitish").
  * Black/mint neon is retired.
  */
-export type ThemeName = "brand" | "editorial";
+export type ThemeName = "brand" | "editorial" | "clinic";
 
 export interface Theme {
   name: ThemeName;
@@ -48,7 +49,22 @@ export const themes: Record<ThemeName, Theme> = {
     map: ["#D8A48F", "#9DB8A6", "#E3C27A", "#9AA9C2", "#C9A2B4", "#B9C98F"],
     end: { top: "#F3F1E6", bottom: "#E4DED0", text: "#24352E", accent: "#B4775F", muted: "#4A5A52", pill: "#24352E", pillText: "#F3F1E6" },
   },
+  clinic: {
+    name: "clinic",
+    bgTop: "#FBFAF7",
+    bgBottom: "#EEEBE4",
+    text: colors.slate,
+    accent: colors.bronze,
+    rule: colors.bronze,
+    muted: "#7D837F",
+    stripe: colors.mist,
+    map: ["#C08A4A", "#C9705E", "#5E9A72", "#5B7DB8", "#A86E99", "#C9A23E"],
+    end: { top: colors.white, bottom: colors.mist, text: colors.slate, accent: colors.bronze, muted: colors.bronzeDark, pill: colors.slate, pillText: colors.white },
+  },
 };
+
+/** Light themes need dark shading instead of the dark vignette. */
+export const isLight = (t: Theme) => t.name === "clinic";
 
 export const ThemeContext = createContext<Theme>(themes.brand);
 export const useTheme = () => useContext(ThemeContext);

@@ -6,6 +6,7 @@ import { DOODLE_SET, type Doodle, type DoodleName, type FillKey } from "./doodle
 const HUES: Record<Theme["name"], Record<Exclude<FillKey, "white" | "ink">, number>> = {
   brand: { gold: 0, coral: 1, green: 2, blue: 3, pink: 4, yellow: 5 },
   editorial: { coral: 0, green: 1, gold: 2, yellow: 2, blue: 3, pink: 4 },
+  clinic: { gold: 0, coral: 1, green: 2, blue: 3, pink: 4, yellow: 5 },
 };
 export const doodleFill = (t: Theme, k: FillKey) => (k === "white" ? "#FFFFFF" : k === "ink" ? t.end.text : t.map[HUES[t.name][k]]);
 

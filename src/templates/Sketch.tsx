@@ -20,6 +20,7 @@ const ease = Easing.bezier(0.4, 0, 0.3, 1);
 const HUES: Record<Theme["name"], Record<Exclude<FillKey, "white" | "ink">, number>> = {
   brand: { gold: 0, coral: 1, green: 2, blue: 3, pink: 4, yellow: 5 },
   editorial: { coral: 0, green: 1, gold: 2, yellow: 2, blue: 3, pink: 4 },
+  clinic: { gold: 0, coral: 1, green: 2, blue: 3, pink: 4, yellow: 5 },
 };
 const fillColour = (t: Theme, k: FillKey, m?: Medium) => m?.palette?.[k] ?? (k === "white" ? "#FFFFFF" : k === "ink" ? t.end.text : t.map[HUES[t.name][k]]);
 

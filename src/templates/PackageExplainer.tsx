@@ -297,7 +297,7 @@ const Clip: React.FC<{ beat: ClipBeat; src: string; window: [number, number]; du
 
 // ---- results: uncropped before/after in the same box ----------------------------
 
-const BOX = { w: W - LEFT - RIGHT + 50, h: 470 };
+const BOX = { w: W - LEFT - RIGHT + 50, h: 420 };
 const Results: React.FC<{ before: string; after: string; note: string }> = ({ before, after, note }) => {
   const t = useTheme();
   const frame = useCurrentFrame();

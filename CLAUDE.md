@@ -6,7 +6,7 @@ Every video starts as a YAML brief → validated → rendered with Remotion → 
 ## Golden rules (never break these)
 1. **Never publish, post, boost or schedule anything** without the user's explicit go-ahead in this conversation. Final approval is always a dentist's.
 2. **Patient privacy:** real case photos live in `public/cases/<case_id>/` and consent forms in `assets/cases/<case_id>/`. Both are gitignored. Never commit them, never upload them anywhere the user didn't ask for, and never show patient names or Dental Align IDs (`DH-0147`) on screen.
-3. **Honest clinical content:** before/after photos are shown unwarped and uncropped (`objectFit: contain`, same box). No retouching, no AI-generated "results", no stock smiles presented as patients.
+3. **Honest clinical content:** before/after photos are shown unwarped and uncropped (`objectFit: contain`, same box), or, when the owner asks, as **matched crops**: the same anatomical region at the same scale for both photos (owner, 14 Nov 2026; e.g. `clinical-3d/whitening/crop_results.py`). If the photos were taken from different angles, say so on screen. No retouching, no AI-generated "results", no stock smiles presented as patients.
 4. **Claims:** no "guaranteed / painless / permanent / best / cheapest / 100% / miracle / cure". The banned list is in `src/brief/compliance.ts`. Education claims need a source (PubMed connector) in `sources`.
 5. **Clinic facts** come only from `src/brand.ts` (`clinic`: phone/WhatsApp, Instagram, doctors, address). Don't invent websites, hours or prices. Ask.
 6. Music: original or properly licensed only. Never copyrighted tracks.
@@ -34,7 +34,7 @@ Every video starts as a YAML brief → validated → rendered with Remotion → 
 - `out/`: final mp4s. `qc/<id>/`: report.md, contact.jpg and frames. Both gitignored.
 
 ## Brand decisions (owner, Nov 2026)
-- Two themes per brief: `theme: brand` (slate/bronze, default) for promos/offers/cases, `theme: editorial` (cream + deep green) for doctor-led education. Black/mint neon is retired. Tokens live in `src/theme.ts`; templates use `useTheme()`, never raw colours.
+- Themes per brief: `theme: brand` (slate/bronze, default) for promos/offers/cases, `theme: editorial` (cream + deep green) for doctor-led education, `theme: clinic` (white/bone, slate type, bronze accents) for patient-information pieces (owner, 14 Nov 2026). Black/mint neon is retired. Tokens live in `src/theme.ts`; templates use `useTheme()`, never raw colours.
 - Instagram **@dentalhousesktt** (two Ts). 0323-7560160 is phone **and** WhatsApp. Both live in `src/brand.ts`.
 - Captions follow whatever is spoken (English, Urdu or mixed): `language: as-spoken`.
 
