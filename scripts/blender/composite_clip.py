@@ -137,5 +137,5 @@ else:
         sc.render.filepath = os.path.join(tmp, f"{n:04d}.png")
         bpy.ops.render.render(write_still=True)
     subprocess.check_call(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", str(fps), "-i", os.path.join(tmp, "%04d.png"),
-                           "-c:v", "libx264", "-crf", "17", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out])
+                           "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-c:v", "libx264", "-crf", "17", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out])
     print("clip →", out)
