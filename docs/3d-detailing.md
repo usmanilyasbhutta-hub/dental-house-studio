@@ -71,3 +71,9 @@ Use them for promos and wow moments only; clinical explanations stay in the defa
 `--clip out/x.mp4 --move <move> [--frames 36 --fps 12 --size 540 --samples 24]` renders a camera move:
 static · dolly_in · dolly_out · orbit · low_arc · crane · tilt · pendulum · ground_skim · close_up · snap_zoom · fpv.
 Previews: ~1 s/frame at 320 px, 10 samples. Final quality: raise `--size`, `--samples`, `--fps 30`.
+
+## Composite 11/21 clinical-macro clip
+`python3 scripts/blender/composite_clip.py out/x.mp4 [--samples 24 --fps 12 --seconds 6]` (single frame: `--frame N out.png`).
+Story: prepared mesial cavities on 11 and 21 (shallow, labial-proximal) → composite fills them (matte) → blue curing light →
+polish (gloss, shade blends). Teeth from modelgen, gum and lighting from direction A. Preview: ~30 s/frame at 405×720,
+24 samples. The cavities are generic textbook preps, **not** the owner's patient photo (that one stays an anatomy map).

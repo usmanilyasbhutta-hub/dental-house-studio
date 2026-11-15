@@ -442,8 +442,9 @@ def tooth(spec, mats):
         s = cav["size"]
         at = {
             "occlusal": ((0, 0, h * 0.97), (0.36 * w * s, 0.3 * d * s, 0.17 * s)),
-            "mesial": ((w * 0.86, 0, h * 0.58), (0.24 * s, 0.26 * s, 0.26 * s)),
-            "distal": ((-w * 0.86, 0, h * 0.58), (0.24 * s, 0.26 * s, 0.26 * s)),
+            # proximal cavities open towards the contact and the labial/buccal side; they never go right through the tooth
+            "mesial": ((w * 0.84, -d * 0.32, h * 0.58), (0.2 * s, 0.17 * s, 0.24 * s)),
+            "distal": ((-w * 0.84, -d * 0.32, h * 0.58), (0.2 * s, 0.17 * s, 0.24 * s)),
             "cervical": ((0, -d * 0.82, h * 0.2), (0.3 * s, 0.16 * s, 0.14 * s)),
             "incisal": ((w * 0.62, 0, h * 0.93), (0.22 * s, 0.3 * s, 0.2 * s)),
         }[cav["at"]]
