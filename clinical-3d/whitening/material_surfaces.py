@@ -3,6 +3,9 @@
 # glossy pale-blue band a few millimetres tall that fills the papillae; the gel
 # is a clear wet coating that leaves the enamel colour visible.
 import random
+SAVE='--save-models' in sys.argv  # write the material meshes as .blend files instead of only rendering
+def save(name):
+ if SAVE:(P.parent/'models').mkdir(exist_ok=True);bpy.ops.wm.save_as_mainfile(filepath=str(P.parent/'models'/name),copy=True,compress=True)
 def xyz(p,z=0):return ((p[0]-285)/380*7-3.5,1.96875-(p[1]-160)/214*3.9375,z)
 MM=6*7/380  # scene units per millimetre at the estimated 6 source px/mm
 def catmull(pts,closed=False,steps=12):
@@ -51,6 +54,7 @@ for i in range(cols-1):
  for j in range(rows-1):a=i*rows+j;faces.append((a,a+rows,a+rows+1,a+1))
 o=object_mesh('Conforming gingival barrier band',verts,faces,barriermat)
 sub=o.modifiers.new('Soft resin surface','SUBSURF');sub.levels=2;sub.render_levels=2
+save('gingival_barrier_band.blend')
 scene.render.filepath=str(P/'barrier_volume.png');bpy.ops.render.render(write_still=True);clean()
 
 # --- Whitening gel: clear wet coating, two passes ------------------------------
@@ -89,4 +93,5 @@ wet=mat('Clear viscous gel surface reflection',(0,0,0),0,.085)
 b=wet.node_tree.nodes.get('Principled BSDF');b.inputs['IOR'].default_value=1.40;b.inputs['Coat Weight'].default_value=.5;b.inputs['Coat Roughness'].default_value=.05
 microtexture(wet,5,.12,.02)
 gel_objects(wet)
+save('whitening_gel_coat.blend')
 scene.render.filepath=str(P/'gel_spec.png');bpy.ops.render.render(write_still=True);clean()

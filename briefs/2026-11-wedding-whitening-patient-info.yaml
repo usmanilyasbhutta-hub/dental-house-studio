@@ -73,3 +73,6 @@ cta: WhatsApp to book
 disclaimer: "Illustration on a real photo. Results vary. Assessment first."
 fx: { transition: none, sfx: none }
 music: audio/pad-calm.mp3
+review:
+  approved_by: Dr. Usman Ilyas Bhutta   # owner and dentist: "I am dentist myself and i approve it."
+  approved_on: 2026-11-15
