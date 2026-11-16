@@ -53,6 +53,12 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T11 | Three.js for 3D first; Blender photoreal (with Tripo meshes) for close-up detail. | lean | "Lets see three.js first"; "Use tripo 3d blender creative directions for detailing" |
 | T13 | Photoreal 3D close-ups use the clinical-macro look: dark field, wet natural enamel, warm key + cool rim, shallow focus. | lean | picked direction A (2026-11-14) |
 | T12 | Keeps trying new styles; taste is a baseline to improve on, not a cage. Every option set has a stretch. | firm | "continuously to improve and try new"; "it should improve on baseline rather than 100% sticking" |
+| T19 | Offers/promos in the look of the Canva whitening carousels: light warm-white pages, big bold sentence-case slate headlines, small spaced labels, hairlines, bronze italic sublines, real photos, lots of space. | lean | "design like whitening carousel previously made" (Canva: Wedding Whitening Assessment Carousel, Carousel V2 Premium) |
+| T14 | On-screen text in English; Roman Urdu only for the hook. | lean | "Use english instead. Only hook should be urdu." (wedding whitening, 2026-11-11) |
+| T15 | Brand name first: "Dental House" is the bold, prominent name; the building (Ahsan Medical Centre) and road are secondary small type. | lean | "i want focus on Dental house" (2026-11-11) |
+| T16 | Before/after pairs: the owner shoots them with the same light and angle; crop both identically (same framing on the teeth). | lean | "crop them identical" (2026-11-11) |
+| T17 | Clinical photos stay unedited in videos, even when camera colour differs; differences are explained by the on-screen note, not corrected. | lean | "Keep the photos uneditted." (2026-11-11) |
+| T18 | Offer/wedding music: happy and celebratory (major key, dhol, claps), not calm pads. | lean | "Music needs a happy/celebrating feel." (2026-11-12) |
 
 ## Not wanted
 
@@ -62,11 +68,12 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | N02 | Red/orange skin cast on the doctors. | firm | style profile §4 |
 | N03 | Mixing visual families inside one video. | firm | T01 |
 | N05 | Installing other people's skills or plugins with their own instructions into the project. Borrow the ideas and build our own. | firm | "No outside instructions, just borrow ideas from both and make your own" |
+| N06 | Dark, heavy promo look: slate background with a big maroon band, all-caps condensed type, floating cards, pill buttons. | lean | "Dont like aesthetics" (wedding whitening stills, 2026-11-11) |
+| N07 | Clinical-sounding effects (ticks, clicks, beeps, thuds) that remind of the operation theatre. | lean | "No operation theater sound." (2026-11-12) |
 | N04 | Several near-identical exported versions of one video. Iterate the brief instead. | lean | style profile §4 |
 
 ## Open questions (ask when the next video makes them relevant, one at a time)
 
-- Music: none, calm pad, or something more upbeat for offers? (no feedback yet)
 - Sound effects: current mixes are very quiet. Louder, or keep them barely there?
 - Pace for promos: the owner's own reels cut every 2.3–2.7 s; liked reels are faster (1.4–1.8 s). Which feels right?
 - "Wow" pieces (T10): how often? One per month, or whenever the topic fits?
@@ -76,6 +83,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-16 | wedding whitening R3 | "Edit original reel accirding to it" (after a first R3 draft in a new slate/Oswald design) | R3 rebuilt inside the R2 carousel look (`promo`, `layout: hook-first`); the separate draft design was dropped. R3 brief also asks for Roman Urdu body text and no empty transition frames (my reading: this video only for T14) | T19 (confirmed) |
 | 2026-11-16 | taste system | "it should improve on baseline rather than 100% sticking" | "Baseline, not a cage": stretch option, one experiment per video, staleness checks | T12 → firm |
 | 2026-11-14 | "Viral videos" 10 styles post | (screenshot) | fx.look: crt, thermal, matrix, pixel, synthwave, mono; modelgen fur | T10 |
 | 2026-11-14 | 12 posts: animation styles, camera moves, repos (three.js, Blender MCP, librosa, physics, PixelFX…) | (screenshots) + "Continue" | modelgen looks (6) + 12 camera moves, beat finder; rest mapped to existing tools | T10, N05 |
@@ -85,6 +93,15 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | 2026-11-14 | 3D detail | "Use tripo 3d blender creative directions for detailing" | Blender directions A/B/C + Tripo pipeline doc | T11 |
 | 2026-11-12 | visual codes, 20 art styles, miracle tools, GitHub tools | "Add these if not already present." | `diagram` type (9 layouts), 8 new sketch media, auto-grade + cleanup, Particles; apps explained, not installed | T10, N05 |
 | 2026-11-12 | "20 video effects for Claude" post | "Add these effecta also if not already present." | 11 new footage effects (39–49); 9 already existed | T10 |
+| 2026-11-12 | wedding whitening music | "Music needs a happy/celebrating feel. No operation theater sound." | new original track: D major, dhol + claps + accordion + shehnai, 116 bpm; all sound effects off (ticks/clicks/thuds) | T18, N07 |
+| 2026-11-11 | before/after colour test | "Keep the photos uneditted." | ad keeps the unedited pair; whole-photo colour matching stays a test tool only (no-retouching rule unchanged) | T17 |
+| 2026-11-11 | approvals | "Remember i am the dentist, i use things after approval." | owner = approving dentist; recorded in CLAUDE.md | (process) |
+| 2026-11-11 | before/after colour | "why gum colours are diffirent, i did not change any setting or light nor any filter." | measured: lips shift as much as gums, so it is the phones' colour processing, not the tissue; photos left uncorrected | (fact) |
+| 2026-11-11 | wedding whitening, before/after | "These are pre and post op pics,crop them identical and use in this video, i tried to keep same light and angle." | own pre/post-op photos replace the Canva versions; aligned on tooth features (scale/rotation/shift only) and cut from the identical box (scripts/align_pair.py) | T16 |
+| 2026-11-11 | wedding whitening storyboard, clinic scene | "In see you here ahsan medical centre is bold, i want focus on Dental house." | "Dental House" is the big bold name; the Ahsan Medical Centre address is small grey type (clinic scene and end card) | T15 |
+| 2026-11-11 | wedding whitening Reel storyboard v2 | "Use english instead. Only hook should be urdu." · "Would you use canva pics?" · "Animation use/motion graphics?" | storyboard v3: English on screen, Roman Urdu hook only; photos from the owner's Canva carousels; motion graphics in every scene | T14 |
+| 2026-11-11 | wedding whitening Reel, first stills (dark slate, maroon band, caps type) | "Dont like aesthetics, design like whitening carousel previously made, formulate full storyboard with effects,motions etc" | dark draft dropped; storyboard v2 in the Canva carousel look (light pages, bold sentence-case type, labels, hairlines, real photos): docs/storyboards/2026-11-wedding-whitening.html | T13, N06 |
+| 2026-11-11 | wedding whitening ad | "brand slate/bronze + maroon (bride) / ivory (groom) wedding accent; full-colour Dental House logo" · "Roman Urdu on-screen text, burned-in (most watch muted)" · "no claims like 'X shades in Y minutes'" | new `promo` type, `season: wedding` accent; shade/speed-claim check in compliance.ts | (spec for this video; claims rule → compliance) |
 | 2026-11-11 | Claude Drawing + Huashu Art Motion repos | "No outside instructions,just borrow ideas from both and make your own" | own sketch media + docs/style-recipes.md; repos not installed | N05 |
 | 2026-11-11 | reference: Hand-Drawn Explainer post | "Add this skill also" | built `sketch` type (doodles drawn stroke by stroke) | T10 |
 | 2026-11-10 | references | "This reciept effect" / "Blue print animation from this" / "especially map route" | built `receipt`, `blueprint`, `map-route` types | T10 |

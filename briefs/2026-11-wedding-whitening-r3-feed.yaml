@@ -1,43 +1,53 @@
-# R3 wedding whitening reel (hook-first rebuild of R2, from the 13–15 Nov ad data).
-# DRAFT: demo: true (watermarked) until the consent form is on file and the before photo is settled:
-#   1. assets/cases/wedding-whitening-2026-11/consent.pdf  → add `consent:` below, set demo: false
-#   2. photos here are frame grabs from the R2 video (850 px): replace with the original files
-#   3. before photo shows a suture; never retouched (golden rule 3): owner picks another before shot or keeps it
-# 4:5 feed (1080×1350) twin of 2026-11-wedding-whitening-r3.yaml: keep the two in step.
+# 4:5 feed (1080×1350) twin of 2026-11-wedding-whitening-r3.yaml: same content, keep the two in step.
 id: 2026-11-wedding-whitening-r3-feed
-type: offer-reel
+type: promo
+layout: hook-first
 format: "4:5"
-title: Wedding whitening offer R3 (hook-first)
-demo: true
-language: roman-ur
+title: Wedding-season teeth whitening offer, R3 hook-first (Reel ad)
+demo: false
+theme: brand
+season: wedding
 tone: contemporary
-fx: { transition: none, sfx: subtle }
-label: Actual case · Sialkot
+language: roman-ur
+fx: { transition: none, sfx: none }      # owner: "No operation theater sound."
+music: audio/wedding-celebration.mp3    # original, synthesised in this project
+label: Wedding season
+kicker: "Teeth whitening · Sialkot"
 hook:
-  lines: ["Shaadi se pehle", "Teeth whitening"]
-place: — Sialkot
-case_id: wedding-whitening-2026-11
-before: cases/wedding-whitening-2026-11/before.png
-after: cases/wedding-whitening-2026-11/after.png
-photo_aspect: 1.864
-photo_note: Lighting differs. Results vary. Subject to assessment.
+  lines: ["Shaadi ki photos mein", "— perfect smile?"]
+  accent: perfect
+proof:
+  case_id: whitening-2026-11
+  before: cases/whitening-2026-11/before.jpg
+  after: cases/whitening-2026-11/after.jpg
+  labels: { before: "Before · actual case", after: After }
+  note: "Lighting differs. Results vary. Subject to assessment."
+  consent:
+    method: verbal
+    taken_on: 2026-11-11          # date the owner confirmed it in chat
+    taken_by: "Dental House team (confirmed by the owner)"
+    scope: [social-media, ads]
+    identity_hidden: true         # retractor close-up, no face or name
 value:
-  heading: Is offer mein shamil
+  eyebrow: Why Dental House?
   points:
-    - title: Dentist-led
-    - title: Masooron ki hifazat
-    - title: Scaling + polishing
-      sub: Shamil — alag charge nahi
-  promise: Pehle assessment, phir treatment.
-offer:
-  kicker: Wedding season offer
-  treatment: Teeth whitening
-  price: PKR 21,000
-  regular: PKR 30,000
-  badge: Save 30%
+    - { title: Dentist-led, sub: "Pehle assessment, phir treatment", icon: dentist }
+    - { title: Masooron ki hifazat, icon: shield }
+    - { title: Scaling + polishing, sub: "Shamil — alag charge nahi", icon: polish }
+price:
+  eyebrow: Wedding season offer
+  service: Teeth whitening.
+  now: "PKR 21,000"
+  was: "PKR 30,000"
+  save: Save 30%
   valid_until: 2026-12-15
-  included: Scaling + polishing shamil
-  prices_confirmed_on: 2026-11-16
+  valid_label: Valid till
+  extra: Scaling + polishing shamil
+prices_confirmed_on: 2026-11-16   # repeated in the owner's R3 brief
+visit:
+  photo: cases/whitening-2026-11/clinic.jpg    # sits behind the CTA in this layout
+end:
+  eyebrow: Wedding season
+  disclaimer: "Subject to assessment. Results vary."
 cta: WhatsApp par slot book karein
-disclaimer: Subject to assessment. Results vary.
-music: audio/pad-calm.mp3
+address: short

@@ -78,44 +78,6 @@ export const offerBrief = base.extend({
   points: z.array(line(34)).min(1).max(3),
 });
 
-/**
- * Short hook-first offer reel (10–12 s, sound off): before + after on frame 1, value before price, static price, CTA.
- * Built from ad data (R2 whitening reel, Nov 2026: 87 % of viewers left before the price card).
- */
-export const offerReelBrief = base.extend({
-  type: z.literal("offer-reel"),
-  /** "9:16" reel (default) or "4:5" feed post. Same brief, same scenes. */
-  format: z.enum(["9:16", "4:5"]).default("9:16"),
-  /** Serif-italic tail after the last headline line, e.g. "— Sialkot". */
-  place: line(16).optional(),
-  case_id: z.string().regex(/^[a-z0-9-]+$/),
-  before: publicAsset,
-  after: publicAsset,
-  /** width / height of the photos (both the same): the box is built to this, so nothing is cropped. */
-  photo_aspect: z.number().min(0.5).max(3),
-  /** Printed under the photos whenever they are on screen. */
-  photo_note: line(70),
-  consent: z
-    .object({ file: z.string(), signed_on: isoDate, scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1) })
-    .optional(),
-  value: z.object({
-    heading: line(30),
-    points: z.array(z.object({ title: line(30), sub: line(44).optional() })).min(2).max(3),
-    promise: line(44).optional(),
-  }),
-  offer: z.object({
-    kicker: line(30),
-    treatment: line(24),
-    price: line(16),
-    regular: line(16).optional(),
-    badge: line(14).optional(),
-    valid_until: isoDate,
-    included: line(44).optional(),
-    /** Prices are clinic facts: the day the owner confirmed them. */
-    prices_confirmed_on: isoDate.optional(),
-  }),
-});
-
 export const educationBrief = base.extend({
   type: z.literal("education"),
   steps: z
@@ -435,7 +397,84 @@ export const diagramBrief = base.extend({
 });
 export type DiagramBrief = z.infer<typeof diagramBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, offerReelBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, diagramBrief]);
+/**
+ * Promo reel in the "carousel" look (owner, Nov 2026: "design like whitening carousel previously made"): light paper pages that
+ * swipe like an Instagram carousel. Hook (readable on frame 0, optional hero photo) → real before/after in identical boxes →
+ * what's included (line icons) → price (odometer roll, strike, save stamp) → optional clinic photo → WhatsApp keyword end card.
+ * `season: wedding` adds the maroon accent (3 uses only: strike, save tag, keyword).
+ */
+const eyebrow = line(44);
+export const PROMO_ICONS = ["dentist", "shield", "polish", "tooth", "calendar"] as const;
+export const promoBrief = base.extend({
+  type: z.literal("promo"),
+  /**
+   * carousel = the original page-by-page reel (hook → proof → included → price → clinic → end).
+   * hook-first = R3 (from the R2 retention curve, Nov 2026): before + after with the hook on frame 1, value before price
+   * with the pair still on screen, static price, clinic photo behind the CTA; quick slides, no empty frames.
+   */
+  layout: z.enum(["carousel", "hook-first"]).default("carousel"),
+  /** "9:16" reel (default) or "4:5" feed post (1080×1350, hook-first layout only). */
+  format: z.enum(["9:16", "4:5"]).default("9:16"),
+  season: z.enum(["none", "wedding"]).default("none"),
+  /** Small spaced label above the hook, e.g. "Brides · Grooms · Families". */
+  kicker: eyebrow.optional(),
+  /** Decorative photo under the hook (fabric, props: never a patient, never a "result"). Returns faintly on the end card. */
+  hero: z.object({ src: publicAsset, source: z.string().min(3) }).optional(),
+  proof: z.object({
+    eyebrow: eyebrow.default("Actual case"),
+    title: line(24).default("Real care."),
+    case_id: z.string().regex(/^[a-z0-9-]+$/),
+    before: publicAsset,
+    after: publicAsset,
+    labels: z.object({ before: line(24), after: line(24) }).default({ before: "Before", after: "After" }),
+    /** Small honesty line under the photos (required: lighting/results/assessment). */
+    note: line(70),
+    /** Photos not received yet: draw labelled placeholders. Only allowed in demo briefs. */
+    pending: z.boolean().default(false),
+    consent: z
+      .object({
+        /** written = signed form in assets/cases/<id>/; verbal = recorded here (who took it, when). */
+        method: z.enum(["written", "verbal"]).default("written"),
+        file: z.string().optional(),
+        taken_on: isoDate,
+        taken_by: z.string().min(2),
+        scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1),
+        /** Face/name hidden in the photos (retractor close-up). */
+        identity_hidden: z.boolean().default(false),
+      })
+      .optional(),
+  }),
+  value: z.object({
+    eyebrow: eyebrow.optional(),
+    /** Page title (carousel layout; the hook-first layout shows only the eyebrow). */
+    title: line(24).optional(),
+    points: z.array(z.object({ title: line(30), sub: line(44).optional(), icon: z.enum(PROMO_ICONS).optional() })).min(1).max(3),
+  }),
+  price: z.object({
+    eyebrow: eyebrow,
+    service: line(24),
+    now: line(16),
+    was: line(16).optional(),
+    was_label: line(12).default("Regular"),
+    save: line(12).optional(),
+    valid_until: isoDate,
+    valid_label: line(16).default("Valid until"),
+    /** One small line under the validity, e.g. "Scaling + polish included". */
+    extra: line(40).optional(),
+  }),
+  /** Owner confirmed these prices on this date (prices are clinic facts). */
+  prices_confirmed_on: isoDate.optional(),
+  /** Optional clinic photo beat before the end card (the clinic's own room, never stock). */
+  visit: z.object({ photo: publicAsset, eyebrow: eyebrow.default("Your visit"), title: line(24).default("See you here.") }).optional(),
+  end: z.object({ eyebrow: eyebrow.optional(), disclaimer: line(70).optional() }).default({}),
+  /** Keyword people send on WhatsApp, e.g. WHITE. */
+  whatsapp_keyword: z.string().regex(/^[A-Z0-9]{2,12}$/).optional(),
+  /** Short address on the end card (must be part of the address in src/brand.ts). */
+  address: z.enum(["full", "short"]).default("short"),
+});
+export type PromoBrief = z.infer<typeof promoBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, diagramBrief, promoBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */
@@ -454,6 +493,5 @@ export const footagePaths = (id: string) => ({
 
 export type Brief = z.infer<typeof brief>;
 export type OfferBrief = z.infer<typeof offerBrief>;
-export type OfferReelBrief = z.infer<typeof offerReelBrief>;
 export type EducationBrief = z.infer<typeof educationBrief>;
 export type CaseBrief = z.infer<typeof caseBrief>;

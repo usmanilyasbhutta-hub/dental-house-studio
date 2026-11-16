@@ -12,7 +12,7 @@ import { Diagram } from "./templates/Diagram";
 import { ClinicalCase } from "./templates/ClinicalCase";
 import { Education } from "./templates/Education";
 import { Offer } from "./templates/Offer";
-import { OfferReel } from "./templates/OfferReel";
+import { Promo } from "./templates/Promo";
 import type { QcProps } from "./templates/shared/Shell";
 
 export type VideoProps = { brief: Brief; words?: Word[]; sizes?: PhotoSize[] } & QcProps;
@@ -20,10 +20,10 @@ export type VideoProps = { brief: Brief; words?: Word[]; sizes?: PhotoSize[] } &
 /** One entry composition; the brief's `type` picks the template. */
 export const Video: React.FC<VideoProps> = ({ brief, words, sizes, showSafeZones }) => {
   switch (brief.type) {
+    case "promo":
+      return <Promo brief={brief} showSafeZones={showSafeZones} />;
     case "offer":
       return <Offer brief={brief} showSafeZones={showSafeZones} />;
-    case "offer-reel":
-      return <OfferReel brief={brief} showSafeZones={showSafeZones} />;
     case "education":
       return <Education brief={brief} showSafeZones={showSafeZones} />;
     case "case":

@@ -1,0 +1,61 @@
+# Wedding-season teeth whitening: Instagram Reel ad. Storyboard v3 approved by the owner 2026-11-11 ("Ok for story board").
+# Look: the Canva whitening carousels (light pages, bold sentence-case type). English on screen; only the hook is Roman Urdu.
+# Photos come from the owner's Canva carousels and live in public/cases/whitening-2026-11/ (gitignored, never committed).
+id: 2026-11-wedding-whitening
+type: promo
+title: Wedding-season teeth whitening offer (Reel ad)
+demo: false
+theme: brand
+season: wedding
+tone: contemporary
+language: en
+fx: { transition: none, sfx: none }      # owner: "No operation theater sound."
+music: audio/wedding-celebration.mp3    # original, synthesised by scripts/make_celebration_music.py
+label: Wedding season
+kicker: "Brides · Grooms · Families"
+hook:
+  lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
+  accent: perfect
+hero:
+  src: cases/whitening-2026-11/fabric.jpg
+  source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
+proof:
+  eyebrow: "Dental House whitening · actual case"
+  title: Real care.
+  case_id: whitening-2026-11
+  before: cases/whitening-2026-11/before.jpg
+  after: cases/whitening-2026-11/after.jpg
+  labels: { before: Before, after: After }
+  note: "Lighting differs. Results vary. Subject to assessment."
+  consent:
+    method: verbal
+    taken_on: 2026-11-11          # date the owner confirmed it in chat
+    taken_by: "Dental House team (confirmed by the owner)"
+    scope: [social-media, ads]
+    identity_hidden: true         # retractor close-up, no face or name
+value:
+  eyebrow: Why Dental House?
+  title: What's included.
+  points:
+    - { title: Dentist-led, sub: "Assessment first, then treatment", icon: dentist }
+    - { title: Gum protection, sub: Your gums are shielded during treatment, icon: shield }
+    - { title: Scaling + polish included, sub: No extra charge, icon: polish }
+price:
+  eyebrow: Wedding season offer
+  service: Teeth whitening.
+  now: "PKR 21,000"
+  was: "PKR 30,000"
+  save: Save 30%
+  valid_until: 2026-12-15
+  extra: Scaling + polish included
+prices_confirmed_on: 2026-11-11   # given by the owner in chat
+visit:
+  photo: cases/whitening-2026-11/clinic.jpg
+  eyebrow: "Your visit · Sialkot"
+  title: See you here.
+end:
+  eyebrow: Wedding season
+  disclaimer: "Subject to assessment. Results vary."
+whatsapp_keyword: WHITE
+cta: Book your assessment slot
+address: short

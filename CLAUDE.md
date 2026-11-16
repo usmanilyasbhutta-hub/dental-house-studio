@@ -37,6 +37,8 @@ Every video starts as a YAML brief → validated → rendered with Remotion → 
 - Two themes per brief: `theme: brand` (slate/bronze, default) for promos/offers/cases, `theme: editorial` (cream + deep green) for doctor-led education. Black/mint neon is retired. Tokens live in `src/theme.ts`; templates use `useTheme()`, never raw colours.
 - Instagram **@dentalhousesktt** (two Ts). 0323-7560160 is phone **and** WhatsApp. Both live in `src/brand.ts`.
 - Captions follow whatever is spoken (English, Urdu or mixed): `language: as-spoken`.
+- **The owner is the approving dentist** ("Remember i am the dentist, i use things after approval."). Don't ask for a separate
+  dentist sign-off; when the owner says a video is approved, fill in `review:` with their name and the date.
 
 ## Brand (from the dental-house-brand-reel skill)
 Slate `#333C39`, slateDeep `#1C2220`, bronze `#816951`, bronzeDark `#3D3622`, bronzeLight `#C9AB86`, mist `#C4CACA`, white `#F7F8F6`.
@@ -87,6 +89,11 @@ Diagram explainers (timeline/roadmap/flowchart/cycle/layers/iceberg/tree/matrix/
 Whole-video looks: `fx.look` crt/thermal/matrix/pixel/synthwave/mono (blocked on clinical material).
 Footage tools: `npm run ff -- auto-grade` and `npm run ff -- cleanup` (blur for privacy; never retouch clinical material).
 Never install third-party skills/plugins with their own instructions into this project: borrow the idea and build our own (owner rule).
+Offer with real proof in the Canva-carousel look (light pages that swipe; hook → before/after → included → price odometer → clinic → WhatsApp
+keyword): brief `type: promo`, optional `season: wedding` (maroon for strike/save/keyword only). Real photos need consent with `ads` scope
+(written form, or verbal only when the patient can't be identified); `proof.pending` placeholders only while `demo: true`.
+`layout: hook-first` = the short version built from Reel insights (pair + hook on frame 1, value before a static price, CTA over the clinic
+photo, 6-frame slides, 11 s); `format: "4:5"` renders the 1080×1350 feed post.
 Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illustrative map" chip; only owner-given street names).
 
 ## Animation, photos and footage

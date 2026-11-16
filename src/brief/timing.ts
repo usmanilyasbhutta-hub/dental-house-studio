@@ -2,11 +2,14 @@ import { segmentsOf, type Brief } from "./schema";
 
 /** Scene lengths in seconds per template. Single source of truth for duration. */
 export const scenes = {
-  "offer-reel": { hook: 2.4, value: 2.9, price: 2.9, cta: 2.8 },
+  /** Promo, hook-first layout (R3): before/after on frame 1, value before price, quick slides. */
+  promoHookFirst: { hook: 2.3, value: 3.0, price: 2.9, end: 2.8, push: 6 },
   offer: { hook: 3, reveal: 4, point: 2, terms: 2.5, end: 4.5 },
   education: { hook: 3, step: 3.2, takeaway: 2.8, sources: 2.2, end: 4.5 },
   "talking-head": { end: 4.5 },
   case: { hook: 2.5, before: 2.5, wipe: 3, after: 2.5, notes: 3, disclaimer: 2.2, end: 4.5 },
+  /** Promo reel (carousel look): pages push like a swipe; `push` frames of overlap are inside each scene's length. */
+  promo: { hook: 2.5, proof: 5, value: 3.5, price: 4, visit: 1.5, end: 3, push: 10 },
 } as const;
 
 /** Time lost to scene overlaps when a transition is used (n scenes → n−1 overlaps). */
@@ -23,7 +26,6 @@ export function sceneCount(b: Brief): number {
       return 6;
     case "case":
       return 7;
-    case "offer-reel":
     case "talking-head":
     case "procedure":
     case "photo-layout":
@@ -33,6 +35,7 @@ export function sceneCount(b: Brief): number {
     case "receipt":
     case "sketch":
     case "diagram":
+    case "promo":
       return 1;
   }
 }
@@ -47,10 +50,6 @@ function rawSeconds(b: Brief): number {
       const s = scenes.offer;
       return s.hook + s.reveal + s.point * b.points.length + s.terms + s.end;
     }
-    case "offer-reel": {
-      const s = scenes["offer-reel"];
-      return s.hook + s.value + s.price + s.cta;
-    }
     case "education": {
       const s = scenes.education;
       return s.hook + s.step * 3 + s.takeaway + s.sources + s.end;
@@ -59,6 +58,14 @@ function rawSeconds(b: Brief): number {
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
     case "diagram":
       return DIAGRAM_INTRO + b.items.length * b.seconds_per_item + b.hold + scenes.offer.end;
+    case "promo": {
+      if (b.layout === "hook-first") {
+        const h = scenes.promoHookFirst;
+        return h.hook + h.value + h.price + h.end;
+      }
+      const s = scenes.promo;
+      return s.hook + s.proof + s.value + s.price + (b.visit ? s.visit : 0) + s.end;
+    }
     case "sketch":
       return SKETCH_INTRO + b.scenes.length * b.seconds_per_scene + scenes.offer.end;
     case "receipt": {

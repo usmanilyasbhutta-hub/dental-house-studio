@@ -8,9 +8,6 @@ export const colors = {
   bronzeLight: "#C9AB86",
   mist: "#C4CACA",
   white: "#F7F8F6",
-  /** Accents for light offer reels (owner brief, Nov 2026): warm paper + wedding maroon. */
-  ivory: "#FBF4ED",
-  maroon: "#7A1F2E",
 } as const;
 
 export const fonts = {
@@ -34,7 +31,7 @@ export const clinic = {
   ],
   address:
     "Ahsan Medical Centre, Opp. Trauma Centre Allama Iqbal Memorial Hospital, Commissioner Road, Sialkot",
-  /** Short form for small CTA cards (same place, fewer words). */
+  /** Short form for tight end cards (owner's wording, Nov 2026). */
   addressShort: "Ahsan Medical Centre, Commissioner Road, Sialkot",
 } as const;
 

@@ -32,6 +32,8 @@ addressShort: "Ahsan Medical Centre, Commissioner Road, Sialkot",
 - Two themes per brief: `theme: brand` (slate/bronze, default) for promos/offers/cases, `theme: editorial` (cream + deep green) for doctor-led education. Black/mint neon is retired. Tokens live in `src/theme.ts`; templates use `useTheme()`, never raw colours.
 - Instagram **@dentalhousesktt** (two Ts). 0323-7560160 is phone **and** WhatsApp. Both live in `src/brand.ts`.
 - Captions follow whatever is spoken (English, Urdu or mixed): `language: as-spoken`.
+- **The owner is the approving dentist** ("Remember i am the dentist, i use things after approval."). Don't ask for a separate
+  dentist sign-off; when the owner says a video is approved, fill in `review:` with their name and the date.
 Slate `#333C39`, slateDeep `#1C2220`, bronze `#816951`, bronzeDark `#3D3622`, bronzeLight `#C9AB86`, mist `#C4CACA`, white `#F7F8F6`.
 Oswald 600/700 uppercase headlines, Instrument Serif Italic for one accent word, JetBrains Mono labels.
 Calm tone for education (no glitch cuts), contemporary allowed for offers.
@@ -41,7 +43,6 @@ Something must change on screen by 1.5 s.
 
 ## Video types (brief `type:`)
 - `offer`: promo/offer reel: hook, 2–4 points, price only if confirmed, CTA
-- `offer-reel`: 10–12 s hook-first offer: before+after on frame 1, value before price, static price, WhatsApp CTA; format 9:16 or 4:5
 - `education`: doctor-led tips or myth-busting with numbered steps (needs a PubMed source for claims)
 - `case`: before/after clinical case (consent required, photos unwarped and uncropped)
 - `talking-head`: edit of a doctor speaking to camera: cut filler, word captions, callouts
@@ -53,6 +54,7 @@ Something must change on screen by 1.5 s.
 - `receipt`: printed-receipt animation for a price list (prices must be confirmed with a date)
 - `sketch`: hand-drawn explainer, doodles drawn stroke by stroke; 14 media (pencil, watercolour, chalkboard, clay…)
 - `diagram`: timeline, roadmap, flowchart, cycle, layers, iceberg, tree, matrix or infographic
+- `promo`: offer with real before/after in the carousel look; layout carousel (page by page) or hook-first (10–12 s: pair on frame 1, value before static price, CTA over clinic photo); format 9:16 or 4:5
 
 ## The owner's taste
 1. **Golden rules** (CLAUDE.md: privacy, consent, honest clinical content, claims, clinic facts). Not a matter of taste.
@@ -100,6 +102,12 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T11 | Three.js for 3D first; Blender photoreal (with Tripo meshes) for close-up detail. | lean | "Lets see three.js first"; "Use tripo 3d blender creative directions for detailing" |
 | T13 | Photoreal 3D close-ups use the clinical-macro look: dark field, wet natural enamel, warm key + cool rim, shallow focus. | lean | picked direction A (2026-11-14) |
 | T12 | Keeps trying new styles; taste is a baseline to improve on, not a cage. Every option set has a stretch. | firm | "continuously to improve and try new"; "it should improve on baseline rather than 100% sticking" |
+| T19 | Offers/promos in the look of the Canva whitening carousels: light warm-white pages, big bold sentence-case slate headlines, small spaced labels, hairlines, bronze italic sublines, real photos, lots of space. | lean | "design like whitening carousel previously made" (Canva: Wedding Whitening Assessment Carousel, Carousel V2 Premium) |
+| T14 | On-screen text in English; Roman Urdu only for the hook. | lean | "Use english instead. Only hook should be urdu." (wedding whitening, 2026-11-11) |
+| T15 | Brand name first: "Dental House" is the bold, prominent name; the building (Ahsan Medical Centre) and road are secondary small type. | lean | "i want focus on Dental house" (2026-11-11) |
+| T16 | Before/after pairs: the owner shoots them with the same light and angle; crop both identically (same framing on the teeth). | lean | "crop them identical" (2026-11-11) |
+| T17 | Clinical photos stay unedited in videos, even when camera colour differs; differences are explained by the on-screen note, not corrected. | lean | "Keep the photos uneditted." (2026-11-11) |
+| T18 | Offer/wedding music: happy and celebratory (major key, dhol, claps), not calm pads. | lean | "Music needs a happy/celebrating feel." (2026-11-12) |
 
 ### Not wanted
 | ID | Avoid | Strength | Evidence |
@@ -108,10 +116,11 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | N02 | Red/orange skin cast on the doctors. | firm | style profile §4 |
 | N03 | Mixing visual families inside one video. | firm | T01 |
 | N05 | Installing other people's skills or plugins with their own instructions into the project. Borrow the ideas and build our own. | firm | "No outside instructions, just borrow ideas from both and make your own" |
+| N06 | Dark, heavy promo look: slate background with a big maroon band, all-caps condensed type, floating cards, pill buttons. | lean | "Dont like aesthetics" (wedding whitening stills, 2026-11-11) |
+| N07 | Clinical-sounding effects (ticks, clicks, beeps, thuds) that remind of the operation theatre. | lean | "No operation theater sound." (2026-11-12) |
 | N04 | Several near-identical exported versions of one video. Iterate the brief instead. | lean | style profile §4 |
 
 ### Still open (ask when relevant, one at a time)
-- Music: none, calm pad, or something more upbeat for offers? (no feedback yet)
 - Sound effects: current mixes are very quiet. Louder, or keep them barely there?
 - Pace for promos: the owner's own reels cut every 2.3–2.7 s; liked reels are faster (1.4–1.8 s). Which feels right?
 - "Wow" pieces (T10): how often? One per month, or whenever the topic fits?

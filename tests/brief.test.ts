@@ -256,3 +256,47 @@ describe("fx.look", () => {
     expect(errors(c).some((f) => f.rule === "look")).toBe(true);
   });
 });
+
+describe("promo brief", () => {
+  const promo = () => loadBrief("briefs/2026-11-wedding-whitening.yaml");
+  it("the wedding whitening draft is valid (demo until real photos + consent)", () => {
+    const b = promo();
+    expect(b.type).toBe("promo");
+    expect(errors(b)).toEqual([]);
+    expect(durationSeconds(b)).toBeGreaterThanOrEqual(15);
+    expect(durationSeconds(b)).toBeLessThanOrEqual(20);
+  });
+  it("blocks publishing with placeholder photos", () => {
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.proof.pending = true;
+    expect(errors(b).map((f) => f.rule)).toContain("proof");
+  });
+  it("accepts verbal consent only when the patient cannot be identified", () => {
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.proof.consent!.identity_hidden = false;
+    expect(errors(b).map((f) => f.rule)).toContain("consent");
+  });
+  it("flags shade/speed claims and wrong savings maths", () => {
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.value.points = [{ title: "8 shades whiter" }];
+    b.price.save = "Save 40%";
+    const rules = errors(b).map((f) => f.rule);
+    expect(rules).toContain("claims");
+    expect(rules).toContain("price");
+  });
+  it("needs consent covering ads once real photos are used", () => {
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.proof.consent = undefined;
+    expect(errors(b).map((f) => f.rule)).toContain("consent");
+  });
+  it("hook-first layout (R3) is 11 s, valid, and keeps the same photos and price as R2", () => {
+    const r3 = loadBrief("briefs/2026-11-wedding-whitening-r3.yaml") as Extract<Brief, { type: "promo" }>;
+    const r2 = promo() as Extract<Brief, { type: "promo" }>;
+    expect(r3.layout).toBe("hook-first");
+    expect(durationSeconds(r3)).toBeCloseTo(11, 5);
+    expect(r3.price.now).toBe(r2.price.now);
+    expect(r3.proof.before).toBe(r2.proof.before);
+    const feed = loadBrief("briefs/2026-11-wedding-whitening-r3-feed.yaml") as Extract<Brief, { type: "promo" }>;
+    expect({ ...feed, id: r3.id, format: r3.format }).toEqual(r3);
+  });
+});

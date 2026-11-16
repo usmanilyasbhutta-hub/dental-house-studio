@@ -33,7 +33,9 @@ export function qc(briefPath: string): Check[] {
   const dur = Number(probe.format.duration);
   const expected = durationSeconds(brief);
   const mb = statSync(file).size / 1e6;
-  add("resolution", v.width === video.width && v.height === video.height, `${v.width}x${v.height} (want ${video.width}x${video.height})`);
+  const feed = brief.type === "promo" && brief.format === "4:5"; // feed post: 1080×1350, no platform UI over it
+  const wantH = feed ? video.feed.height : video.height;
+  add("resolution", v.width === video.width && v.height === wantH, `${v.width}x${v.height} (want ${video.width}x${wantH})`);
   add("frame rate", Math.abs(fps - video.fps) < 0.01, `${fps.toFixed(2)} fps`);
   add("codec", v.codec_name === "h264" && v.pix_fmt === "yuv420p" && v.color_range !== "pc", `${v.codec_name} ${v.pix_fmt} ${v.color_range ?? ""} ${v.color_space ?? ""}`);
   add("duration", Math.abs(dur - expected) <= 0.2, `${dur.toFixed(2)} s (brief ${expected.toFixed(2)} s)`);
@@ -62,7 +64,7 @@ export function qc(briefPath: string): Check[] {
   // 4. frames for visual review: 2 per second, safe zones tinted red, + contact sheet
   rmSync(`${dir}/frames`, { recursive: true, force: true });
   mkdirSync(`${dir}/frames`, { recursive: true });
-  const s = video.safe;
+  const s = feed ? video.feed.safe : video.safe;
   const zones = [
     `drawbox=0:0:iw:${s.top}:red@0.12:t=fill`,
     `drawbox=0:ih-${s.bottom}:iw:${s.bottom}:red@0.12:t=fill`,
