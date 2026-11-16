@@ -64,6 +64,8 @@ The logo bug and HUD label sit in the top band on purpose. They're decorative, n
   sheet (`docs/decisions/<id>.md`): every choice with its reason and source.
 - **Log every reaction** ("like this", "too fast", picking B, a correction) in `docs/taste.md` without being asked, with the
   owner's exact words, and say in one line what you recorded. Once → lean; twice or "always/never" → firm; latest word wins.
+- **Taste is a baseline, not a cage:** every `/options` set includes one *stretch* option, and a video may carry one named
+  experiment; results move the baseline (rules in `docs/taste.md`). Golden rules and correctness rows are never explored.
 - Never present a guess as the owner's preference. If the ledger is silent, say so and ask at most two A/B questions.
 
 ## How to work

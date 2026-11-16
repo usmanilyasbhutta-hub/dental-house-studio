@@ -16,8 +16,8 @@
 },
 {
 "file": ".claude/agents/creative-director.md",
-"kb": 2.0,
-"tokens": 515,
+"kb": 2.4,
+"tokens": 618,
 "purpose": "Makes the creative decisions for a Dental House video the way the owner would (look, hook, pace, effects, sound, leng\u2026",
 "exports": []
 },
@@ -51,8 +51,8 @@
 },
 {
 "file": ".claude/commands/options.md",
-"kb": 1.6,
-"tokens": 397,
+"kb": 1.7,
+"tokens": 439,
 "purpose": "Propose 2\u20133 creative directions for a video (with preview stills) so the owner can choose without editing expertise",
 "exports": []
 },
@@ -121,8 +121,8 @@
 },
 {
 "file": "CLAUDE.md",
-"kb": 9.3,
-"tokens": 2369,
+"kb": 9.5,
+"tokens": 2430,
 "purpose": "Dental House Studio: instructions for Claude",
 "exports": []
 },
@@ -380,15 +380,15 @@
 },
 {
 "file": "docs/taste.md",
-"kb": 8.2,
-"tokens": 2101,
+"kb": 9.8,
+"tokens": 2504,
 "purpose": "Dental House: taste ledger",
 "exports": []
 },
 {
 "file": "package.json",
 "kb": 2.0,
-"tokens": 506,
+"tokens": 509,
 "purpose": "",
 "exports": []
 },
@@ -629,6 +629,22 @@
 "purpose": "SRT (source seconds) \u2192 words relative to the trim; time spread inside each cue by character length.",
 "exports": [
 "srtToWords"
+]
+},
+{
+"file": "scripts/project_map.py",
+"kb": 6.7,
+"tokens": 1702,
+"purpose": "Project map (\"graphify\" idea, our own code): one compact page that tells Claude where everything is, so a new chat",
+"exports": [
+"files",
+"purpose",
+"exports",
+"imports",
+"build",
+"index_section",
+"render",
+"main"
 ]
 },
 {

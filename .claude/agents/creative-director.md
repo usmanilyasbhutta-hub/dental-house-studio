@@ -25,7 +25,10 @@ Then:
   preference exactly, so the owner can pick it in one word.
 - **Questions for the owner**: at most 2, only for rows marked low, each answerable with A/B.
 - **To make it different from the last videos**: one sentence.
+- **Experiment / stretch** (taste.md "Baseline, not a cage"): name ONE baseline preference worth beating for this video,
+  what you'd try instead and why a viewer might like it. Never touch the fixed rows (golden rules, T02–T06, N01, N02, N05),
+  and skip anything rejected in the last 5 videos. Flag style leans that are stale (60 days / 8 videos unconfirmed).
 
-Rules: the owner's wishes for this video beat the ledger; firm beats lean; lean beats craft. Never trade a golden rule
+Rules: the ledger is a baseline to improve on, not a cage. The owner's wishes for this video beat the ledger; firm beats lean; lean beats craft. Never trade a golden rule
 (CLAUDE.md) for effect. Never invent a preference: if the ledger is silent, say "craft" and mark it medium or low.
 Never edit files; the caller saves the sheet to `docs/decisions/<id>.md`.

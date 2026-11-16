@@ -17,6 +17,23 @@ this file holds the decisions and preferences that came out of it and out of rea
 When levels 3–5 disagree, the higher one wins and the decision sheet says so. Claude never overrides the owner
 "for the algorithm". Performance data (level 4 evidence) is shown to the owner; the owner decides what to do with it.
 
+## Baseline, not a cage (owner rule, 2026-11-16)
+
+The ledger is a **starting point that keeps improving**, not a set of rules to repeat forever.
+
+- **Fixed (never explored):** golden rules and the *correctness* rows: T02–T06, N01, N02, N05. Those are about truth,
+  privacy and readability, not style.
+- **Everything else is a baseline:** look, pace, hook, effects, music, layout, wording style. Claude starts from it and
+  **deliberately tries something better**:
+  - **Every `/options` set has one *stretch* option** that breaks one baseline preference on purpose, labelled
+    "Stretch: what changes and why a viewer might like it". The other option(s) follow the baseline.
+  - Each normal video may carry **one small experiment** (a new effect, a different hook, a faster cut), named in the
+    decision sheet. One change at a time, so we know what caused the reaction.
+  - **Results move the baseline:** stretch picked or liked → it becomes a lean (twice → firm, replacing the old one).
+    Stretch rejected → logged, not retried for the next 5 videos. 📈 numbers (saves, watch-time) suggest the next stretch.
+  - **Staleness:** a style lean not confirmed in 60 days or 8 videos is marked *check*; the next video tests an alternative.
+- Firm style preferences (T01) can be challenged only inside a stretch, never silently.
+
 ## Standing preferences
 
 Strength: **firm** = treat as a rule · **lean** = default, offer an alternative now and then · **test** = unsure, ask.
@@ -35,7 +52,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T10 | Likes "wow" 3D/motion pieces as occasional features: map route (most), blueprint, receipt, exploded view, data city, hand-drawn explainer. | lean | "especially map route"; "Blue print animation from this"; "This reciept effect"; "Add this skill also" (hand-drawn) |
 | T11 | Three.js for 3D first; Blender photoreal (with Tripo meshes) for close-up detail. | lean | "Lets see three.js first"; "Use tripo 3d blender creative directions for detailing" |
 | T13 | Photoreal 3D close-ups use the clinical-macro look: dark field, wet natural enamel, warm key + cool rim, shallow focus. | lean | picked direction A (2026-11-14) |
-| T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
+| T12 | Keeps trying new styles; taste is a baseline to improve on, not a cage. Every option set has a stretch. | firm | "continuously to improve and try new"; "it should improve on baseline rather than 100% sticking" |
 
 ## Not wanted
 
@@ -59,6 +76,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-16 | taste system | "it should improve on baseline rather than 100% sticking" | "Baseline, not a cage": stretch option, one experiment per video, staleness checks | T12 → firm |
 | 2026-11-14 | "Viral videos" 10 styles post | (screenshot) | fx.look: crt, thermal, matrix, pixel, synthwave, mono; modelgen fur | T10 |
 | 2026-11-14 | 12 posts: animation styles, camera moves, repos (three.js, Blender MCP, librosa, physics, PixelFX…) | (screenshots) + "Continue" | modelgen looks (6) + 12 camera moves, beat finder; rest mapped to existing tools | T10, N05 |
 | 2026-11-14 | modelgen teeth | "Fix the upper molar and bring the direction-A enamel detail into all teeth." | layered enamel/dentin on all teeth, upper molar anatomy rebuilt, front teeth reshaped | T13 |

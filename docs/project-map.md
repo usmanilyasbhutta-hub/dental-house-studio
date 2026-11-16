@@ -1,6 +1,6 @@
 # Project map (generated: `python3 scripts/project_map.py`; do not edit by hand)
 
-143 source files, about 175,379 tokens if read in full. **Read this map first and open only the files a task needs;**
+144 source files, about 177,693 tokens if read in full. **Read this map first and open only the files a task needs;**
 for big files, search (`grep -n`) and read the relevant lines instead of the whole file.
 
 ## Where to look
@@ -19,9 +19,9 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 
 ### (root)
 - `.gitignore` ~102tok: —
-- `CLAUDE.md` ~2369tok: Dental House Studio: instructions for Claude
+- `CLAUDE.md` ~2430tok: Dental House Studio: instructions for Claude
 - `README.md` ~900tok: Dental House Studio
-- `package.json` ~506tok: —
+- `package.json` ~509tok: —
 - `remotion.config.ts` ~45tok: —
 - `tsconfig.json` ~100tok: —
 
@@ -31,14 +31,14 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 ### .claude/agents
 - `.claude/agents/brand-reviewer.md` ~200tok: Reviews a Dental House brief's copy and settings against the brand voice and rules. Use before approval or when draft…
 - `.claude/agents/clinical-reviewer.md` ~389tok: Reviews a Dental House video brief for clinical accuracy, evidence, advertising ethics, consent and patient privacy. …
-- `.claude/agents/creative-director.md` ~515tok: Makes the creative decisions for a Dental House video the way the owner would (look, hook, pace, effects, sound, leng…
+- `.claude/agents/creative-director.md` ~618tok: Makes the creative decisions for a Dental House video the way the owner would (look, hook, pace, effects, sound, leng…
 - `.claude/agents/editor-reviewer.md` ~490tok: Reviews a rendered Dental House video the way a viewer and an experienced social-video editor would (hook, pacing, re…
 - `.claude/agents/visual-qc.md` ~329tok: Inspects rendered frames of a Dental House video (contact sheet + frames + QC report) for visual defects. Use after e…
 
 ### .claude/commands
 - `.claude/commands/make.md` ~134tok: Validate, render, master and QC a brief, then visually inspect the result
 - `.claude/commands/new-video.md` ~414tok: Interview me, write a brief, preview stills, then render + QC a new video
-- `.claude/commands/options.md` ~397tok: Propose 2–3 creative directions for a video (with preview stills) so the owner can choose without editing expertise
+- `.claude/commands/options.md` ~439tok: Propose 2–3 creative directions for a video (with preview stills) so the owner can choose without editing expertise
 - `.claude/commands/publish-prep.md` ~207tok: Prepare captions, hashtags and a cover still for an approved video (does not post)
 - `.claude/commands/review.md` ~214tok: Full 3-level review (understanding, code, visual) of a video before dentist approval
 - `.claude/commands/taste.md` ~376tok: Tell Claude what you like or don't (or see what it currently believes about your taste and correct it)
@@ -93,7 +93,7 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - `docs/style-profile.md` ~2013tok: Dental House: editing style profile (v1)
 - `docs/style-recipes.md` ~1171tok: Style recipes (our own)
 - `docs/talking-head.md` ~401tok: Talking-head videos
-- `docs/taste.md` ~2101tok: Dental House: taste ledger
+- `docs/taste.md` ~2504tok: Dental House: taste ledger
 
 ### scripts
 - `scripts/analyze_reference.py` ~1586tok: Measure reference videos to learn an editing style. · exports: run, probe, cuts, frames, colour_stats, audio_stats, sheet, main
@@ -110,6 +110,7 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - `scripts/make.ts` ~156tok: One command: validate → render (+ loudness master) → QC.
 - `scripts/make_sfx.py` ~1244tok: Generate the UI sound-effect set (public/sfx/*.wav) in code: free, no samples, no licences. · exports: t_, band, env, modes, reverb, finish, stereo, save
 - `scripts/prep_footage.ts` ~753tok: SRT (source seconds) → words relative to the trim; time spread inside each cue by character length. · exports: srtToWords · used by 1
+- `scripts/project_map.py` ~1702tok: Project map ("graphify" idea, our own code): one compact page that tells Claude where everything is, so a new chat · exports: files, purpose, exports, imports, build, index_section, render, main
 - `scripts/qc.ts` ~1535tok: .jpg. Exit 1 on any FAIL. · exports: qc · used by 1
 - `scripts/render.ts` ~1061tok: Mastering: H.264 yuv420p, TV range, BT.709 tags (what Instagram/TikTok expect), +faststart. · exports: render · used by 1
 - `scripts/stills-many.ts` ~364tok: Render one or more frames for several briefs from ONE bundle (fast visual checks of many examples).
