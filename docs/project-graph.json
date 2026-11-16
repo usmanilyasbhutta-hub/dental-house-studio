@@ -1,0 +1,2489 @@
+{
+"nodes": [
+{
+"file": ".claude/agents/brand-reviewer.md",
+"kb": 0.8,
+"tokens": 200,
+"purpose": "Reviews a Dental House brief's copy and settings against the brand voice and rules. Use before approval or when draft\u2026",
+"exports": []
+},
+{
+"file": ".claude/agents/clinical-reviewer.md",
+"kb": 1.5,
+"tokens": 389,
+"purpose": "Reviews a Dental House video brief for clinical accuracy, evidence, advertising ethics, consent and patient privacy. \u2026",
+"exports": []
+},
+{
+"file": ".claude/agents/creative-director.md",
+"kb": 2.0,
+"tokens": 515,
+"purpose": "Makes the creative decisions for a Dental House video the way the owner would (look, hook, pace, effects, sound, leng\u2026",
+"exports": []
+},
+{
+"file": ".claude/agents/editor-reviewer.md",
+"kb": 1.9,
+"tokens": 490,
+"purpose": "Reviews a rendered Dental House video the way a viewer and an experienced social-video editor would (hook, pacing, re\u2026",
+"exports": []
+},
+{
+"file": ".claude/agents/visual-qc.md",
+"kb": 1.3,
+"tokens": 329,
+"purpose": "Inspects rendered frames of a Dental House video (contact sheet + frames + QC report) for visual defects. Use after e\u2026",
+"exports": []
+},
+{
+"file": ".claude/commands/make.md",
+"kb": 0.5,
+"tokens": 134,
+"purpose": "Validate, render, master and QC a brief, then visually inspect the result",
+"exports": []
+},
+{
+"file": ".claude/commands/new-video.md",
+"kb": 1.6,
+"tokens": 414,
+"purpose": "Interview me, write a brief, preview stills, then render + QC a new video",
+"exports": []
+},
+{
+"file": ".claude/commands/options.md",
+"kb": 1.6,
+"tokens": 397,
+"purpose": "Propose 2\u20133 creative directions for a video (with preview stills) so the owner can choose without editing expertise",
+"exports": []
+},
+{
+"file": ".claude/commands/publish-prep.md",
+"kb": 0.8,
+"tokens": 207,
+"purpose": "Prepare captions, hashtags and a cover still for an approved video (does not post)",
+"exports": []
+},
+{
+"file": ".claude/commands/review.md",
+"kb": 0.8,
+"tokens": 214,
+"purpose": "Full 3-level review (understanding, code, visual) of a video before dentist approval",
+"exports": []
+},
+{
+"file": ".claude/commands/taste.md",
+"kb": 1.5,
+"tokens": 376,
+"purpose": "Tell Claude what you like or don't (or see what it currently believes about your taste and correct it)",
+"exports": []
+},
+{
+"file": ".claude/hooks/after-edit.sh",
+"kb": 0.6,
+"tokens": 142,
+"purpose": "After Claude edits a file: typecheck code, validate briefs. Exit 2 feeds errors back to Claude.",
+"exports": []
+},
+{
+"file": ".claude/hooks/guard-bash.sh",
+"kb": 0.5,
+"tokens": 138,
+"purpose": "Block commands that could leak patient material into git or the public bundle.",
+"exports": []
+},
+{
+"file": ".claude/settings.json",
+"kb": 0.8,
+"tokens": 208,
+"purpose": "",
+"exports": []
+},
+{
+"file": ".claude/skills/dental-animation/SKILL.md",
+"kb": 6.0,
+"tokens": 1536,
+"purpose": "Make dental procedure animations (3D implant/crown explainers), general dental education graphics, and annotated layo\u2026",
+"exports": []
+},
+{
+"file": ".github/workflows/ci.yml",
+"kb": 0.8,
+"tokens": 215,
+"purpose": "",
+"exports": []
+},
+{
+"file": ".gitignore",
+"kb": 0.4,
+"tokens": 102,
+"purpose": "",
+"exports": []
+},
+{
+"file": "CLAUDE.md",
+"kb": 9.3,
+"tokens": 2369,
+"purpose": "Dental House Studio: instructions for Claude",
+"exports": []
+},
+{
+"file": "README.md",
+"kb": 3.6,
+"tokens": 900,
+"purpose": "Dental House Studio",
+"exports": []
+},
+{
+"file": "briefs/2026-11-bleeding-gums-talking-head.yaml",
+"kb": 3.6,
+"tokens": 915,
+"purpose": "TEST RUN: talking-head from a compressed Instagram copy (the only copy available).",
+"exports": []
+},
+{
+"file": "briefs/2026-11-caries-11-21-map.yaml",
+"kb": 2.8,
+"tokens": 708,
+"purpose": "Anatomy map of a real case: carious upper central incisors (11, 21), photographed after cavity preparation.",
+"exports": []
+},
+{
+"file": "briefs/2026-11-composite-11-21-procedure.yaml",
+"kb": 1.2,
+"tokens": 312,
+"purpose": "3D illustration (three.js): composite restoration of carious 11/21, mesial. Generic products only (owner, Nov 2026).",
+"exports": []
+},
+{
+"file": "briefs/examples/anatomy-map.yaml",
+"kb": 2.3,
+"tokens": 591,
+"purpose": "EXAMPLE anatomy map (layout of reference \"I\"): synthetic molar illustrations, not a patient.",
+"exports": []
+},
+{
+"file": "briefs/examples/blueprint-implant.yaml",
+"kb": 0.5,
+"tokens": 124,
+"purpose": "Blueprint (reference: blueprint-style reel). Drawn in code, illustration only, not to scale.",
+"exports": []
+},
+{
+"file": "briefs/examples/blueprint-tooth.yaml",
+"kb": 0.4,
+"tokens": 98,
+"purpose": "Blueprint of a molar in section: labels only, no claims. Illustration, not to scale.",
+"exports": []
+},
+{
+"file": "briefs/examples/case-demo-spacing.yaml",
+"kb": 0.8,
+"tokens": 208,
+"purpose": "EXAMPLE case brief using SYNTHETIC illustrations (not a patient). Real cases need:",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-cycle.yaml",
+"kb": 0.5,
+"tokens": 117,
+"purpose": "The cavity cycle (demo)",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-flowchart.yaml",
+"kb": 0.4,
+"tokens": 103,
+"purpose": "Toothache: what to do (demo)",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-iceberg.yaml",
+"kb": 0.5,
+"tokens": 115,
+"purpose": "A cavity is an iceberg (demo)",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-infographic.yaml",
+"kb": 0.5,
+"tokens": 135,
+"purpose": "Brushing by the numbers (demo)",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-layers.yaml",
+"kb": 0.5,
+"tokens": 124,
+"purpose": "Layers of a tooth (demo)",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-matrix.yaml",
+"kb": 0.5,
+"tokens": 112,
+"purpose": "Which treatment when (demo)",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-roadmap.yaml",
+"kb": 0.5,
+"tokens": 125,
+"purpose": "Braces roadmap (demo)",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-timeline.yaml",
+"kb": 0.9,
+"tokens": 226,
+"purpose": "Diagram explainer, layout: timeline. Demo: steps are general; a dentist confirms the wording for a real video.",
+"exports": []
+},
+{
+"file": "briefs/examples/diagram-tree.yaml",
+"kb": 0.4,
+"tokens": 113,
+"purpose": "Replacing a missing tooth (demo)",
+"exports": []
+},
+{
+"file": "briefs/examples/education-bleeding-gums.yaml",
+"kb": 1.1,
+"tokens": 292,
+"purpose": "EXAMPLE education brief. Every claim must be backed by `sources` (checked by the clinical-reviewer agent).",
+"exports": []
+},
+{
+"file": "briefs/examples/map-route.yaml",
+"kb": 0.9,
+"tokens": 224,
+"purpose": "Map route (reference: \"map-route\" reel). The city is DRAWN, not a real map: grid, buildings and river are procedural.",
+"exports": []
+},
+{
+"file": "briefs/examples/offer-implant-consult.yaml",
+"kb": 0.8,
+"tokens": 194,
+"purpose": "EXAMPLE offer brief. demo: true -> watermarked; replace with a real offer and set demo: false.",
+"exports": []
+},
+{
+"file": "briefs/examples/photo-annotate.yaml",
+"kb": 0.7,
+"tokens": 184,
+"purpose": "EXAMPLE photo layout: annotate one photo (synthetic illustration, not a patient).",
+"exports": []
+},
+{
+"file": "briefs/examples/photo-split.yaml",
+"kb": 0.5,
+"tokens": 138,
+"purpose": "EXAMPLE photo layout: split comparison (synthetic illustrations, not a patient).",
+"exports": []
+},
+{
+"file": "briefs/examples/procedure-crown.yaml",
+"kb": 0.7,
+"tokens": 184,
+"purpose": "EXAMPLE 3D procedure explainer (illustration, not to scale). demo: true -> watermarked.",
+"exports": []
+},
+{
+"file": "briefs/examples/procedure-implant.yaml",
+"kb": 0.8,
+"tokens": 208,
+"purpose": "EXAMPLE 3D procedure explainer (illustration, not to scale). demo: true -> watermarked.",
+"exports": []
+},
+{
+"file": "briefs/examples/receipt.yaml",
+"kb": 0.8,
+"tokens": 193,
+"purpose": "Receipt (reference: \"/receipt\" reel). Values are PLACEHOLDERS: prices are clinic facts, so a real video uses the",
+"exports": []
+},
+{
+"file": "briefs/examples/sketch-bleeding-gums.yaml",
+"kb": 1.2,
+"tokens": 317,
+"purpose": "Hand-drawn explainer (reference: \"Hand-Drawn Explainer\" reel). Doodles: see src/fx/doodles.ts / docs/effects.md.",
+"exports": []
+},
+{
+"file": "docs/3d-detailing.md",
+"kb": 6.2,
+"tokens": 1586,
+"purpose": "3D detailing: Tripo + Blender pipeline",
+"exports": []
+},
+{
+"file": "docs/animation-toolkit.md",
+"kb": 2.6,
+"tokens": 668,
+"purpose": "Animation & footage toolkit",
+"exports": []
+},
+{
+"file": "docs/content-calendar.csv",
+"kb": 0.4,
+"tokens": 99,
+"purpose": "",
+"exports": []
+},
+{
+"file": "docs/effects.md",
+"kb": 16.2,
+"tokens": 4145,
+"purpose": "Effects library",
+"exports": []
+},
+{
+"file": "docs/how-to-use.md",
+"kb": 1.9,
+"tokens": 491,
+"purpose": "How to use Dental House Studio (owner's guide)",
+"exports": []
+},
+{
+"file": "docs/review-process.md",
+"kb": 1.8,
+"tokens": 448,
+"purpose": "Review process (who reviews what)",
+"exports": []
+},
+{
+"file": "docs/roadmap.md",
+"kb": 1.5,
+"tokens": 381,
+"purpose": "Roadmap: from assisted to automated",
+"exports": []
+},
+{
+"file": "docs/style-profile.md",
+"kb": 8.0,
+"tokens": 2013,
+"purpose": "Dental House: editing style profile (v1)",
+"exports": []
+},
+{
+"file": "docs/style-recipes.md",
+"kb": 4.6,
+"tokens": 1171,
+"purpose": "Style recipes (our own)",
+"exports": []
+},
+{
+"file": "docs/talking-head.md",
+"kb": 1.6,
+"tokens": 401,
+"purpose": "Talking-head videos",
+"exports": []
+},
+{
+"file": "docs/taste.md",
+"kb": 8.2,
+"tokens": 2101,
+"purpose": "Dental House: taste ledger",
+"exports": []
+},
+{
+"file": "package.json",
+"kb": 2.0,
+"tokens": 506,
+"purpose": "",
+"exports": []
+},
+{
+"file": "remotion.config.ts",
+"kb": 0.2,
+"tokens": 45,
+"purpose": "",
+"exports": []
+},
+{
+"file": "scripts/analyze_reference.py",
+"kb": 6.2,
+"tokens": 1586,
+"purpose": "Measure reference videos to learn an editing style.",
+"exports": [
+"run",
+"probe",
+"cuts",
+"frames",
+"colour_stats",
+"audio_stats",
+"sheet",
+"main"
+]
+},
+{
+"file": "scripts/autograde.py",
+"kb": 3.4,
+"tokens": 866,
+"purpose": "Automatic colour correction (\"one-click grade\" idea, our own code, local).",
+"exports": [
+"sample",
+"main"
+]
+},
+{
+"file": "scripts/beats.py",
+"kb": 3.2,
+"tokens": 827,
+"purpose": "Beat and onset finder (librosa idea, our own numpy code): where the beats are in a music track, so cuts land on them.",
+"exports": [
+"load",
+"onset_envelope",
+"tempo",
+"track",
+"main"
+]
+},
+{
+"file": "scripts/blender/build_library.py",
+"kb": 1.1,
+"tokens": 292,
+"purpose": "Regenerate the 3D model library from scripts/blender/library.txt (models are reproducible, so .glb files are not comm\u2026",
+"exports": []
+},
+{
+"file": "scripts/blender/composite_clip.py",
+"kb": 6.2,
+"tokens": 1593,
+"purpose": "Clinical-macro clip (direction A): composite restoration of the mesial cavities on 11 and 21. Illustration only.",
+"exports": [
+"area",
+"pose"
+]
+},
+{
+"file": "scripts/blender/directions.py",
+"kb": 16.4,
+"tokens": 4196,
+"purpose": "Creative directions for 3D detailing, rendered in Blender Cycles (headless bpy, our own procedural models).",
+"exports": [
+"tooth_mesh",
+"gum_band",
+"material",
+"incisal_translucency",
+"assign",
+"world",
+"area",
+"camera",
+"backdrop"
+]
+},
+{
+"file": "scripts/blender/library.txt",
+"kb": 0.7,
+"tokens": 187,
+"purpose": "",
+"exports": []
+},
+{
+"file": "scripts/blender/modelgen.py",
+"kb": 44.6,
+"tokens": 11409,
+"purpose": "modelgen: our own text \u2192 3D generator for dental objects (headless Blender, pure code, no AI service, no uploads).",
+"exports": [
+"parse",
+"reset",
+"mat",
+"M",
+"new_obj",
+"lathe",
+"tube",
+"place",
+"group",
+"boolean",
+"bake",
+"sellipse",
+"anterior_crown",
+"occlusal",
+"posterior_crown",
+"root",
+"tooth",
+"implant",
+"knurl",
+"handpiece",
+"curing_light",
+"syringe",
+"handle",
+"mirror",
+"probe",
+"bounds",
+"apply_look",
+"camera_move",
+"preview",
+"selftest",
+"main"
+]
+},
+{
+"file": "scripts/brand_assets.py",
+"kb": 1.6,
+"tokens": 407,
+"purpose": "Build transparent brand PNGs from the source JPEGs (logo on white).",
+"exports": [
+"to_rgba",
+"save"
+]
+},
+{
+"file": "scripts/cleanup.py",
+"kb": 4.1,
+"tokens": 1045,
+"purpose": "Footage clean-up (idea from \"miracle clean up\" tools, our own code, runs locally; nothing is uploaded).",
+"exports": [
+"feather_mask",
+"main"
+]
+},
+{
+"file": "scripts/copy_fonts.mjs",
+"kb": 1.0,
+"tokens": 257,
+"purpose": "Copies the brand fonts (woff2) from @fontsource into public/fonts.",
+"exports": []
+},
+{
+"file": "scripts/demo_assets.py",
+"kb": 2.9,
+"tokens": 734,
+"purpose": "Synthetic before/after ILLUSTRATIONS for the demo case (not a patient), and an",
+"exports": [
+"smile"
+]
+},
+{
+"file": "scripts/demo_molar.py",
+"kb": 2.7,
+"tokens": 685,
+"purpose": "Synthetic occlusal molar illustrations (NOT a patient) for the anatomy-map demo:",
+"exports": [
+"base",
+"finish"
+]
+},
+{
+"file": "scripts/ff.ts",
+"kb": 11.3,
+"tokens": 2882,
+"purpose": "ffmpeg toolkit for clinic footage. Usage: npm run ff -- <recipe> [args]   (npm run ff -- help)",
+"exports": [
+"GRADES"
+]
+},
+{
+"file": "scripts/footage_cutout.py",
+"kb": 5.8,
+"tokens": 1490,
+"purpose": "Prepare talking-head footage: trim, crop, paint out burned-in overlay text, colour-correct,",
+"exports": [
+"decode_all",
+"paint_out_text",
+"grade",
+"matte"
+]
+},
+{
+"file": "scripts/lib.ts",
+"kb": 1.4,
+"tokens": 357,
+"purpose": "Expand args (files or folders) into a list of .yaml/.yml brief paths.",
+"exports": [
+"today",
+"briefPaths",
+"validate",
+"printFindings",
+"arg",
+"flag"
+]
+},
+{
+"file": "scripts/make.ts",
+"kb": 0.6,
+"tokens": 156,
+"purpose": "One command: validate \u2192 render (+ loudness master) \u2192 QC.",
+"exports": []
+},
+{
+"file": "scripts/make_sfx.py",
+"kb": 4.9,
+"tokens": 1244,
+"purpose": "Generate the UI sound-effect set (public/sfx/*.wav) in code: free, no samples, no licences.",
+"exports": [
+"t_",
+"band",
+"env",
+"modes",
+"reverb",
+"finish",
+"stereo",
+"save"
+]
+},
+{
+"file": "scripts/prep_footage.ts",
+"kb": 2.9,
+"tokens": 753,
+"purpose": "SRT (source seconds) \u2192 words relative to the trim; time spread inside each cue by character length.",
+"exports": [
+"srtToWords"
+]
+},
+{
+"file": "scripts/qc.ts",
+"kb": 6.0,
+"tokens": 1535,
+"purpose": ".jpg. Exit 1 on any FAIL.",
+"exports": [
+"qc"
+]
+},
+{
+"file": "scripts/render.ts",
+"kb": 4.2,
+"tokens": 1061,
+"purpose": "Mastering: H.264 yuv420p, TV range, BT.709 tags (what Instagram/TikTok expect), +faststart.",
+"exports": [
+"render"
+]
+},
+{
+"file": "scripts/stills-many.ts",
+"kb": 1.4,
+"tokens": 364,
+"purpose": "Render one or more frames for several briefs from ONE bundle (fast visual checks of many examples).",
+"exports": []
+},
+{
+"file": "scripts/stills.ts",
+"kb": 1.1,
+"tokens": 276,
+"purpose": "Render several stills of any composition from ONE bundle (fast checks).",
+"exports": []
+},
+{
+"file": "scripts/trace_regions.py",
+"kb": 4.2,
+"tokens": 1074,
+"purpose": "Trace anatomy-map regions from the photo itself (no hand-drawn guessing).",
+"exports": [
+"mask_for",
+"contour_points",
+"main"
+]
+},
+{
+"file": "scripts/validate.ts",
+"kb": 0.6,
+"tokens": 150,
+"purpose": "Usage: npm run validate -- briefs/my-video.yaml [more files or folders]",
+"exports": []
+},
+{
+"file": "src/Root.tsx",
+"kb": 3.3,
+"tokens": 839,
+"purpose": "Video\" is what scripts/render.ts uses; the other three are previews in Studio.",
+"exports": [
+"Root"
+]
+},
+{
+"file": "src/Video.tsx",
+"kb": 2.1,
+"tokens": 548,
+"purpose": "One entry composition; the brief's `type` picks the template.",
+"exports": [
+"VideoProps",
+"Video"
+]
+},
+{
+"file": "src/brand.ts",
+"kb": 1.3,
+"tokens": 340,
+"purpose": "Facts printed on end cards. Source: business card. Never invent others.",
+"exports": [
+"colors",
+"fonts",
+"clinic",
+"video"
+]
+},
+{
+"file": "src/brief/compliance.ts",
+"kb": 13.0,
+"tokens": 3336,
+"purpose": "Words a medical practice should not use in advertising. Extend in CLAUDE.md first.",
+"exports": [
+"Finding",
+"BANNED",
+"ALLOWED_PHRASES",
+"ComplianceEnv",
+"checkCompliance"
+]
+},
+{
+"file": "src/brief/load.ts",
+"kb": 1.3,
+"tokens": 327,
+"purpose": "In YAML flow maps `{ small: Soft brush, light pressure }` the comma silently splits the text:",
+"exports": [
+"findCommaSplits",
+"loadBrief"
+]
+},
+{
+"file": "src/brief/schema.ts",
+"kb": 18.9,
+"tokens": 4832,
+"purpose": "A file inside public/ (Remotion can only load assets from there).",
+"exports": [
+"offerBrief",
+"educationBrief",
+"caseBrief",
+"word",
+"Word",
+"talkingHeadBrief",
+"PROCEDURE_STAGES",
+"procedureBrief",
+"ProcedureBrief",
+"photoLayoutBrief",
+"PhotoLayoutBrief",
+"mapRegion",
+"anatomyMapBrief",
+"AnatomyMapBrief",
+"mapRouteBrief",
+"MapRouteBrief",
+"blueprintBrief",
+"BlueprintBrief",
+"receiptBrief",
+"ReceiptBrief",
+"sketchBrief",
+"SketchBrief",
+"DIAGRAM_LAYOUTS",
+"diagramBrief",
+"DiagramBrief",
+"brief",
+"TalkingHeadBrief",
+"segmentsOf",
+"footagePaths",
+"Brief",
+"OfferBrief",
+"EducationBrief",
+"CaseBrief"
+]
+},
+{
+"file": "src/brief/timing.ts",
+"kb": 4.2,
+"tokens": 1079,
+"purpose": "Scene lengths in seconds per template. Single source of truth for duration.",
+"exports": [
+"scenes",
+"sceneCount",
+"durationSeconds",
+"sec",
+"MAP_XFADE",
+"mapSceneSeconds",
+"MAP_ROUTE",
+"RECEIPT",
+"receiptHeight",
+"receiptTimes",
+"SKETCH_INTRO",
+"DIAGRAM_INTRO"
+]
+},
+{
+"file": "src/demo-briefs.ts",
+"kb": 2.9,
+"tokens": 743,
+"purpose": ".yaml; tests keep them in sync).",
+"exports": [
+"demoOffer",
+"demoEducation",
+"demoCase"
+]
+},
+{
+"file": "src/fx/DoodleIcon.tsx",
+"kb": 2.0,
+"tokens": 512,
+"purpose": "A doodle as an icon on a light round badge (reads on dark and light themes). `p` 0\u21921 draws the lines, then colour lan\u2026",
+"exports": [
+"doodleFill",
+"DoodleIcon"
+]
+},
+{
+"file": "src/fx/EffectsGallery3.tsx",
+"kb": 2.1,
+"tokens": 536,
+"purpose": "Effects set 3 (reference reel: git-city / teardown / headline). Map route: brief type `map-route`.",
+"exports": [
+"effectsGallery3Frames",
+"EffectsGallery3"
+]
+},
+{
+"file": "src/fx/FootageGallery.tsx",
+"kb": 5.9,
+"tokens": 1505,
+"purpose": "Full-frame \"footage\": the cut-out doctor over the brand backdrop.",
+"exports": [
+"FX_SEG",
+"footageGalleryFrames",
+"FootageGallery"
+]
+},
+{
+"file": "src/fx/FootageGallery2.tsx",
+"kb": 3.3,
+"tokens": 855,
+"purpose": "",
+"exports": [
+"FX2_SEG",
+"footageGallery2Frames",
+"FootageGallery2"
+]
+},
+{
+"file": "src/fx/FootageGallery3.tsx",
+"kb": 3.3,
+"tokens": 851,
+"purpose": "Set 4: the effects from the \"20 video effects for Claude\" reel we didn't have yet (needs the local clinic footage).",
+"exports": [
+"FX3F_SEG",
+"footageGallery3Frames",
+"FootageGallery3"
+]
+},
+{
+"file": "src/fx/Gallery.tsx",
+"kb": 7.1,
+"tokens": 1818,
+"purpose": "Every effect, labelled. Render: npx remotion render src/index.ts EffectsGallery out/effects-gallery.mp4",
+"exports": [
+"EffectsGallery",
+"galleryFrames"
+]
+},
+{
+"file": "src/fx/Halftone.tsx",
+"kb": 2.3,
+"tokens": 595,
+"purpose": "Halftone reveal (reference: \"map-route\" / \"headline\" reels): a dark screen opens through a grid of dots that",
+"exports": [
+"HalftoneReveal"
+]
+},
+{
+"file": "src/fx/LooksGallery.tsx",
+"kb": 1.8,
+"tokens": 448,
+"purpose": "Whole-video looks on one clinic shot (needs the local footage). First segment: no look, for comparison.",
+"exports": [
+"LOOK_SEG",
+"looksGalleryFrames",
+"LooksGallery"
+]
+},
+{
+"file": "src/fx/LottieClip.tsx",
+"kb": 1.2,
+"tokens": 298,
+"purpose": "Plays a Lottie animation from public/lottie/<file>.json (synced to the video frame).",
+"exports": [
+"LottieClip"
+]
+},
+{
+"file": "src/fx/Scenes.tsx",
+"kb": 1.5,
+"tokens": 392,
+"purpose": "Plays scenes back to back. With a transition, neighbouring scenes overlap by",
+"exports": [
+"SceneItem",
+"Scenes",
+"useEdgeFade"
+]
+},
+{
+"file": "src/fx/blueprint-subjects.ts",
+"kb": 6.3,
+"tokens": 1621,
+"purpose": "Blueprint drawings (frame coordinates, 1080\u00d71920). Each stroke has a start/end as a FRACTION of the drawing time,",
+"exports": [
+"Stroke",
+"Dim",
+"Label",
+"Subject",
+"implant",
+"tooth",
+"SUBJECTS"
+]
+},
+{
+"file": "src/fx/context.ts",
+"kb": 0.7,
+"tokens": 184,
+"purpose": "Transitions that render reliably headless (plain CSS; no WebGL).",
+"exports": [
+"TRANSITIONS",
+"TransitionName",
+"FxSettings",
+"defaultFx",
+"FxContext",
+"useFx"
+]
+},
+{
+"file": "src/fx/doodles.ts",
+"kb": 7.8,
+"tokens": 2004,
+"purpose": "Hand-drawn dental doodles for the `sketch` explainer (reference: \"Hand-Drawn Explainer\" reel).",
+"exports": [
+"FillKey",
+"Doodle",
+"DOODLE_SET",
+"DOODLES",
+"DoodleName"
+]
+},
+{
+"file": "src/fx/effects.tsx",
+"kb": 15.2,
+"tokens": 3902,
+"purpose": "Dental House effects library. Every effect is plain Remotion code (free, no licensed assets).",
+"exports": [
+"ShineText",
+"Highlighter",
+"Typewriter",
+"CountUp",
+"Glow",
+"LightSweep",
+"Sparkles",
+"LightLeak",
+"Confetti",
+"PunchZoom",
+"Shake",
+"Glitch",
+"DrawCircle",
+"DrawArrow",
+"DrawUnderline",
+"SFX",
+"SfxName",
+"Sfx"
+]
+},
+{
+"file": "src/fx/footage.tsx",
+"kb": 34.7,
+"tokens": 8873,
+"purpose": "Footage effects (creator-style looks, built in Remotion code; free).",
+"exports": [
+"Subject",
+"Orbit",
+"CouchWall",
+"VideoWall",
+"UIWorld",
+"FrameBreak",
+"DigitalZoom",
+"PhoneMockup",
+"PhoneBeside",
+"Checklist",
+"HeadlineWall",
+"ZoomThrough",
+"ChartGrow",
+"TrendLine",
+"PullBackReveal",
+"GreenScreen",
+"PaperCut",
+"DoodleBoil",
+"Vertigo",
+"CoverStory",
+"GlassType",
+"PunchCaption",
+"PhotoLayer"
+]
+},
+{
+"file": "src/fx/footage2.tsx",
+"kb": 16.4,
+"tokens": 4200,
+"purpose": "Footage effects, set 2 (19\u201330): built for clinic use, in Remotion code (free), frame-driven.",
+"exports": [
+"TextRing",
+"Spotlight",
+"WhipPan",
+"ShapeReveal",
+"FreezeIntro",
+"NotificationStack",
+"LocationPin",
+"Countdown",
+"PostMockup",
+"MulticamGrid",
+"WordStack",
+"BrandDuotone"
+]
+},
+{
+"file": "src/fx/footage3.tsx",
+"kb": 22.9,
+"tokens": 5866,
+"purpose": "Footage effects, set 4 (39\u201349): the effects from the \"20 video effects for Claude\" reel that we didn't have yet.",
+"exports": [
+"GridDive",
+"MagnifyLens",
+"Portal",
+"InfiniteZoom",
+"CubeSpin",
+"LiquidGlass",
+"TileTunnel",
+"PhoneFan",
+"Shatter",
+"RibbonWrap",
+"HeadPopOut",
+"Particles"
+]
+},
+{
+"file": "src/fx/looks.tsx",
+"kb": 7.1,
+"tokens": 1796,
+"purpose": "Whole-video looks (our own code; style names from a \"10 viral video styles\" post): wrap any scene in <Look kind=\u2026>.",
+"exports": [
+"LOOKS",
+"LookName",
+"Look"
+]
+},
+{
+"file": "src/fx/media.ts",
+"kb": 9.6,
+"tokens": 2467,
+"purpose": "Drawing media for the `sketch` explainer: one drawing, six materials. Our own \"style recipes",
+"exports": [
+"MEDIA",
+"MediumName",
+"Medium",
+"MEDIUM"
+]
+},
+{
+"file": "src/fx/reel3.tsx",
+"kb": 13.2,
+"tokens": 3383,
+"purpose": "Effects set 3 (reference reel: /git-city, /teardown, /map-route, /headline). Rebuilt in our own code for clinic use.",
+"exports": [
+"demoGrid",
+"DataCity",
+"IMPLANT_PARTS",
+"Teardown",
+"Newspaper",
+"FX3_SEG"
+]
+},
+{
+"file": "src/fx/transitions.tsx",
+"kb": 2.7,
+"tokens": 693,
+"purpose": "Custom calm transition: incoming scene sharpens from a soft blur while fading in.",
+"exports": [
+"transitionFor"
+]
+},
+{
+"file": "src/index.ts",
+"kb": 0.1,
+"tokens": 23,
+"purpose": "",
+"exports": []
+},
+{
+"file": "src/templates/AnatomyMap.tsx",
+"kb": 10.8,
+"tokens": 2751,
+"purpose": "Photo placement: contain-fit to the full frame (never cropped), or a uniform zoom centred on `focus`",
+"exports": [
+"smoothPath",
+"AnatomyMap"
+]
+},
+{
+"file": "src/templates/Blueprint.tsx",
+"kb": 11.5,
+"tokens": 2948,
+"purpose": "Blueprint drawing (reference: blueprint-style reel), driven by the frame number.",
+"exports": [
+"Blueprint"
+]
+},
+{
+"file": "src/templates/ClinicalCase.tsx",
+"kb": 6.4,
+"tokens": 1644,
+"purpose": "Before/after case. Photos are shown UNWARPED and uncropped (object-fit: contain,",
+"exports": [
+"ClinicalCase"
+]
+},
+{
+"file": "src/templates/Diagram.tsx",
+"kb": 22.1,
+"tokens": 5664,
+"purpose": "Content area below the title (inside the safe zone).",
+"exports": [
+"Diagram"
+]
+},
+{
+"file": "src/templates/Education.tsx",
+"kb": 3.6,
+"tokens": 920,
+"purpose": "",
+"exports": [
+"Education"
+]
+},
+{
+"file": "src/templates/MapRoute.tsx",
+"kb": 17.8,
+"tokens": 4552,
+"purpose": "Timeline in frames, derived from the brief (single source of truth for camera, route and overlays).",
+"exports": [
+"MapRoute"
+]
+},
+{
+"file": "src/templates/Offer.tsx",
+"kb": 4.8,
+"tokens": 1220,
+"purpose": "",
+"exports": [
+"Offer"
+]
+},
+{
+"file": "src/templates/PhotoLayout.tsx",
+"kb": 12.2,
+"tokens": 3126,
+"purpose": "Content box (inside the safe area): photos never leave it.",
+"exports": [
+"PhotoSize",
+"PhotoLayout",
+"photoSizes"
+]
+},
+{
+"file": "src/templates/Procedure.tsx",
+"kb": 7.2,
+"tokens": 1847,
+"purpose": "3D procedure explainer. Stage progress comes from the frame number, so every render is identical.",
+"exports": [
+"HOOK_SECONDS",
+"Procedure"
+]
+},
+{
+"file": "src/templates/Receipt.tsx",
+"kb": 9.2,
+"tokens": 2347,
+"purpose": "Receipt (reference: \"/receipt\" reel). Prices only from the owner: compliance enforces prices_confirmed_on.",
+"exports": [
+"Receipt"
+]
+},
+{
+"file": "src/templates/Sketch.tsx",
+"kb": 24.7,
+"tokens": 6313,
+"purpose": "Doodle fill colours by hue name, taken from each theme's harmonised map palette (slot order differs per theme).",
+"exports": [
+"Sketch"
+]
+},
+{
+"file": "src/templates/TalkingHead.tsx",
+"kb": 11.2,
+"tokens": 2857,
+"purpose": "Stage: where the cut-out doctor sits (footage is 1152 px wide after prep).",
+"exports": [
+"chapterTimes",
+"cutTimes",
+"calloutTimes",
+"captionChunks",
+"TalkingHead"
+]
+},
+{
+"file": "src/templates/shared/Backdrop.tsx",
+"kb": 2.2,
+"tokens": 570,
+"purpose": "Dark brand backdrop: gradient, oversized house-mark watermark, grain, vignette.",
+"exports": [
+"Backdrop",
+"KenBurns"
+]
+},
+{
+"file": "src/templates/shared/EndCard.tsx",
+"kb": 3.1,
+"tokens": 785,
+"purpose": "Light end card: logo mask-wipe, tagline, CTA pill with pulsing ring, phone/WhatsApp, handle, doctors, address.",
+"exports": [
+"EndCard"
+]
+},
+{
+"file": "src/templates/shared/Headline.tsx",
+"kb": 1.7,
+"tokens": 445,
+"purpose": "Kinetic multi-line headline: masked slide-up per line, one serif accent word, bronze strike rule.",
+"exports": [
+"KineticHeadline"
+]
+},
+{
+"file": "src/templates/shared/Hud.tsx",
+"kb": 2.9,
+"tokens": 752,
+"purpose": "Persistent HUD until the end card: progress bar, logo bug, label, crop marks, business-card bars.",
+"exports": [
+"Hud",
+"DemoWatermark",
+"MinimalBug"
+]
+},
+{
+"file": "src/templates/shared/SafeZones.tsx",
+"kb": 0.8,
+"tokens": 197,
+"purpose": "Preview overlay: light red bands = platform UI, red outline = safe area. Never rendered in final videos.",
+"exports": [
+"SafeZones"
+]
+},
+{
+"file": "src/templates/shared/Shell.tsx",
+"kb": 2.2,
+"tokens": 550,
+"purpose": "Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays.",
+"exports": [
+"QcProps",
+"Shell"
+]
+},
+{
+"file": "src/templates/shared/Step.tsx",
+"kb": 1.6,
+"tokens": 413,
+"purpose": "Numbered beat: outlined numeral, bronze rule, headline + serif subline.",
+"exports": [
+"Step"
+]
+},
+{
+"file": "src/templates/shared/fonts.ts",
+"kb": 1.2,
+"tokens": 310,
+"purpose": "Blocks rendering until brand fonts are loaded (no fallback-font frames).",
+"exports": [
+"loadBrandFonts"
+]
+},
+{
+"file": "src/templates/shared/motion.ts",
+"kb": 0.9,
+"tokens": 224,
+"purpose": "0\u21921 over `dur` frames starting at `start`, eased.",
+"exports": [
+"ease",
+"easeInOut",
+"prog",
+"pop",
+"sceneFade"
+]
+},
+{
+"file": "src/templates/shared/text.ts",
+"kb": 1.1,
+"tokens": 280,
+"purpose": "Font size so the longest line fits `width` px. Oswald 700 uppercase averages",
+"exports": [
+"headline",
+"serif",
+"mono",
+"fitSize"
+]
+},
+{
+"file": "src/theme.ts",
+"kb": 2.0,
+"tokens": 511,
+"purpose": "Visual families (decided Nov 2026, see docs/style-profile.md \u00a76):",
+"exports": [
+"ThemeName",
+"Theme",
+"themes",
+"ThemeContext",
+"useTheme"
+]
+},
+{
+"file": "src/three/CompositeScene.tsx",
+"kb": 7.1,
+"tokens": 1821,
+"purpose": "Composite restoration of carious 11/21 (mesial), stage by stage. Generic products only.",
+"exports": [
+"CompositeScene"
+]
+},
+{
+"file": "src/three/anterior.tsx",
+"kb": 14.4,
+"tokens": 3694,
+"purpose": "Anterior arch + restorative instruments, built in code with three.js (no downloaded models, no licences).",
+"exports": [
+"archZ",
+"archRotY",
+"TEETH",
+"faceZ",
+"Tooth2",
+"Gum",
+"Patch",
+"Syringe",
+"Turbine",
+"PolisherDisc",
+"MicroBrush",
+"CuringLight",
+"Spray"
+]
+},
+{
+"file": "src/three/city.ts",
+"kb": 8.2,
+"tokens": 2096,
+"purpose": "Procedural \"clay\" city for map-route videos: road grid, blocks, buildings, parks, river and bridges.",
+"exports": [
+"PITCH",
+"ROAD",
+"Grid",
+"GridPoint",
+"gx",
+"gz",
+"rng",
+"RIVER_W",
+"riverZ",
+"Palette",
+"PALETTES",
+"buildCity",
+"Path",
+"makePath",
+"pointAt",
+"smoothAt",
+"closestOnPath"
+]
+},
+{
+"file": "src/three/dental.tsx",
+"kb": 6.5,
+"tokens": 1670,
+"purpose": "Procedural 3D dental models (three.js, built in code: no downloaded models, no licences).",
+"exports": [
+"MAT",
+"Tooth",
+"PreparedTooth",
+"Crown",
+"Implant",
+"Abutment",
+"JawSection",
+"DentalLights"
+]
+},
+{
+"file": "tests/brief.test.ts",
+"kb": 11.7,
+"tokens": 2986,
+"purpose": "",
+"exports": []
+},
+{
+"file": "tests/talking-head.test.ts",
+"kb": 4.0,
+"tokens": 1029,
+"purpose": "",
+"exports": []
+},
+{
+"file": "tests/toolkit.test.ts",
+"kb": 4.2,
+"tokens": 1075,
+"purpose": "",
+"exports": []
+},
+{
+"file": "tsconfig.json",
+"kb": 0.4,
+"tokens": 100,
+"purpose": "",
+"exports": []
+}
+],
+"edges": [
+[
+"scripts/blender/composite_clip.py",
+"scripts/blender/modelgen.py"
+],
+[
+"scripts/lib.ts",
+"src/brief/compliance.ts"
+],
+[
+"scripts/lib.ts",
+"src/brief/load.ts"
+],
+[
+"scripts/lib.ts",
+"src/brief/schema.ts"
+],
+[
+"scripts/make.ts",
+"scripts/qc.ts"
+],
+[
+"scripts/make.ts",
+"scripts/render.ts"
+],
+[
+"scripts/prep_footage.ts",
+"scripts/lib.ts"
+],
+[
+"scripts/prep_footage.ts",
+"src/brief/schema.ts"
+],
+[
+"scripts/qc.ts",
+"scripts/lib.ts"
+],
+[
+"scripts/qc.ts",
+"src/brand.ts"
+],
+[
+"scripts/qc.ts",
+"src/brief/timing.ts"
+],
+[
+"scripts/render.ts",
+"scripts/lib.ts"
+],
+[
+"scripts/stills-many.ts",
+"src/brief/load.ts"
+],
+[
+"scripts/stills-many.ts",
+"src/brief/timing.ts"
+],
+[
+"scripts/validate.ts",
+"scripts/lib.ts"
+],
+[
+"src/Root.tsx",
+"src/Video.tsx"
+],
+[
+"src/Root.tsx",
+"src/brand.ts"
+],
+[
+"src/Root.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/Root.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/Root.tsx",
+"src/demo-briefs.ts"
+],
+[
+"src/Root.tsx",
+"src/fx/EffectsGallery3.tsx"
+],
+[
+"src/Root.tsx",
+"src/fx/FootageGallery.tsx"
+],
+[
+"src/Root.tsx",
+"src/fx/FootageGallery2.tsx"
+],
+[
+"src/Root.tsx",
+"src/fx/FootageGallery3.tsx"
+],
+[
+"src/Root.tsx",
+"src/fx/Gallery.tsx"
+],
+[
+"src/Root.tsx",
+"src/fx/LooksGallery.tsx"
+],
+[
+"src/Root.tsx",
+"src/templates/PhotoLayout.tsx"
+],
+[
+"src/Root.tsx",
+"src/templates/shared/fonts.ts"
+],
+[
+"src/Video.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/Video.tsx",
+"src/templates/AnatomyMap.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/Blueprint.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/ClinicalCase.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/Diagram.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/Education.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/MapRoute.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/Offer.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/PhotoLayout.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/Procedure.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/Receipt.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/Sketch.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/TalkingHead.tsx"
+],
+[
+"src/Video.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/brief/compliance.ts",
+"src/brand.ts"
+],
+[
+"src/brief/compliance.ts",
+"src/brief/schema.ts"
+],
+[
+"src/brief/load.ts",
+"src/brief/schema.ts"
+],
+[
+"src/brief/schema.ts",
+"src/fx/context.ts"
+],
+[
+"src/brief/schema.ts",
+"src/fx/doodles.ts"
+],
+[
+"src/brief/schema.ts",
+"src/fx/looks.tsx"
+],
+[
+"src/brief/schema.ts",
+"src/fx/media.ts"
+],
+[
+"src/brief/timing.ts",
+"src/brief/schema.ts"
+],
+[
+"src/demo-briefs.ts",
+"src/brief/schema.ts"
+],
+[
+"src/fx/DoodleIcon.tsx",
+"src/fx/doodles.ts"
+],
+[
+"src/fx/DoodleIcon.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/EffectsGallery3.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/EffectsGallery3.tsx",
+"src/fx/Halftone.tsx"
+],
+[
+"src/fx/EffectsGallery3.tsx",
+"src/fx/reel3.tsx"
+],
+[
+"src/fx/EffectsGallery3.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/EffectsGallery3.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/FootageGallery.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/FootageGallery.tsx",
+"src/fx/footage.tsx"
+],
+[
+"src/fx/FootageGallery.tsx",
+"src/templates/shared/Backdrop.tsx"
+],
+[
+"src/fx/FootageGallery.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/FootageGallery.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/FootageGallery2.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/FootageGallery2.tsx",
+"src/fx/footage.tsx"
+],
+[
+"src/fx/FootageGallery2.tsx",
+"src/fx/footage2.tsx"
+],
+[
+"src/fx/FootageGallery2.tsx",
+"src/templates/shared/Backdrop.tsx"
+],
+[
+"src/fx/FootageGallery2.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/FootageGallery2.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/FootageGallery3.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/FootageGallery3.tsx",
+"src/fx/footage.tsx"
+],
+[
+"src/fx/FootageGallery3.tsx",
+"src/fx/footage2.tsx"
+],
+[
+"src/fx/FootageGallery3.tsx",
+"src/fx/footage3.tsx"
+],
+[
+"src/fx/FootageGallery3.tsx",
+"src/templates/shared/Backdrop.tsx"
+],
+[
+"src/fx/FootageGallery3.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/FootageGallery3.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/Gallery.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/Gallery.tsx",
+"src/fx/Scenes.tsx"
+],
+[
+"src/fx/Gallery.tsx",
+"src/fx/context.ts"
+],
+[
+"src/fx/Gallery.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/fx/Gallery.tsx",
+"src/templates/shared/Backdrop.tsx"
+],
+[
+"src/fx/Gallery.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/Gallery.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/LooksGallery.tsx",
+"src/fx/footage.tsx"
+],
+[
+"src/fx/LooksGallery.tsx",
+"src/fx/looks.tsx"
+],
+[
+"src/fx/LooksGallery.tsx",
+"src/templates/shared/Backdrop.tsx"
+],
+[
+"src/fx/LooksGallery.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/fx/LooksGallery.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/LooksGallery.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/Scenes.tsx",
+"src/fx/context.ts"
+],
+[
+"src/fx/Scenes.tsx",
+"src/fx/transitions.tsx"
+],
+[
+"src/fx/effects.tsx",
+"src/fx/context.ts"
+],
+[
+"src/fx/effects.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/footage.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/footage.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/footage.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/footage2.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/footage2.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/footage2.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/footage3.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/footage3.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/footage3.tsx",
+"src/theme.ts"
+],
+[
+"src/fx/looks.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/media.ts",
+"src/fx/doodles.ts"
+],
+[
+"src/fx/media.ts",
+"src/theme.ts"
+],
+[
+"src/fx/reel3.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/reel3.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/fx/reel3.tsx",
+"src/three/city.ts"
+],
+[
+"src/fx/reel3.tsx",
+"src/three/dental.tsx"
+],
+[
+"src/fx/transitions.tsx",
+"src/brand.ts"
+],
+[
+"src/fx/transitions.tsx",
+"src/fx/context.ts"
+],
+[
+"src/index.ts",
+"src/Root.tsx"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/templates/PhotoLayout.tsx"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/AnatomyMap.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/Blueprint.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/Blueprint.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/Blueprint.tsx",
+"src/fx/blueprint-subjects.ts"
+],
+[
+"src/templates/Blueprint.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/Blueprint.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/Blueprint.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/Blueprint.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/fx/Scenes.tsx"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/ClinicalCase.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/Diagram.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/Diagram.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/Diagram.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/templates/Diagram.tsx",
+"src/fx/DoodleIcon.tsx"
+],
+[
+"src/templates/Diagram.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/Diagram.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/Diagram.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/Diagram.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/Diagram.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/Education.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/Education.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/Education.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/templates/Education.tsx",
+"src/fx/Scenes.tsx"
+],
+[
+"src/templates/Education.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/Education.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/Education.tsx",
+"src/templates/shared/Step.tsx"
+],
+[
+"src/templates/Education.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/Education.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/Education.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/fx/Halftone.tsx"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/MapRoute.tsx",
+"src/three/city.ts"
+],
+[
+"src/templates/Offer.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/Offer.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/Offer.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/templates/Offer.tsx",
+"src/fx/Scenes.tsx"
+],
+[
+"src/templates/Offer.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/Offer.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/Offer.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/Offer.tsx",
+"src/templates/shared/Step.tsx"
+],
+[
+"src/templates/Offer.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/Offer.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/Offer.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/PhotoLayout.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/PhotoLayout.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/PhotoLayout.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/PhotoLayout.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/PhotoLayout.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/PhotoLayout.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/PhotoLayout.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/Procedure.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/Procedure.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/Procedure.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/Procedure.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/Procedure.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/Procedure.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/Procedure.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/Procedure.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/Procedure.tsx",
+"src/three/CompositeScene.tsx"
+],
+[
+"src/templates/Procedure.tsx",
+"src/three/dental.tsx"
+],
+[
+"src/templates/Receipt.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/Receipt.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/Receipt.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/templates/Receipt.tsx",
+"src/fx/Halftone.tsx"
+],
+[
+"src/templates/Receipt.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/Receipt.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/Receipt.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/Receipt.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/Receipt.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/Sketch.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/Sketch.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/Sketch.tsx",
+"src/brief/timing.ts"
+],
+[
+"src/templates/Sketch.tsx",
+"src/fx/doodles.ts"
+],
+[
+"src/templates/Sketch.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/Sketch.tsx",
+"src/fx/media.ts"
+],
+[
+"src/templates/Sketch.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/Sketch.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/TalkingHead.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/TalkingHead.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/TalkingHead.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/TalkingHead.tsx",
+"src/templates/shared/Headline.tsx"
+],
+[
+"src/templates/TalkingHead.tsx",
+"src/templates/shared/Shell.tsx"
+],
+[
+"src/templates/TalkingHead.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/TalkingHead.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/TalkingHead.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/shared/Backdrop.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/shared/EndCard.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/shared/EndCard.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/shared/EndCard.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/shared/EndCard.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/shared/EndCard.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/shared/Headline.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/shared/Headline.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/shared/Headline.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/shared/Hud.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/shared/Hud.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/shared/Hud.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/shared/SafeZones.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/shared/Shell.tsx",
+"src/brief/schema.ts"
+],
+[
+"src/templates/shared/Shell.tsx",
+"src/fx/context.ts"
+],
+[
+"src/templates/shared/Shell.tsx",
+"src/fx/looks.tsx"
+],
+[
+"src/templates/shared/Shell.tsx",
+"src/templates/shared/Backdrop.tsx"
+],
+[
+"src/templates/shared/Shell.tsx",
+"src/templates/shared/EndCard.tsx"
+],
+[
+"src/templates/shared/Shell.tsx",
+"src/templates/shared/Hud.tsx"
+],
+[
+"src/templates/shared/Shell.tsx",
+"src/templates/shared/SafeZones.tsx"
+],
+[
+"src/templates/shared/Shell.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/shared/Step.tsx",
+"src/brand.ts"
+],
+[
+"src/templates/shared/Step.tsx",
+"src/fx/Scenes.tsx"
+],
+[
+"src/templates/shared/Step.tsx",
+"src/fx/effects.tsx"
+],
+[
+"src/templates/shared/Step.tsx",
+"src/templates/shared/motion.ts"
+],
+[
+"src/templates/shared/Step.tsx",
+"src/templates/shared/text.ts"
+],
+[
+"src/templates/shared/Step.tsx",
+"src/theme.ts"
+],
+[
+"src/templates/shared/text.ts",
+"src/brand.ts"
+],
+[
+"src/theme.ts",
+"src/brand.ts"
+],
+[
+"src/three/CompositeScene.tsx",
+"src/three/anterior.tsx"
+],
+[
+"src/three/CompositeScene.tsx",
+"src/three/dental.tsx"
+],
+[
+"tests/brief.test.ts",
+"src/brief/compliance.ts"
+],
+[
+"tests/brief.test.ts",
+"src/brief/load.ts"
+],
+[
+"tests/brief.test.ts",
+"src/brief/schema.ts"
+],
+[
+"tests/brief.test.ts",
+"src/brief/timing.ts"
+],
+[
+"tests/brief.test.ts",
+"src/demo-briefs.ts"
+],
+[
+"tests/talking-head.test.ts",
+"scripts/prep_footage.ts"
+],
+[
+"tests/talking-head.test.ts",
+"src/brief/schema.ts"
+],
+[
+"tests/talking-head.test.ts",
+"src/brief/timing.ts"
+],
+[
+"tests/talking-head.test.ts",
+"src/templates/TalkingHead.tsx"
+],
+[
+"tests/toolkit.test.ts",
+"src/brief/compliance.ts"
+],
+[
+"tests/toolkit.test.ts",
+"src/brief/schema.ts"
+],
+[
+"tests/toolkit.test.ts",
+"src/brief/timing.ts"
+]
+]
+}

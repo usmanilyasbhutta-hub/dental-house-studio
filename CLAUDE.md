@@ -49,6 +49,14 @@ White logo bug top-left over dark; full-colour logo only on light backgrounds.
 Safe area: keep text out of the top 220 px, bottom 380 px, right 140 px and left 60 px (Instagram/TikTok UI).
 The logo bug and HUD label sit in the top band on purpose. They're decorative, not information.
 
+## Saving credits (read this first in every chat)
+- **Start from `docs/project-map.md`** (~5k tokens: every file, its purpose, size and links). Open only the files the task
+  needs. Files marked ⚠ (>4k tokens) are searched with `grep -n` and read in ranges, never whole.
+- Don't re-read a file you just edited or already read in this chat. Don't print long logs: `| tail`, `| grep`.
+- Check visuals with a few **stills or a contact sheet**, not full renders; full renders only after the owner approves.
+- Use subagents only when the owner asks (they start from zero and cost more). One chat per job; keep chats short.
+- The map refreshes on `npm run check` / `npm run map`.
+
 ## Creative judgement (read `docs/taste.md` first)
 - **The owner's word wins** on every creative choice (look, pace, effects, music, wording). Only the golden rules outrank it.
   You may say once, in one sentence, what a viewer might lose; then do it their way.
