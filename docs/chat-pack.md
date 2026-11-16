@@ -25,6 +25,7 @@ doctors: [
 ],
 address:
 "Ahsan Medical Centre, Opp. Trauma Centre Allama Iqbal Memorial Hospital, Commissioner Road, Sialkot",
+addressShort: "Ahsan Medical Centre, Commissioner Road, Sialkot",
 ```
 
 ## Brand and specs
@@ -40,6 +41,7 @@ Something must change on screen by 1.5 s.
 
 ## Video types (brief `type:`)
 - `offer`: promo/offer reel: hook, 2–4 points, price only if confirmed, CTA
+- `offer-reel`: 10–12 s hook-first offer: before+after on frame 1, value before price, static price, WhatsApp CTA; format 9:16 or 4:5
 - `education`: doctor-led tips or myth-busting with numbered steps (needs a PubMed source for claims)
 - `case`: before/after clinical case (consent required, photos unwarped and uncropped)
 - `talking-head`: edit of a doctor speaking to camera: cut filler, word captions, callouts

@@ -22,6 +22,9 @@ const HANDLE = /@[a-z0-9._]{3,30}/gi;
 function allText(b: Brief): string[] {
   const t = [b.title, ...b.hook.lines, b.cta, b.label];
   if (b.type === "offer") t.push(b.offer.headline, b.offer.detail, b.offer.terms, b.offer.price ?? "", ...b.points);
+  if (b.type === "offer-reel")
+    t.push(b.place ?? "", b.photo_note, b.value.heading, b.value.promise ?? "", ...b.value.points.flatMap((p) => [p.title, p.sub ?? ""]),
+      b.offer.kicker, b.offer.treatment, b.offer.price, b.offer.regular ?? "", b.offer.badge ?? "", b.offer.included ?? "");
   if (b.type === "education") t.push(b.takeaway, ...b.steps.flatMap((s) => [s.title, s.subline]));
   if (b.type === "case") t.push(b.treatment, b.timeline ?? "", ...b.notes);
   if (b.type === "anatomy-map")
@@ -74,6 +77,23 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (b.offer.valid_until < env.today)
       (b.demo ? warn : err)("offer", `offer expired on ${b.offer.valid_until}`);
     if (!b.offer.terms.trim()) err("offer", "offer needs terms");
+  }
+
+  if (b.type === "offer-reel") {
+    if (b.offer.valid_until < env.today) (b.demo ? warn : err)("offer", `offer expired on ${b.offer.valid_until}`);
+    if (!b.offer.prices_confirmed_on) (b.demo ? warn : err)("prices", "prices are clinic facts: set offer.prices_confirmed_on (the day the owner confirmed them)");
+    if (/\bshades?\b/i.test(allText(b).join(" "))) err("claims", 'no "X shades" result claims on whitening offers');
+    if (!/results? vary/i.test(b.photo_note)) err("claims", 'photo_note must say "Results vary" next to before/after photos');
+    for (const p of [b.before, b.after]) if (!env.fileExists(`public/${p}`)) err("assets", `missing image public/${p}`);
+    if (b.demo) {
+      warn("demo", "draft: watermarked, must not be published (needs consent file on record, then demo: false)");
+    } else if (!b.consent) {
+      err("consent", "patient photos need written consent (consent.file)");
+    } else {
+      if (!env.fileExists(b.consent.file)) err("consent", `consent file not found: ${b.consent.file}`);
+      if (b.consent.file.startsWith("public/")) err("consent", "consent forms must never be inside public/");
+      if (!b.consent.scope.includes("social-media") || !b.consent.scope.includes("ads")) err("consent", "consent scope must cover social media and ads");
+    }
   }
 
   if (b.type === "education") {
@@ -163,7 +183,7 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
   }
 
   if (b.fx.look !== "none") {
-    const clinical = b.type === "case" || ((b.type === "photo-layout" || b.type === "anatomy-map") && b.clinical);
+    const clinical = b.type === "case" || b.type === "offer-reel" || ((b.type === "photo-layout" || b.type === "anatomy-map") && b.clinical);
     if (clinical) err("look", `fx.look "${b.fx.look}" changes colours and detail: never on clinical photos or results`);
     if (b.type === "education" || b.theme === "editorial") warn("look", `fx.look "${b.fx.look}" on calm education: check it doesn't distract from the message`);
   }

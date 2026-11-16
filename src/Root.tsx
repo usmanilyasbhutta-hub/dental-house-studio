@@ -27,7 +27,8 @@ const calc = async ({ props }: { props: VideoProps }) => {
   }
   const srcs = b.type === "photo-layout" ? b.photos.map((p) => p.src) : b.type === "anatomy-map" ? b.scenes.map((s) => s.photo) : null;
   const sizes = srcs ? (props.sizes ?? (await photoSizes(srcs))) : props.sizes;
-  return { durationInFrames: Math.round(durationSeconds(b) * video.fps), props: { ...props, brief: b, words, sizes } };
+  const height = b.type === "offer-reel" && b.format === "4:5" ? video.feed.height : video.height;
+  return { height, durationInFrames: Math.round(durationSeconds(b) * video.fps), props: { ...props, brief: b, words, sizes } };
 };
 
 const common = { component: Video, fps: video.fps, width: video.width, height: video.height, durationInFrames: 1, calculateMetadata: calc };

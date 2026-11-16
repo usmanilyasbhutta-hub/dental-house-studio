@@ -78,6 +78,44 @@ export const offerBrief = base.extend({
   points: z.array(line(34)).min(1).max(3),
 });
 
+/**
+ * Short hook-first offer reel (10–12 s, sound off): before + after on frame 1, value before price, static price, CTA.
+ * Built from ad data (R2 whitening reel, Nov 2026: 87 % of viewers left before the price card).
+ */
+export const offerReelBrief = base.extend({
+  type: z.literal("offer-reel"),
+  /** "9:16" reel (default) or "4:5" feed post. Same brief, same scenes. */
+  format: z.enum(["9:16", "4:5"]).default("9:16"),
+  /** Serif-italic tail after the last headline line, e.g. "— Sialkot". */
+  place: line(16).optional(),
+  case_id: z.string().regex(/^[a-z0-9-]+$/),
+  before: publicAsset,
+  after: publicAsset,
+  /** width / height of the photos (both the same): the box is built to this, so nothing is cropped. */
+  photo_aspect: z.number().min(0.5).max(3),
+  /** Printed under the photos whenever they are on screen. */
+  photo_note: line(70),
+  consent: z
+    .object({ file: z.string(), signed_on: isoDate, scope: z.array(z.enum(["social-media", "website", "ads", "print"])).min(1) })
+    .optional(),
+  value: z.object({
+    heading: line(30),
+    points: z.array(z.object({ title: line(30), sub: line(44).optional() })).min(2).max(3),
+    promise: line(44).optional(),
+  }),
+  offer: z.object({
+    kicker: line(30),
+    treatment: line(24),
+    price: line(16),
+    regular: line(16).optional(),
+    badge: line(14).optional(),
+    valid_until: isoDate,
+    included: line(44).optional(),
+    /** Prices are clinic facts: the day the owner confirmed them. */
+    prices_confirmed_on: isoDate.optional(),
+  }),
+});
+
 export const educationBrief = base.extend({
   type: z.literal("education"),
   steps: z
@@ -397,7 +435,7 @@ export const diagramBrief = base.extend({
 });
 export type DiagramBrief = z.infer<typeof diagramBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, diagramBrief]);
+export const brief = z.discriminatedUnion("type", [offerBrief, offerReelBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, diagramBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */
@@ -416,5 +454,6 @@ export const footagePaths = (id: string) => ({
 
 export type Brief = z.infer<typeof brief>;
 export type OfferBrief = z.infer<typeof offerBrief>;
+export type OfferReelBrief = z.infer<typeof offerReelBrief>;
 export type EducationBrief = z.infer<typeof educationBrief>;
 export type CaseBrief = z.infer<typeof caseBrief>;

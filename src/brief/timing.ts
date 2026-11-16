@@ -2,6 +2,7 @@ import { segmentsOf, type Brief } from "./schema";
 
 /** Scene lengths in seconds per template. Single source of truth for duration. */
 export const scenes = {
+  "offer-reel": { hook: 2.4, value: 2.9, price: 2.9, cta: 2.8 },
   offer: { hook: 3, reveal: 4, point: 2, terms: 2.5, end: 4.5 },
   education: { hook: 3, step: 3.2, takeaway: 2.8, sources: 2.2, end: 4.5 },
   "talking-head": { end: 4.5 },
@@ -22,6 +23,7 @@ export function sceneCount(b: Brief): number {
       return 6;
     case "case":
       return 7;
+    case "offer-reel":
     case "talking-head":
     case "procedure":
     case "photo-layout":
@@ -44,6 +46,10 @@ function rawSeconds(b: Brief): number {
     case "offer": {
       const s = scenes.offer;
       return s.hook + s.reveal + s.point * b.points.length + s.terms + s.end;
+    }
+    case "offer-reel": {
+      const s = scenes["offer-reel"];
+      return s.hook + s.value + s.price + s.cta;
     }
     case "education": {
       const s = scenes.education;

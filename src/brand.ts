@@ -8,6 +8,9 @@ export const colors = {
   bronzeLight: "#C9AB86",
   mist: "#C4CACA",
   white: "#F7F8F6",
+  /** Accents for light offer reels (owner brief, Nov 2026): warm paper + wedding maroon. */
+  ivory: "#FBF4ED",
+  maroon: "#7A1F2E",
 } as const;
 
 export const fonts = {
@@ -31,6 +34,8 @@ export const clinic = {
   ],
   address:
     "Ahsan Medical Centre, Opp. Trauma Centre Allama Iqbal Memorial Hospital, Commissioner Road, Sialkot",
+  /** Short form for small CTA cards (same place, fewer words). */
+  addressShort: "Ahsan Medical Centre, Commissioner Road, Sialkot",
 } as const;
 
 export const video = {
@@ -39,4 +44,6 @@ export const video = {
   fps: 30,
   /** Instagram/TikTok UI covers these areas of a 1080x1920 reel. Keep text out. */
   safe: { top: 220, bottom: 380, left: 60, right: 140 },
+  /** 4:5 feed post (1080×1350): no platform UI over the picture, just a margin. */
+  feed: { height: 1350, safe: { top: 150, bottom: 60, left: 60, right: 60 } },
 } as const;
