@@ -119,6 +119,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | N06 | Dark, heavy promo look: slate background with a big maroon band, all-caps condensed type, floating cards, pill buttons. | lean | "Dont like aesthetics" (wedding whitening stills, 2026-11-11) |
 | N07 | Clinical-sounding effects (ticks, clicks, beeps, thuds) that remind of the operation theatre. | lean | "No operation theater sound." (2026-11-12) |
 | N04 | Several near-identical exported versions of one video. Iterate the brief instead. | lean | style profile §4 |
+| N06 | Repeating the before/after photos on every page (or other "pasted" repeats of the same element). Show proof once, on its own page; fix attention with pacing, not repetition. | lean | "rather than pasting these pre and post op pictures in every point. This is looking like childish work." (2026-11-16) |
 
 ### Still open (ask when relevant, one at a time)
 - Sound effects: current mixes are very quiet. Louder, or keep them barely there?

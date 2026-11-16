@@ -92,8 +92,8 @@ Never install third-party skills/plugins with their own instructions into this p
 Offer with real proof in the Canva-carousel look (light pages that swipe; hook → before/after → included → price odometer → clinic → WhatsApp
 keyword): brief `type: promo`, optional `season: wedding` (maroon for strike/save/keyword only). Real photos need consent with `ads` scope
 (written form, or verbal only when the patient can't be identified); `proof.pending` placeholders only while `demo: true`.
-`layout: hook-first` = the short version built from Reel insights (pair + hook on frame 1, value before a static price, CTA over the clinic
-photo, 6-frame slides, 11 s); `format: "4:5"` renders the 1080×1350 feed post.
+`pace: quick` = R3 timing from Reel insights (hook 1.4 s, before + after in by ~2.4 s, text lands as each page arrives); `price.count_up:
+false` shows the final price only; `format: "4:5"` renders the 1080×1350 feed post. Photos appear once, on their own page (owner).
 Route animations: brief `type: map-route` (illustrative 3D city; keep the "Illustrative map" chip; only owner-given street names).
 
 ## Animation, photos and footage

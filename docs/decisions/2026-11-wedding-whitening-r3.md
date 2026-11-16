@@ -1,28 +1,23 @@
-# Decision sheet: 2026-11-wedding-whitening-r3 (R2 re-ordered, 11 s)
+# Decision sheet: 2026-11-wedding-whitening-r3 (original reel, quick pace, 15.6 s)
 
-R2 = `briefs/2026-11-wedding-whitening.yaml` (19.6 s, carousel layout). R3 is the same reel, same look, photos, prices and
-music, edited to the owner's R3 brief of 16 Nov 2026 (Reel insights retention curve). Brief type `promo`, `layout: hook-first`.
+R2 = `briefs/2026-11-wedding-whitening.yaml` (19.6 s). R3 keeps R2's look, pages, order, photos, music and end card
+(owner, 16 Nov: "I still like the original one") and fixes the early drop-off seen in the Reel insights.
+An 11 s hook-first version (before/after on every page) was rejected: "rather than pasting these pre and post op
+pictures in every point. This is looking like childish work." Removed from the code.
 
 | Choice | Decision | Source |
 |---|---|---|
-| Look | unchanged: paper pages, Roboto 900 sentence case, bronze italics, maroon only for strike / save tag / CTA rule | owner: "Edit original reel according to it" (T19) |
-| Order | hook → value → price → CTA, 2.3 / 3.0 / 2.9 / 2.8 s | R3 brief; R2 lost 59 % by 3 s and dipped again at the price |
-| Frame 1 (cover) | hook question + before + after, nothing animates in | R3 brief; in R2 the after photo arrived at 4.5 s |
-| Hook wording | "Shaadi ki photos mein — perfect smile?" kept; eyebrow now "Teeth whitening · Sialkot" | R3 brief ("keep the hook idea"); keyword in the eyebrow is mine |
-| Fabric photo | dropped from the hook (no room next to two photos) | mine |
-| Transitions | 6-frame slides, incoming page already has its text; no empty frames | R3 brief |
-| Pair during value + price | before + after stay on screen, small, with the note | R3 brief ("keep the after photo visible") |
-| Value wording | Dentist-led / Pehle assessment, phir treatment · Masooron ki hifazat · Scaling + polishing / Shamil — alag charge nahi | R3 brief (Roman Urdu; replaces T14 for this video) |
-| Price | "PKR 21,000" static; only the strike line and the save tag move | R3 brief; R2's count-up passed through 25,000 |
-| Clinic photo | behind the CTA, in the band the app UI covers; no scene of its own | R3 brief |
-| CTA | "WhatsApp par slot book karein", phone, Dental House bold, short address; "WHITE" keyword removed | R3 brief (keyword not in it); T15 |
-| Before photo (suture mark) | unchanged | golden rule 3 and "Keep the photos uneditted." (T17); cropping it out would cut lower teeth. A different before shot is the owner's call |
-| Dr. Usman on camera | not included | no footage; AI video advised against (AI teeth in a whitening ad) |
-| Music / sfx | wedding-celebration track, no sound effects | T18; "No operation theater sound." |
-| 4:5 feed | `…-r3-feed.yaml`, same layout moved up 190 px | R3 brief |
+| Look, pages, order | as R2: hook (fabric) → Real care. → What's included → price → See you here → WhatsApp "WHITE" | owner |
+| Hook length | 2.5 s → 1.4 s; headline readable on frame 0, underline written by 0.7 s | owner: "early transition from the first scene to second scene"; R2 lost 59 % by 3 s |
+| Before/after page | before is there as the page lands, after wipes in by ~2.4 s (R2: 4.5 s); page 3.5 s (R2: 5 s) | R3 brief; owner's "second picture" = this page |
+| Photos | once, on their own page only | owner (quote above) |
+| Text timing | each page's text lands as the page slides in (no near-empty frames) | R3 brief: R2 swipe moments at 2.5 / 7.5 / 11 / 15 s |
+| Price | `count_up: false`: final digits from the first frame; strike + save stamp still animate | R3 brief; R2 rolled through 25,000 |
+| Wording | R3 brief: Pehle assessment, phir treatment · Masooron ki hifazat · Scaling + polishing / Shamil — alag charge nahi · Valid till · WhatsApp par slot book karein | owner's R3 brief |
+| Kept from R2 | "WHITE" keyword end card, clinic page, celebration music, no sound effects | owner: "I still like the original one" |
+| Before photo (suture) | unchanged | golden rule 3, T17 |
+| Length | 15.6 s (R3 brief asked 10–12 s; keeping every R2 page wins) | owner |
+| 4:5 feed | same pages moved up 200 px | R3 brief |
 
-Source files: this cloud session had no original photos (gitignored), so before, after and clinic are frame grabs from the
-R2 master (850 px wide; shown at 800 px, the clinic photo is enlarged). Re-render from the originals on the clinic PC
-before boosting if the softness shows.
-
-After posting, compare with R2: % still watching at 3 s, 7 s and at the price card (5.3 s in R3).
+Source files: the photos (and the fabric image) here are rebuilt from frames of the R2 master; the clinic PC has the originals.
+After posting, compare with R2: % still watching at 3 s, 7 s and at the price card (8.1 s in R3, 10–12 s in R2).

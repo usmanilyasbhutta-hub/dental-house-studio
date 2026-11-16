@@ -2,8 +2,8 @@ import { segmentsOf, type Brief } from "./schema";
 
 /** Scene lengths in seconds per template. Single source of truth for duration. */
 export const scenes = {
-  /** Promo, hook-first layout (R3): before/after on frame 1, value before price, quick slides. */
-  promoHookFirst: { hook: 2.3, value: 3.0, price: 2.9, end: 2.8, push: 6 },
+  /** Promo at `pace: quick` (R3): earlier cut from the hook to the before/after, shorter pages. Same push. */
+  promoQuick: { hook: 1.4, proof: 3.5, value: 3.2, price: 3, visit: 1.5, end: 3, push: 10 },
   offer: { hook: 3, reveal: 4, point: 2, terms: 2.5, end: 4.5 },
   education: { hook: 3, step: 3.2, takeaway: 2.8, sources: 2.2, end: 4.5 },
   "talking-head": { end: 4.5 },
@@ -59,11 +59,7 @@ function rawSeconds(b: Brief): number {
     case "diagram":
       return DIAGRAM_INTRO + b.items.length * b.seconds_per_item + b.hold + scenes.offer.end;
     case "promo": {
-      if (b.layout === "hook-first") {
-        const h = scenes.promoHookFirst;
-        return h.hook + h.value + h.price + h.end;
-      }
-      const s = scenes.promo;
+      const s = b.pace === "quick" ? scenes.promoQuick : scenes.promo;
       return s.hook + s.proof + s.value + s.price + (b.visit ? s.visit : 0) + s.end;
     }
     case "sketch":

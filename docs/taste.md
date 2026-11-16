@@ -71,6 +71,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | N06 | Dark, heavy promo look: slate background with a big maroon band, all-caps condensed type, floating cards, pill buttons. | lean | "Dont like aesthetics" (wedding whitening stills, 2026-11-11) |
 | N07 | Clinical-sounding effects (ticks, clicks, beeps, thuds) that remind of the operation theatre. | lean | "No operation theater sound." (2026-11-12) |
 | N04 | Several near-identical exported versions of one video. Iterate the brief instead. | lean | style profile §4 |
+| N06 | Repeating the before/after photos on every page (or other "pasted" repeats of the same element). Show proof once, on its own page; fix attention with pacing, not repetition. | lean | "rather than pasting these pre and post op pictures in every point. This is looking like childish work." (2026-11-16) |
 
 ## Open questions (ask when the next video makes them relevant, one at a time)
 
@@ -83,6 +84,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-16 | wedding whitening R3 (hook-first, photos on every page) | "I still like the original one, but the data is showing there is early attention lost. So you should be more like the second picture or early transition from the first scene to second scene, rather than pasting these pre and post op pictures in every point. This is looking like childish work." | R3 = R2 pages at `pace: quick` (hook 1.4 s, after photo by 2.4 s), photos once; hook-first layout removed | N06 |
 | 2026-11-16 | wedding whitening R3 | "Edit original reel accirding to it" (after a first R3 draft in a new slate/Oswald design) | R3 rebuilt inside the R2 carousel look (`promo`, `layout: hook-first`); the separate draft design was dropped. R3 brief also asks for Roman Urdu body text and no empty transition frames (my reading: this video only for T14) | T19 (confirmed) |
 | 2026-11-16 | taste system | "it should improve on baseline rather than 100% sticking" | "Baseline, not a cage": stretch option, one experiment per video, staleness checks | T12 → firm |
 | 2026-11-14 | "Viral videos" 10 styles post | (screenshot) | fx.look: crt, thermal, matrix, pixel, synthwave, mono; modelgen fur | T10 |

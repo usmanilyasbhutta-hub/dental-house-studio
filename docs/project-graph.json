@@ -122,7 +122,7 @@
 {
 "file": "CLAUDE.md",
 "kb": 10.4,
-"tokens": 2645,
+"tokens": 2658,
 "purpose": "Dental House Studio: instructions for Claude",
 "exports": []
 },
@@ -152,6 +152,20 @@
 "kb": 1.2,
 "tokens": 312,
 "purpose": "3D illustration (three.js): composite restoration of carious 11/21, mesial. Generic products only (owner, Nov 2026).",
+"exports": []
+},
+{
+"file": "briefs/2026-11-wedding-whitening-r3-feed.yaml",
+"kb": 2.3,
+"tokens": 578,
+"purpose": "4:5 feed (1080\u00d71350) twin of 2026-11-wedding-whitening-r3.yaml: same content, keep the two in step.",
+"exports": []
+},
+{
+"file": "briefs/2026-11-wedding-whitening-r3.yaml",
+"kb": 2.7,
+"tokens": 687,
+"purpose": "R3 of the wedding-season whitening Reel: the original (briefs/2026-11-wedding-whitening.yaml, R2) kept as it is, with",
 "exports": []
 },
 {
@@ -344,6 +358,13 @@
 "exports": []
 },
 {
+"file": "docs/decisions/2026-11-wedding-whitening-r3.md",
+"kb": 2.1,
+"tokens": 530,
+"purpose": "Decision sheet: 2026-11-wedding-whitening-r3 (original reel, quick pace, 15.6 s)",
+"exports": []
+},
+{
 "file": "docs/decisions/2026-11-wedding-whitening.md",
 "kb": 2.1,
 "tokens": 527,
@@ -408,22 +429,8 @@
 },
 {
 "file": "docs/taste.md",
-"kb": 14.1,
-"tokens": 3607,
-"purpose": "Dental House: taste ledger",
-"exports": []
-},
-{
-"file": "docs/taste.md",
-"kb": 14.1,
-"tokens": 3607,
-"purpose": "Dental House: taste ledger",
-"exports": []
-},
-{
-"file": "docs/taste.md",
-"kb": 14.1,
-"tokens": 3607,
+"kb": 14.9,
+"tokens": 3806,
 "purpose": "Dental House: taste ledger",
 "exports": []
 },
@@ -824,50 +831,6 @@
 ]
 },
 {
-"file": "src/Video.tsx",
-"kb": 2.3,
-"tokens": 580,
-"purpose": "One entry composition; the brief's `type` picks the template.",
-"exports": [
-"VideoProps",
-"Video"
-]
-},
-{
-"file": "src/Video.tsx",
-"kb": 2.3,
-"tokens": 580,
-"purpose": "One entry composition; the brief's `type` picks the template.",
-"exports": [
-"VideoProps",
-"Video"
-]
-},
-{
-"file": "src/brand.ts",
-"kb": 1.6,
-"tokens": 415,
-"purpose": "Facts printed on end cards. Source: business card. Never invent others.",
-"exports": [
-"colors",
-"fonts",
-"clinic",
-"video"
-]
-},
-{
-"file": "src/brand.ts",
-"kb": 1.6,
-"tokens": 415,
-"purpose": "Facts printed on end cards. Source: business card. Never invent others.",
-"exports": [
-"colors",
-"fonts",
-"clinic",
-"video"
-]
-},
-{
 "file": "src/brand.ts",
 "kb": 1.6,
 "tokens": 415,
@@ -905,95 +868,7 @@
 {
 "file": "src/brief/schema.ts",
 "kb": 23.0,
-"tokens": 5867,
-"purpose": "A file inside public/ (Remotion can only load assets from there).",
-"exports": [
-"offerBrief",
-"educationBrief",
-"caseBrief",
-"word",
-"Word",
-"talkingHeadBrief",
-"PROCEDURE_STAGES",
-"procedureBrief",
-"ProcedureBrief",
-"photoLayoutBrief",
-"PhotoLayoutBrief",
-"mapRegion",
-"anatomyMapBrief",
-"AnatomyMapBrief",
-"mapRouteBrief",
-"MapRouteBrief",
-"blueprintBrief",
-"BlueprintBrief",
-"receiptBrief",
-"ReceiptBrief",
-"sketchBrief",
-"SketchBrief",
-"DIAGRAM_LAYOUTS",
-"diagramBrief",
-"DiagramBrief",
-"PROMO_ICONS",
-"promoBrief",
-"PromoBrief",
-"brief",
-"TalkingHeadBrief",
-"segmentsOf",
-"footagePaths",
-"Brief",
-"OfferBrief",
-"EducationBrief",
-"CaseBrief"
-]
-},
-{
-"file": "src/brief/schema.ts",
-"kb": 23.0,
-"tokens": 5867,
-"purpose": "A file inside public/ (Remotion can only load assets from there).",
-"exports": [
-"offerBrief",
-"educationBrief",
-"caseBrief",
-"word",
-"Word",
-"talkingHeadBrief",
-"PROCEDURE_STAGES",
-"procedureBrief",
-"ProcedureBrief",
-"photoLayoutBrief",
-"PhotoLayoutBrief",
-"mapRegion",
-"anatomyMapBrief",
-"AnatomyMapBrief",
-"mapRouteBrief",
-"MapRouteBrief",
-"blueprintBrief",
-"BlueprintBrief",
-"receiptBrief",
-"ReceiptBrief",
-"sketchBrief",
-"SketchBrief",
-"DIAGRAM_LAYOUTS",
-"diagramBrief",
-"DiagramBrief",
-"PROMO_ICONS",
-"promoBrief",
-"PromoBrief",
-"brief",
-"TalkingHeadBrief",
-"segmentsOf",
-"footagePaths",
-"Brief",
-"OfferBrief",
-"EducationBrief",
-"CaseBrief"
-]
-},
-{
-"file": "src/brief/schema.ts",
-"kb": 23.0,
-"tokens": 5867,
+"tokens": 5885,
 "purpose": "A file inside public/ (Remotion can only load assets from there).",
 "exports": [
 "offerBrief",
@@ -1036,48 +911,8 @@
 },
 {
 "file": "src/brief/timing.ts",
-"kb": 4.9,
-"tokens": 1248,
-"purpose": "Scene lengths in seconds per template. Single source of truth for duration.",
-"exports": [
-"scenes",
-"sceneCount",
-"durationSeconds",
-"sec",
-"MAP_XFADE",
-"mapSceneSeconds",
-"MAP_ROUTE",
-"RECEIPT",
-"receiptHeight",
-"receiptTimes",
-"SKETCH_INTRO",
-"DIAGRAM_INTRO"
-]
-},
-{
-"file": "src/brief/timing.ts",
-"kb": 4.9,
-"tokens": 1248,
-"purpose": "Scene lengths in seconds per template. Single source of truth for duration.",
-"exports": [
-"scenes",
-"sceneCount",
-"durationSeconds",
-"sec",
-"MAP_XFADE",
-"mapSceneSeconds",
-"MAP_ROUTE",
-"RECEIPT",
-"receiptHeight",
-"receiptTimes",
-"SKETCH_INTRO",
-"DIAGRAM_INTRO"
-]
-},
-{
-"file": "src/brief/timing.ts",
-"kb": 4.9,
-"tokens": 1248,
+"kb": 4.8,
+"tokens": 1231,
 "purpose": "Scene lengths in seconds per template. Single source of truth for duration.",
 "exports": [
 "scenes",
@@ -1487,9 +1322,9 @@
 },
 {
 "file": "src/templates/Promo.tsx",
-"kb": 34.4,
-"tokens": 8793,
-"purpose": "Promo reel, carousel look: paper pages that push left like a thumb swipe; on each page things arrive in reading order.",
+"kb": 23.7,
+"tokens": 6060,
+"purpose": "4:5 feed post: the 1920-high layout moved up so its content (y 222\u20131536) fits 1350 px.",
 "exports": [
 "Promo"
 ]
@@ -1572,26 +1407,6 @@
 "purpose": "Preview overlay: light red bands = platform UI, red outline = safe area. Never rendered in final videos.",
 "exports": [
 "SafeZones"
-]
-},
-{
-"file": "src/templates/shared/Shell.tsx",
-"kb": 2.3,
-"tokens": 584,
-"purpose": "Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays.",
-"exports": [
-"QcProps",
-"Shell"
-]
-},
-{
-"file": "src/templates/shared/Shell.tsx",
-"kb": 2.3,
-"tokens": 584,
-"purpose": "Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays.",
-"exports": [
-"QcProps",
-"Shell"
 ]
 },
 {
@@ -1737,22 +1552,8 @@
 },
 {
 "file": "tests/brief.test.ts",
-"kb": 13.7,
-"tokens": 3517,
-"purpose": "",
-"exports": []
-},
-{
-"file": "tests/brief.test.ts",
-"kb": 13.7,
-"tokens": 3517,
-"purpose": "",
-"exports": []
-},
-{
-"file": "tests/brief.test.ts",
-"kb": 13.7,
-"tokens": 3517,
+"kb": 13.8,
+"tokens": 3542,
 "purpose": "",
 "exports": []
 },
@@ -1952,126 +1753,6 @@
 "src/templates/shared/Shell.tsx"
 ],
 [
-"src/Video.tsx",
-"src/brief/schema.ts"
-],
-[
-"src/Video.tsx",
-"src/templates/AnatomyMap.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Blueprint.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/ClinicalCase.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Diagram.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Education.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/MapRoute.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Offer.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/PhotoLayout.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Procedure.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Promo.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Receipt.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Sketch.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/TalkingHead.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/shared/Shell.tsx"
-],
-[
-"src/Video.tsx",
-"src/brief/schema.ts"
-],
-[
-"src/Video.tsx",
-"src/templates/AnatomyMap.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Blueprint.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/ClinicalCase.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Diagram.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Education.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/MapRoute.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Offer.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/PhotoLayout.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Procedure.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Promo.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Receipt.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/Sketch.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/TalkingHead.tsx"
-],
-[
-"src/Video.tsx",
-"src/templates/shared/Shell.tsx"
-],
-[
 "src/brief/compliance.ts",
 "src/brand.ts"
 ],
@@ -2098,46 +1779,6 @@
 [
 "src/brief/schema.ts",
 "src/fx/media.ts"
-],
-[
-"src/brief/schema.ts",
-"src/fx/context.ts"
-],
-[
-"src/brief/schema.ts",
-"src/fx/doodles.ts"
-],
-[
-"src/brief/schema.ts",
-"src/fx/looks.tsx"
-],
-[
-"src/brief/schema.ts",
-"src/fx/media.ts"
-],
-[
-"src/brief/schema.ts",
-"src/fx/context.ts"
-],
-[
-"src/brief/schema.ts",
-"src/fx/doodles.ts"
-],
-[
-"src/brief/schema.ts",
-"src/fx/looks.tsx"
-],
-[
-"src/brief/schema.ts",
-"src/fx/media.ts"
-],
-[
-"src/brief/timing.ts",
-"src/brief/schema.ts"
-],
-[
-"src/brief/timing.ts",
-"src/brief/schema.ts"
 ],
 [
 "src/brief/timing.ts",
@@ -2936,70 +2577,6 @@
 "src/theme.ts"
 ],
 [
-"src/templates/shared/Shell.tsx",
-"src/brief/schema.ts"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/fx/context.ts"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/fx/looks.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/templates/shared/Backdrop.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/templates/shared/EndCard.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/templates/shared/Hud.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/templates/shared/SafeZones.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/theme.ts"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/brief/schema.ts"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/fx/context.ts"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/fx/looks.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/templates/shared/Backdrop.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/templates/shared/EndCard.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/templates/shared/Hud.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/templates/shared/SafeZones.tsx"
-],
-[
-"src/templates/shared/Shell.tsx",
-"src/theme.ts"
-],
-[
 "src/templates/shared/Step.tsx",
 "src/brand.ts"
 ],
@@ -3038,46 +2615,6 @@
 [
 "src/three/CompositeScene.tsx",
 "src/three/dental.tsx"
-],
-[
-"tests/brief.test.ts",
-"src/brief/compliance.ts"
-],
-[
-"tests/brief.test.ts",
-"src/brief/load.ts"
-],
-[
-"tests/brief.test.ts",
-"src/brief/schema.ts"
-],
-[
-"tests/brief.test.ts",
-"src/brief/timing.ts"
-],
-[
-"tests/brief.test.ts",
-"src/demo-briefs.ts"
-],
-[
-"tests/brief.test.ts",
-"src/brief/compliance.ts"
-],
-[
-"tests/brief.test.ts",
-"src/brief/load.ts"
-],
-[
-"tests/brief.test.ts",
-"src/brief/schema.ts"
-],
-[
-"tests/brief.test.ts",
-"src/brief/timing.ts"
-],
-[
-"tests/brief.test.ts",
-"src/demo-briefs.ts"
 ],
 [
 "tests/brief.test.ts",

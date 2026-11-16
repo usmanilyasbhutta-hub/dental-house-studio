@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createContext, useContext } from "react";
 import { AbsoluteFill, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { clinic, video } from "../brand";
 import type { PromoBrief } from "../brief/schema";
@@ -8,8 +8,18 @@ import { Sfx } from "../fx/effects";
 import { ease, easeInOut, prog } from "./shared/motion";
 import { Shell, type QcProps } from "./shared/Shell";
 
-const s = scenes.promo;
-const PUSH = s.push;
+const PUSH = scenes.promo.push;
+/** 4:5 feed post: the 1920-high layout moved up so its content (y 222–1536) fits 1350 px. */
+const FEED_SHIFT = 200;
+
+/** pace: quick = things land as the page arrives (no near-empty frames), so the reel reaches the before/after in ~1.4 s. */
+const Quick = createContext(false);
+const useQuick = () => useContext(Quick);
+/** Delay/duration in frames: standard value, or the quick-pace value. */
+const useT = () => {
+  const quick = useQuick();
+  return (standard: number, fast: number) => (quick ? fast : standard);
+};
 const L = 90; // left text edge (safe area starts at 60)
 const W = 850; // text/photo column width (ends at 940, inside the right safe margin)
 
@@ -18,9 +28,10 @@ const W = 850; // text/photo column width (ends at 940, inside the right safe ma
  * Before/after photos are shown whole (objectFit contain) in identical boxes and are never animated, zoomed or filtered.
  */
 export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSafeZones }) => {
-  const { fps } = useVideoConfig();
+  const { fps, height } = useVideoConfig();
+  const s = brief.pace === "quick" ? scenes.promoQuick : scenes.promo;
+  const feed = height < video.height;
   const accent = seasons[brief.season].primary;
-  if (brief.layout === "hook-first") return <HookFirst brief={brief} accent={accent} showSafeZones={showSafeZones} />;
   const pages: { len: number; node: React.ReactNode }[] = [
     { len: sec(s.hook, fps), node: <Hook brief={brief} /> },
     { len: sec(s.proof, fps), node: <Proof brief={brief} /> },
@@ -31,8 +42,10 @@ export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSa
   ];
   let from = 0;
   return (
-    <Shell brief={brief} endSeconds={0} end={<></>} chrome="none" backdrop={false} showSafeZones={showSafeZones}>
+    <Shell brief={brief} endSeconds={0} end={<></>} chrome="none" backdrop={false} showSafeZones={showSafeZones && !feed}>
+      <Quick.Provider value={brief.pace === "quick"}>
       <AbsoluteFill style={{ background: P.paper }} />
+      <AbsoluteFill style={{ height: video.height, bottom: "auto", transform: `translateY(${feed ? -FEED_SHIFT : 0}px)` }}>
       {pages.map((p, i) => {
         const last = i === pages.length - 1;
         const el = (
@@ -46,6 +59,8 @@ export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSa
         from += p.len;
         return el;
       })}
+      </AbsoluteFill>
+      </Quick.Provider>
     </Shell>
   );
 };
@@ -123,6 +138,7 @@ const Hook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
   const size = 112;
   const lh = 128;
   const top = 400;
+  const t = useT();
   return (
     <AbsoluteFill>
       {brief.hero ? (
@@ -142,7 +158,7 @@ const Hook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
           <AccentLine line={l} accent={accent} size={size} />
         </div>
       ))}
-      <Hair top={top + lines.length * lh + 14} width={330} delay={18} color={P.bronze} thick={4} />
+      <Hair top={top + lines.length * lh + 14} width={330} delay={t(18, 8)} color={P.bronze} thick={4} />
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
     </AbsoluteFill>
   );
@@ -153,7 +169,8 @@ const AccentLine: React.FC<{ line: string; accent?: string; size: number }> = ({
   const frame = useCurrentFrame();
   const i = accent ? line.toLowerCase().indexOf(accent.toLowerCase()) : -1;
   if (!accent || i < 0) return <>{line}</>;
-  const p = prog(frame, 24, 16, easeInOut);
+  const t = useT();
+  const p = prog(frame, t(24, 10), t(16, 12), easeInOut);
   return (
     <>
       {line.slice(0, i)}
@@ -199,19 +216,20 @@ const label = (text: string, top: number, opacity: number) => (
 const Proof: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
   const frame = useCurrentFrame();
   const p = brief.proof;
-  const before = prog(frame, 15, 14);
-  const wipe = interpolate(frame, [51, 76], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
+  const t = useT();
+  const before = prog(frame, t(15, 2), t(14, 8));
+  const wipe = interpolate(frame, [t(51, 12), t(76, 30)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
   return (
     <AbsoluteFill>
-      <Sfx name="whoosh" at={51} volume={0.25} />
+      <Sfx name="whoosh" at={t(51, 12)} volume={0.25} />
       <Eyebrow text={p.eyebrow} delay={4} />
       <Rise top={310} delay={6} style={font(120)}>{p.title}</Rise>
       {label(p.labels.before, BOX.top1 - 38, before)}
       <PhotoBox src={p.before} top={BOX.top1} pending={p.pending} style={{ opacity: before }} />
-      {label(p.labels.after, BOX.top2 - 38, prog(frame, 60, 10))}
+      {label(p.labels.after, BOX.top2 - 38, prog(frame, t(60, 16), 10))}
       <PhotoBox src={p.after} top={BOX.top2} pending={p.pending} style={{ clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0)` }} />
       {wipe > 0 && wipe < 1 ? <div style={{ ...at(BOX.top2, L + BOX.w * wipe - 2), width: 4, height: BOX.h, background: P.bronze }} /> : null}
-      <div style={{ ...at(BOX.top2 + BOX.h + 16), ...font(24, 400, P.soft), lineHeight: 1.3, opacity: prog(frame, 76, 12) }}>{p.note}</div>
+      <div style={{ ...at(BOX.top2 + BOX.h + 16), ...font(24, 400, P.soft), lineHeight: 1.3, opacity: prog(frame, t(76, 28), 12) }}>{p.note}</div>
     </AbsoluteFill>
   );
 };
@@ -251,12 +269,13 @@ const ROWS = [560, 790, 1020];
 const Value: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
   const frame = useCurrentFrame();
   const v = brief.value;
+  const t = useT();
   return (
     <AbsoluteFill>
       <Eyebrow text={v.eyebrow} delay={4} />
       {v.title ? <Rise top={310} delay={6} style={font(112)}>{v.title}</Rise> : null}
       {v.points.map((pt, i) => {
-        const d = 16 + i * 18;
+        const d = t(16 + i * 18, i * 14);
         const a = prog(frame, d + 6, 12);
         const b = prog(frame, d + 12, 12);
         const left = pt.icon ? 220 : L;
@@ -266,7 +285,7 @@ const Value: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
             {pt.icon ? <Icon name={pt.icon} top={ROWS[i]} delay={d} /> : null}
             <div style={{ ...at(ROWS[i] + 2, left), width: 940 - left, opacity: a, transform: `translateX(${(1 - a) * 24}px)`, ...font(76), letterSpacing: "-0.01em" }}>{pt.title}</div>
             {pt.sub ? (
-              <div style={{ ...at(ROWS[i] + 2 + (pt.title.length > 18 ? 172 : 90), left + 2), opacity: b, ...italic(42) }}>{pt.sub}</div>
+              <div style={{ ...at(ROWS[i] + 2 + (pt.title.length > 21 ? 172 : 90), left + 2), opacity: b, ...italic(42) }}>{pt.sub}</div>
             ) : null}
             {i < v.points.length - 1 ? <Hair top={ROWS[i] + 180} delay={d + 8} /> : null}
           </React.Fragment>
@@ -285,17 +304,19 @@ const Price: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent 
   const p = brief.price;
   const now = digits(p.now);
   const was = digits(p.was);
-  const roll = prog(frame, 16, 38, ease); // fast start, slow landing: the 3→2 carry takes ~2 frames
+  const t = useT();
+  // count_up: false → the final price from the first frame (a paused frame can never show another number)
+  const roll = p.count_up ? prog(frame, 16, 38, ease) : 1; // fast start, slow landing: the 3→2 carry takes ~2 frames
   const value = Number.isFinite(was) && Number.isFinite(now) ? was + (now - was) * roll : now;
-  const settle = spring({ frame: frame - 50, fps, config: { damping: 9, stiffness: 220, mass: 0.6 } });
-  const stamp = spring({ frame: frame - 56, fps, config: { damping: 12, stiffness: 200 } });
-  const strike = prog(frame, 42, 10);
-  const sweep = interpolate(frame, [75, 97], [-0.3, 1.3], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const settle = p.count_up ? spring({ frame: frame - 50, fps, config: { damping: 9, stiffness: 220, mass: 0.6 } }) : 1;
+  const stamp = spring({ frame: frame - t(56, 14), fps, config: { damping: 12, stiffness: 200 } });
+  const strike = prog(frame, t(42, 6), 10);
+  const sweep = interpolate(frame, [t(75, 30), t(97, 52)], [-0.3, 1.3], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const until = new Date(`${p.valid_until}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   const currency = p.now.replace(/[\d,.\s]+$/, "").trim();
   return (
     <AbsoluteFill>
-      {[16, 22, 28, 34, 40, 46].map((f) => <Sfx key={f} name="tick" at={f} volume={0.14} />)}
+      {p.count_up ? [16, 22, 28, 34, 40, 46].map((f) => <Sfx key={f} name="tick" at={f} volume={0.14} />) : null}
       <Sfx name="thud" at={58} volume={0.4} />
       <Eyebrow text={p.eyebrow} delay={4} />
       <Rise top={310} delay={6} style={font(112)}>{p.service}</Rise>
@@ -309,7 +330,7 @@ const Price: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent 
         </Fade>
       ) : null}
       {currency ? <div style={{ ...at(680), ...font(52, 900), letterSpacing: "0.06em", opacity: prog(frame, 12, 10) }}>{currency}</div> : null}
-      <div style={{ ...at(735), transform: `translateY(${(1 - settle) * -10}px)`, opacity: prog(frame, 12, 8) }}>
+      <div style={{ ...at(735), transform: `translateY(${(1 - settle) * -10}px)`, opacity: prog(frame, t(12, 0), 8) }}>
         <Odometer value={value} target={p.now.replace(currency, "").trim()} size={268} />
         <div style={{ position: "absolute", inset: 0, mixBlendMode: "screen", pointerEvents: "none",
           background: `linear-gradient(100deg, transparent ${sweep * 100 - 12}%, rgba(255,255,255,0.55) ${sweep * 100}%, transparent ${sweep * 100 + 12}%)` }} />
@@ -320,9 +341,9 @@ const Price: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent 
           {p.save.toUpperCase()}
         </div>
       ) : null}
-      <Hair top={1200} delay={70} />
-      <Fade top={1236} delay={70} style={font(40, 700)}>{p.valid_label} {until}</Fade>
-      {p.extra ? <Fade top={1306} delay={76} style={font(32, 400, P.soft)}>{p.extra}</Fade> : null}
+      <Hair top={1200} delay={t(70, 20)} />
+      <Fade top={1236} delay={t(70, 20)} style={font(40, 700)}>{p.valid_label} {until}</Fade>
+      {p.extra ? <Fade top={1306} delay={t(76, 26)} style={font(32, 400, P.soft)}>{p.extra}</Fade> : null}
     </AbsoluteFill>
   );
 };
@@ -436,208 +457,3 @@ const End: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent })
 };
 
 
-// =====================================================================================================================
-// Hook-first layout (R3). Same look, new order, from the R2 retention curve (Nov 2026):
-//   hook + before/after on frame 1 → value (pair stays, small) → static price (pair stays) → CTA over the clinic photo.
-// Pages slide in 6 frames with their text already in place (no empty frames); inside a page something new lands
-// about every second. Frame 0 is the cover, so the hook page has no entrance. The 4:5 feed version is the same
-// 1920-high layout moved up by FEED_SHIFT (everything sits between y=220 and y=1540).
-// =====================================================================================================================
-const H = scenes.promoHookFirst;
-const HP = H.push;
-const FEED_SHIFT = 190;
-const BIG = { w: 800, h: 429 }; // 850×456 photos, same aspect
-const SMALL = { w: 418, h: 224 };
-const PAIR_BOTTOM = 284 + SMALL.h; // 508
-
-const HookFirst: React.FC<{ brief: PromoBrief; accent: string } & QcProps> = ({ brief, accent, showSafeZones }) => {
-  const { fps, height } = useVideoConfig();
-  const len = { hook: sec(H.hook, fps), value: sec(H.value, fps), price: sec(H.price, fps) };
-  const t = { value: len.hook, price: len.hook + len.value, end: len.hook + len.value + len.price };
-  const feed = height < video.height;
-  return (
-    <Shell brief={brief} endSeconds={0} end={<></>} chrome="none" backdrop={false} showSafeZones={showSafeZones && !feed}>
-      <AbsoluteFill style={{ background: P.paper }} />
-      <AbsoluteFill style={{ height: video.height, bottom: "auto", transform: `translateY(${feed ? -FEED_SHIFT : 0}px)` }}>
-        <Sequence durationInFrames={len.hook + HP}>
-          <Slide first len={len.hook}><HfHook brief={brief} accent={accent} /></Slide>
-        </Sequence>
-        <Sequence from={t.value} durationInFrames={len.value + HP}>
-          <Slide len={len.value}><HfValue brief={brief} /></Slide>
-        </Sequence>
-        <Sequence from={t.price} durationInFrames={len.price + HP}>
-          <Slide len={len.price}><HfPrice brief={brief} accent={accent} /></Slide>
-        </Sequence>
-        {/* the pair rides in with the value page, stays still while the price page slides under it, leaves with the price page */}
-        <Sequence from={t.value} durationInFrames={len.value + len.price + HP}>
-          <Slide clear len={len.value + len.price}><HfPair brief={brief} accent={accent} /></Slide>
-        </Sequence>
-        <Sequence from={t.end}>
-          <Slide len={1e6}><HfEnd brief={brief} accent={accent} /></Slide>
-        </Sequence>
-      </AbsoluteFill>
-    </Shell>
-  );
-};
-
-/** Quick slide: in from the right over HP frames (not the first page), drifts left under the next one. `clear` = overlay layer, no paper. */
-const Slide: React.FC<{ first?: boolean; clear?: boolean; len: number; children: React.ReactNode }> = ({ first, clear, len, children }) => {
-  const frame = useCurrentFrame();
-  const x = first ? 0 : interpolate(frame, [0, HP], [1080, 0], { extrapolateRight: "clamp", easing: ease });
-  const out = interpolate(frame, [len, len + HP], [0, -320], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: ease });
-  const dim = interpolate(frame, [len, len + HP], [0, 0.12], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  return (
-    <AbsoluteFill style={{ background: clear ? undefined : P.paper, transform: `translateX(${x + out}px)`, boxShadow: first || clear ? undefined : "-30px 0 60px rgba(51,60,57,0.10)", overflow: "hidden" }}>
-      {children}
-      {clear ? null : <AbsoluteFill style={{ background: "#333C39", opacity: dim, pointerEvents: "none" }} />}
-    </AbsoluteFill>
-  );
-};
-
-/** Whole photo in a box of its own aspect: contain, never zoomed, filtered or retouched. The label sits above it, not on it. */
-const HfPhoto: React.FC<{ src: string; text: string; top: number; left?: number; size: { w: number; h: number }; mark?: string }> = ({ src, text, top, left = L, size, mark }) => (
-  <>
-    <div style={{ ...at(top - 36, left), ...font(size.w > 500 ? 24 : 21, mark ? 700 : 500, mark ?? P.soft), letterSpacing: "0.14em", textTransform: "uppercase" }}>{text}</div>
-    <div style={{ ...at(top, left), width: size.w, height: size.h, borderRadius: 6, overflow: "hidden", background: P.photoBg }}>
-      <Img src={staticFile(src)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
-    </div>
-  </>
-);
-
-// ---- 1. hook: the question + before and after, complete on frame 0 (this frame is the cover) -------------------------------
-const HfHook: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
-  const p = brief.proof;
-  const size = 76;
-  const top1 = 584;
-  const top2 = top1 + BIG.h + 44;
-  return (
-    <AbsoluteFill>
-      <Eyebrow text={brief.kicker} />
-      <Logo />
-      {brief.hook.lines.map((l, i) => (
-        <div key={i} style={{ ...at(336 + i * 90), ...font(size), whiteSpace: "nowrap" }}>
-          <AccentLine line={l} accent={brief.hook.accent} size={size} />
-        </div>
-      ))}
-      <HfPhoto src={p.before} text={p.labels.before} top={top1} size={BIG} />
-      <HfPhoto src={p.after} text={p.labels.after} top={top2} size={BIG} mark={accent} />
-      <div style={{ ...at(top2 + BIG.h + 14), ...font(24, 400, P.soft), lineHeight: 1.3 }}>{p.note}</div>
-    </AbsoluteFill>
-  );
-};
-
-// ---- 2 + 3. the pair, small, on screen through value and price ---------------------------------------------------------
-const HfPair: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
-  const p = brief.proof;
-  return (
-    <AbsoluteFill>
-      <HfPhoto src={p.before} text={p.labels.before} top={284} size={SMALL} />
-      <HfPhoto src={p.after} text={p.labels.after} top={284} left={L + W - SMALL.w} size={SMALL} mark={accent} />
-      <div style={{ ...at(PAIR_BOTTOM + 12), ...font(21, 400, P.soft) }}>{p.note}</div>
-    </AbsoluteFill>
-  );
-};
-
-const eyebrowAt = (top: number): React.CSSProperties => ({ ...at(top), ...font(27, 500), letterSpacing: "0.2em", textTransform: "uppercase" });
-
-// ---- 2. value: first row is there when the page lands, the others follow ------------------------------------------------
-const HF_ROWS = [676, 906, 1136];
-const HfValue: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
-  const frame = useCurrentFrame();
-  const v = brief.value;
-  return (
-    <AbsoluteFill>
-      <div style={eyebrowAt(596)}>{v.eyebrow}</div>
-      {v.points.map((pt, i) => {
-        const d = i * 14;
-        const a = i === 0 ? 1 : prog(frame, d, 9);
-        const left = pt.icon ? 210 : L;
-        return (
-          <React.Fragment key={i}>
-            {pt.icon ? <Icon name={pt.icon} top={HF_ROWS[i]} delay={i === 0 ? -20 : d - 4} /> : null}
-            <div style={{ ...at(HF_ROWS[i] + (pt.sub ? 0 : 16), left), width: 940 - left, opacity: a, transform: `translateX(${(1 - a) * 24}px)`, ...font(72), letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{pt.title}</div>
-            {pt.sub ? <div style={{ ...at(HF_ROWS[i] + 84, left + 2), opacity: a, ...italic(46), whiteSpace: "nowrap" }}>{pt.sub}</div> : null}
-            {i < v.points.length - 1 ? <div style={{ ...at(HF_ROWS[i] + 182), height: 3, width: W, background: P.line }} /> : null}
-          </React.Fragment>
-        );
-      })}
-    </AbsoluteFill>
-  );
-};
-
-// ---- 3. price: the digits never change (no count-up); only the save tag pops in ------------------------------------------
-const HfPrice: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const p = brief.price;
-  const stamp = spring({ frame: frame - 14, fps, config: { damping: 12, stiffness: 200 } });
-  const strike = prog(frame, 6, 8);
-  const until = new Date(`${p.valid_until}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-  const currency = p.now.replace(/[\d,.\s]+$/, "").trim();
-  return (
-    <AbsoluteFill>
-      <div style={eyebrowAt(596)}>{p.eyebrow}</div>
-      <div style={{ ...at(640), ...font(88) }}>{p.service}</div>
-      {p.was ? (
-        <div style={{ ...at(762), ...font(42, 400, P.soft) }}>
-          {p.was_label}{" "}
-          <span style={{ position: "relative", display: "inline-block" }}>
-            {p.was}
-            <span style={{ position: "absolute", left: -4, top: "52%", height: 5, width: `calc(${strike * 100}% + 8px)`, background: accent }} />
-          </span>
-        </div>
-      ) : null}
-      <div style={{ ...at(838), display: "flex", alignItems: "baseline", gap: 22 }}>
-        {currency ? <span style={{ ...font(52, 900), letterSpacing: "0.06em" }}>{currency}</span> : null}
-        <span style={{ ...font(222), letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>{p.now.replace(currency, "").trim()}</span>
-      </div>
-      <div style={{ ...at(1110), display: "flex", alignItems: "center", gap: 26 }}>
-        {p.save ? (
-          <div style={{ background: accent, ...font(48, 900, P.paper), letterSpacing: "0.04em", padding: "14px 28px", borderRadius: 6,
-            transform: `scale(${1.3 - 0.3 * stamp})`, opacity: Math.min(1, stamp * 2), transformOrigin: "left center" }}>
-            {p.save.toUpperCase()}
-          </div>
-        ) : null}
-        <div style={font(42, 700)}>{p.valid_label} {until}</div>
-      </div>
-      {p.extra ? <div style={{ ...at(1228), ...italic(46), opacity: prog(frame, 28, 10) }}>{p.extra}</div> : null}
-    </AbsoluteFill>
-  );
-};
-
-// ---- 4. CTA: clinic photo sits under the text (in the band the app covers anyway), not in a scene of its own -----------
-const HfEnd: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const words = brief.cta.split(" ");
-  const cut = Math.ceil(words.length / 2) - (words.length > 4 ? 1 : 0);
-  const lines = words.length > 3 ? [words.slice(0, cut).join(" "), words.slice(cut).join(" ")] : [brief.cta];
-  const pin = spring({ frame: frame - 22, fps, config: { damping: 9, stiffness: 200 } });
-  const address = brief.address === "short" ? clinic.addressShort : clinic.address;
-  return (
-    <AbsoluteFill>
-      {brief.visit ? (
-        <div style={{ ...at(1090, 0), width: 1080, height: 830, overflow: "hidden" }}>
-          <Img src={staticFile(brief.visit.photo)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${1 + 0.04 * Math.min(1, frame / 80)})` }} />
-          <div style={{ position: "absolute", left: 0, right: 0, top: -2, height: 240, background: `linear-gradient(180deg, ${P.paper} 0%, ${P.paper}dd 30%, ${P.paper}00 100%)` }} />
-        </div>
-      ) : null}
-      <Eyebrow text={brief.end.eyebrow} />
-      <Logo />
-      {lines.map((l, i) => (
-        <div key={i} style={{ ...at(350 + i * 104), ...font(98), whiteSpace: "nowrap" }}>{l}</div>
-      ))}
-      <Fade top={350 + lines.length * 104 + 50} delay={8} dur={9} style={{ ...font(120), letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{clinic.phone.replace("-", " ")}</Fade>
-      <Hair top={350 + lines.length * 104 + 200} width={560} delay={12} dur={10} color={accent} thick={8} />
-      <div style={{ ...at(350 + lines.length * 104 + 250), display: "flex", alignItems: "center", gap: 18, opacity: prog(frame, 16, 9) }}>
-        <div style={font(72)}>{clinic.name}</div>
-        <svg viewBox="0 0 24 32" style={{ width: 36, height: 48, transform: `translateY(${(1 - pin) * -50}px)`, opacity: Math.min(1, pin * 3) }}>
-          <path d="M12 31s10-11 10-19A10 10 0 0 0 2 12c0 8 10 19 10 19z" fill={P.bronze} />
-          <circle cx="12" cy="12" r="4" fill={P.paper} />
-        </svg>
-      </div>
-      <Fade top={350 + lines.length * 104 + 340} delay={18} dur={9} style={font(32, 400, P.soft)}>{address}</Fade>
-      {brief.end.disclaimer ? <Fade top={350 + lines.length * 104 + 396} delay={20} dur={9} style={font(24, 400, P.soft)}>{brief.end.disclaimer}</Fade> : null}
-    </AbsoluteFill>
-  );
-};

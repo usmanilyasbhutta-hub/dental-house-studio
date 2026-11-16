@@ -408,12 +408,11 @@ export const PROMO_ICONS = ["dentist", "shield", "polish", "tooth", "calendar"] 
 export const promoBrief = base.extend({
   type: z.literal("promo"),
   /**
-   * carousel = the original page-by-page reel (hook → proof → included → price → clinic → end).
-   * hook-first = R3 (from the R2 retention curve, Nov 2026): before + after with the hook on frame 1, value before price
-   * with the pair still on screen, static price, clinic photo behind the CTA; quick slides, no empty frames.
+   * standard = R2 timing. quick = R3 (R2 Reel insights, Nov 2026: 59 % gone by 3 s, after photo only at 4.5 s): the hook
+   * holds 1.4 s, before + after are both in by ~2.4 s, and each page's text lands as the page slides in (no near-empty frames).
    */
-  layout: z.enum(["carousel", "hook-first"]).default("carousel"),
-  /** "9:16" reel (default) or "4:5" feed post (1080×1350, hook-first layout only). */
+  pace: z.enum(["standard", "quick"]).default("standard"),
+  /** "9:16" reel (default) or "4:5" feed post (1080×1350, same pages moved up). */
   format: z.enum(["9:16", "4:5"]).default("9:16"),
   season: z.enum(["none", "wedding"]).default("none"),
   /** Small spaced label above the hook, e.g. "Brides · Grooms · Families". */
@@ -459,6 +458,8 @@ export const promoBrief = base.extend({
     save: line(12).optional(),
     valid_until: isoDate,
     valid_label: line(16).default("Valid until"),
+    /** Odometer from `was` to `now`. false = the final price is shown from the first frame (no in-between numbers). */
+    count_up: z.boolean().default(true),
     /** One small line under the validity, e.g. "Scaling + polish included". */
     extra: line(40).optional(),
   }),

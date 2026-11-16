@@ -1,6 +1,6 @@
 # Project map (generated: `python3 scripts/project_map.py`; do not edit by hand)
 
-168 source files, about 238,871 tokens if read in full. **Read this map first and open only the files a task needs;**
+157 source files, about 206,535 tokens if read in full. **Read this map first and open only the files a task needs;**
 for big files, search (`grep -n`) and read the relevant lines instead of the whole file.
 
 ## Where to look
@@ -19,7 +19,7 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 
 ### (root)
 - `.gitignore` ~102tok: —
-- `CLAUDE.md` ~2645tok: Dental House Studio: instructions for Claude
+- `CLAUDE.md` ~2658tok: Dental House Studio: instructions for Claude
 - `README.md` ~900tok: Dental House Studio
 - `package.json` ~518tok: —
 - `remotion.config.ts` ~45tok: —
@@ -57,6 +57,8 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - `briefs/2026-11-bleeding-gums-talking-head.yaml` ~915tok: TEST RUN: talking-head from a compressed Instagram copy (the only copy available).
 - `briefs/2026-11-caries-11-21-map.yaml` ~708tok: Anatomy map of a real case: carious upper central incisors (11, 21), photographed after cavity preparation.
 - `briefs/2026-11-composite-11-21-procedure.yaml` ~312tok: 3D illustration (three.js): composite restoration of carious 11/21, mesial. Generic products only (owner, Nov 2026).
+- `briefs/2026-11-wedding-whitening-r3-feed.yaml` ~578tok: 4:5 feed (1080×1350) twin of 2026-11-wedding-whitening-r3.yaml: same content, keep the two in step.
+- `briefs/2026-11-wedding-whitening-r3.yaml` ~687tok: R3 of the wedding-season whitening Reel: the original (briefs/2026-11-wedding-whitening.yaml, R2) kept as it is, with
 - `briefs/2026-11-wedding-whitening.yaml` ~605tok: Wedding-season teeth whitening: Instagram Reel ad. Storyboard v3 approved by the owner 2026-11-11 ("Ok for story boar…
 
 ### briefs/examples
@@ -95,11 +97,10 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - `docs/style-profile.md` ~2013tok: Dental House: editing style profile (v1)
 - `docs/style-recipes.md` ~1171tok: Style recipes (our own)
 - `docs/talking-head.md` ~401tok: Talking-head videos
-- `docs/taste.md` ~3607tok: Dental House: taste ledger
-- `docs/taste.md` ~3607tok: Dental House: taste ledger
-- `docs/taste.md` ~3607tok: Dental House: taste ledger
+- `docs/taste.md` ~3806tok: Dental House: taste ledger
 
 ### docs/decisions
+- `docs/decisions/2026-11-wedding-whitening-r3.md` ~530tok: Decision sheet: 2026-11-wedding-whitening-r3 (original reel, quick pace, 15.6 s)
 - `docs/decisions/2026-11-wedding-whitening.md` ~527tok: Decision sheet: 2026-11-wedding-whitening (Reel ad, 19.5 s)
 
 ### docs/storyboards
@@ -143,24 +144,16 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 ### src
 - `src/Root.tsx` ~864tok: Video" is what scripts/render.ts uses; the other three are previews in Studio. · exports: Root · used by 1
 - `src/Video.tsx` ~580tok: One entry composition; the brief's `type` picks the template. · exports: VideoProps, Video · used by 1
-- `src/Video.tsx` ~580tok: One entry composition; the brief's `type` picks the template. · exports: VideoProps, Video · used by 1
-- `src/Video.tsx` ~580tok: One entry composition; the brief's `type` picks the template. · exports: VideoProps, Video · used by 1
 - `src/brand.ts` ~415tok: Facts printed on end cards. Source: business card. Never invent others. · exports: colors, fonts, clinic, video · used by 33
-- `src/brand.ts` ~415tok: Facts printed on end cards. Source: business card. Never invent others. · exports: colors, fonts, clinic, video · used by 33
-- `src/brand.ts` ~415tok: Facts printed on end cards. Source: business card. Never invent others. · exports: colors, fonts, clinic, video · used by 33
-- `src/demo-briefs.ts` ~743tok: .yaml; tests keep them in sync). · exports: demoOffer, demoEducation, demoCase · used by 4
+- `src/demo-briefs.ts` ~743tok: .yaml; tests keep them in sync). · exports: demoOffer, demoEducation, demoCase · used by 2
 - `src/index.ts` ~23tok: —
-- `src/theme.ts` ~834tok: Visual families (decided Nov 2026, see docs/style-profile.md §6): · exports: ThemeName, Theme, themes, ThemeContext, useTheme, SeasonName, Season, seasons… · used by 33
+- `src/theme.ts` ~834tok: Visual families (decided Nov 2026, see docs/style-profile.md §6): · exports: ThemeName, Theme, themes, ThemeContext, useTheme, SeasonName, Season, seasons… · used by 31
 
 ### src/brief
-- `src/brief/compliance.ts` ~4283tok ⚠: Words a medical practice should not use in advertising. Extend in CLAUDE.md first. · exports: Finding, BANNED, ALLOWED_PHRASES, ComplianceEnv, checkCompliance · used by 5
-- `src/brief/load.ts` ~327tok: In YAML flow maps `{ small: Soft brush, light pressure }` the comma silently splits the text: · exports: findCommaSplits, loadBrief · used by 5
-- `src/brief/schema.ts` ~5867tok ⚠: A file inside public/ (Remotion can only load assets from there). · exports: offerBrief, educationBrief, caseBrief, word, Word, talkingHeadBrief, PROCEDURE_STAGES, procedureBrief… · used by 33
-- `src/brief/schema.ts` ~5867tok ⚠: A file inside public/ (Remotion can only load assets from there). · exports: offerBrief, educationBrief, caseBrief, word, Word, talkingHeadBrief, PROCEDURE_STAGES, procedureBrief… · used by 33
-- `src/brief/schema.ts` ~5867tok ⚠: A file inside public/ (Remotion can only load assets from there). · exports: offerBrief, educationBrief, caseBrief, word, Word, talkingHeadBrief, PROCEDURE_STAGES, procedureBrief… · used by 33
-- `src/brief/timing.ts` ~1248tok: Scene lengths in seconds per template. Single source of truth for duration. · exports: scenes, sceneCount, durationSeconds, sec, MAP_XFADE, mapSceneSeconds, MAP_ROUTE, RECEIPT… · used by 17
-- `src/brief/timing.ts` ~1248tok: Scene lengths in seconds per template. Single source of truth for duration. · exports: scenes, sceneCount, durationSeconds, sec, MAP_XFADE, mapSceneSeconds, MAP_ROUTE, RECEIPT… · used by 17
-- `src/brief/timing.ts` ~1248tok: Scene lengths in seconds per template. Single source of truth for duration. · exports: scenes, sceneCount, durationSeconds, sec, MAP_XFADE, mapSceneSeconds, MAP_ROUTE, RECEIPT… · used by 17
+- `src/brief/compliance.ts` ~4283tok ⚠: Words a medical practice should not use in advertising. Extend in CLAUDE.md first. · exports: Finding, BANNED, ALLOWED_PHRASES, ComplianceEnv, checkCompliance · used by 3
+- `src/brief/load.ts` ~327tok: In YAML flow maps `{ small: Soft brush, light pressure }` the comma silently splits the text: · exports: findCommaSplits, loadBrief · used by 3
+- `src/brief/schema.ts` ~5885tok ⚠: A file inside public/ (Remotion can only load assets from there). · exports: offerBrief, educationBrief, caseBrief, word, Word, talkingHeadBrief, PROCEDURE_STAGES, procedureBrief… · used by 25
+- `src/brief/timing.ts` ~1231tok: Scene lengths in seconds per template. Single source of truth for duration. · exports: scenes, sceneCount, durationSeconds, sec, MAP_XFADE, mapSceneSeconds, MAP_ROUTE, RECEIPT… · used by 15
 
 ### src/fx
 - `src/fx/DoodleIcon.tsx` ~512tok: A doodle as an icon on a light round badge (reads on dark and light themes). `p` 0→1 draws the lines, then colour lan… · exports: doodleFill, DoodleIcon · used by 1
@@ -174,39 +167,37 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - `src/fx/LottieClip.tsx` ~298tok: Plays a Lottie animation from public/lottie/<file>.json (synced to the video frame). · exports: LottieClip
 - `src/fx/Scenes.tsx` ~392tok: Plays scenes back to back. With a transition, neighbouring scenes overlap by · exports: SceneItem, Scenes, useEdgeFade · used by 5
 - `src/fx/blueprint-subjects.ts` ~1621tok: Blueprint drawings (frame coordinates, 1080×1920). Each stroke has a start/end as a FRACTION of the drawing time, · exports: Stroke, Dim, Label, Subject, implant, tooth, SUBJECTS · used by 1
-- `src/fx/context.ts` ~184tok: Transitions that render reliably headless (plain CSS; no WebGL). · exports: TRANSITIONS, TransitionName, FxSettings, defaultFx, FxContext, useFx · used by 10
-- `src/fx/doodles.ts` ~2004tok: Hand-drawn dental doodles for the `sketch` explainer (reference: "Hand-Drawn Explainer" reel). · exports: FillKey, Doodle, DOODLE_SET, DOODLES, DoodleName · used by 6
+- `src/fx/context.ts` ~184tok: Transitions that render reliably headless (plain CSS; no WebGL). · exports: TRANSITIONS, TransitionName, FxSettings, defaultFx, FxContext, useFx · used by 6
+- `src/fx/doodles.ts` ~2004tok: Hand-drawn dental doodles for the `sketch` explainer (reference: "Hand-Drawn Explainer" reel). · exports: FillKey, Doodle, DOODLE_SET, DOODLES, DoodleName · used by 4
 - `src/fx/effects.tsx` ~3902tok: Dental House effects library. Every effect is plain Remotion code (free, no licensed assets). · exports: ShineText, Highlighter, Typewriter, CountUp, Glow, LightSweep, Sparkles, LightLeak… · used by 14
 - `src/fx/footage.tsx` ~8873tok ⚠: Footage effects (creator-style looks, built in Remotion code; free). · exports: Subject, Orbit, CouchWall, VideoWall, UIWorld, FrameBreak, DigitalZoom, PhoneMockup… · used by 4
 - `src/fx/footage2.tsx` ~4200tok ⚠: Footage effects, set 2 (19–30): built for clinic use, in Remotion code (free), frame-driven. · exports: TextRing, Spotlight, WhipPan, ShapeReveal, FreezeIntro, NotificationStack, LocationPin, Countdown… · used by 2
 - `src/fx/footage3.tsx` ~5866tok ⚠: Footage effects, set 4 (39–49): the effects from the "20 video effects for Claude" reel that we didn't have yet. · exports: GridDive, MagnifyLens, Portal, InfiniteZoom, CubeSpin, LiquidGlass, TileTunnel, PhoneFan… · used by 1
-- `src/fx/looks.tsx` ~1796tok: Whole-video looks (our own code; style names from a "10 viral video styles" post): wrap any scene in <Look kind=…>. · exports: LOOKS, LookName, Look · used by 7
-- `src/fx/media.ts` ~2467tok: Drawing media for the `sketch` explainer: one drawing, six materials. Our own "style recipes · exports: MEDIA, MediumName, Medium, MEDIUM · used by 4
+- `src/fx/looks.tsx` ~1796tok: Whole-video looks (our own code; style names from a "10 viral video styles" post): wrap any scene in <Look kind=…>. · exports: LOOKS, LookName, Look · used by 3
+- `src/fx/media.ts` ~2467tok: Drawing media for the `sketch` explainer: one drawing, six materials. Our own "style recipes · exports: MEDIA, MediumName, Medium, MEDIUM · used by 2
 - `src/fx/reel3.tsx` ~3383tok: Effects set 3 (reference reel: /git-city, /teardown, /map-route, /headline). Rebuilt in our own code for clinic use. · exports: demoGrid, DataCity, IMPLANT_PARTS, Teardown, Newspaper, FX3_SEG · used by 1
 - `src/fx/transitions.tsx` ~693tok: Custom calm transition: incoming scene sharpens from a soft blur while fading in. · exports: transitionFor · used by 1
 
 ### src/templates
-- `src/templates/AnatomyMap.tsx` ~2751tok: Photo placement: contain-fit to the full frame (never cropped), or a uniform zoom centred on `focus` · exports: smoothPath, AnatomyMap · used by 3
-- `src/templates/Blueprint.tsx` ~2948tok: Blueprint drawing (reference: blueprint-style reel), driven by the frame number. · exports: Blueprint · used by 3
-- `src/templates/ClinicalCase.tsx` ~1644tok: Before/after case. Photos are shown UNWARPED and uncropped (object-fit: contain, · exports: ClinicalCase · used by 3
-- `src/templates/Diagram.tsx` ~5664tok ⚠: Content area below the title (inside the safe zone). · exports: Diagram · used by 3
-- `src/templates/Education.tsx` ~920tok: — · exports: Education · used by 3
-- `src/templates/MapRoute.tsx` ~4552tok ⚠: Timeline in frames, derived from the brief (single source of truth for camera, route and overlays). · exports: MapRoute · used by 3
-- `src/templates/Offer.tsx` ~1220tok: — · exports: Offer · used by 3
-- `src/templates/PhotoLayout.tsx` ~3126tok: Content box (inside the safe area): photos never leave it. · exports: PhotoSize, PhotoLayout, photoSizes · used by 5
-- `src/templates/Procedure.tsx` ~1847tok: 3D procedure explainer. Stage progress comes from the frame number, so every render is identical. · exports: HOOK_SECONDS, Procedure · used by 3
-- `src/templates/Promo.tsx` ~8793tok ⚠: Promo reel, carousel look: paper pages that push left like a thumb swipe; on each page things arrive in reading order. · exports: Promo · used by 3
-- `src/templates/Receipt.tsx` ~2347tok: Receipt (reference: "/receipt" reel). Prices only from the owner: compliance enforces prices_confirmed_on. · exports: Receipt · used by 3
-- `src/templates/Sketch.tsx` ~6313tok ⚠: Doodle fill colours by hue name, taken from each theme's harmonised map palette (slot order differs per theme). · exports: Sketch · used by 3
-- `src/templates/TalkingHead.tsx` ~2857tok: Stage: where the cut-out doctor sits (footage is 1152 px wide after prep). · exports: chapterTimes, cutTimes, calloutTimes, captionChunks, TalkingHead · used by 4
-- `src/templates/shared/Backdrop.tsx` ~570tok: Dark brand backdrop: gradient, oversized house-mark watermark, grain, vignette. · exports: Backdrop, KenBurns · used by 8
-- `src/templates/shared/EndCard.tsx` ~785tok: Light end card: logo mask-wipe, tagline, CTA pill with pulsing ring, phone/WhatsApp, handle, doctors, address. · exports: EndCard · used by 3
+- `src/templates/AnatomyMap.tsx` ~2751tok: Photo placement: contain-fit to the full frame (never cropped), or a uniform zoom centred on `focus` · exports: smoothPath, AnatomyMap · used by 1
+- `src/templates/Blueprint.tsx` ~2948tok: Blueprint drawing (reference: blueprint-style reel), driven by the frame number. · exports: Blueprint · used by 1
+- `src/templates/ClinicalCase.tsx` ~1644tok: Before/after case. Photos are shown UNWARPED and uncropped (object-fit: contain, · exports: ClinicalCase · used by 1
+- `src/templates/Diagram.tsx` ~5664tok ⚠: Content area below the title (inside the safe zone). · exports: Diagram · used by 1
+- `src/templates/Education.tsx` ~920tok: — · exports: Education · used by 1
+- `src/templates/MapRoute.tsx` ~4552tok ⚠: Timeline in frames, derived from the brief (single source of truth for camera, route and overlays). · exports: MapRoute · used by 1
+- `src/templates/Offer.tsx` ~1220tok: — · exports: Offer · used by 1
+- `src/templates/PhotoLayout.tsx` ~3126tok: Content box (inside the safe area): photos never leave it. · exports: PhotoSize, PhotoLayout, photoSizes · used by 3
+- `src/templates/Procedure.tsx` ~1847tok: 3D procedure explainer. Stage progress comes from the frame number, so every render is identical. · exports: HOOK_SECONDS, Procedure · used by 1
+- `src/templates/Promo.tsx` ~6060tok ⚠: 4:5 feed post: the 1920-high layout moved up so its content (y 222–1536) fits 1350 px. · exports: Promo · used by 1
+- `src/templates/Receipt.tsx` ~2347tok: Receipt (reference: "/receipt" reel). Prices only from the owner: compliance enforces prices_confirmed_on. · exports: Receipt · used by 1
+- `src/templates/Sketch.tsx` ~6313tok ⚠: Doodle fill colours by hue name, taken from each theme's harmonised map palette (slot order differs per theme). · exports: Sketch · used by 1
+- `src/templates/TalkingHead.tsx` ~2857tok: Stage: where the cut-out doctor sits (footage is 1152 px wide after prep). · exports: chapterTimes, cutTimes, calloutTimes, captionChunks, TalkingHead · used by 2
+- `src/templates/shared/Backdrop.tsx` ~570tok: Dark brand backdrop: gradient, oversized house-mark watermark, grain, vignette. · exports: Backdrop, KenBurns · used by 6
+- `src/templates/shared/EndCard.tsx` ~785tok: Light end card: logo mask-wipe, tagline, CTA pill with pulsing ring, phone/WhatsApp, handle, doctors, address. · exports: EndCard · used by 1
 - `src/templates/shared/Headline.tsx` ~447tok: Kinetic multi-line headline: masked slide-up per line, one serif accent word, bronze strike rule. · exports: KineticHeadline, renderAccent · used by 10
-- `src/templates/shared/Hud.tsx` ~752tok: Persistent HUD until the end card: progress bar, logo bug, label, crop marks, business-card bars. · exports: Hud, DemoWatermark, MinimalBug · used by 3
-- `src/templates/shared/SafeZones.tsx` ~197tok: Preview overlay: light red bands = platform UI, red outline = safe area. Never rendered in final videos. · exports: SafeZones · used by 3
-- `src/templates/shared/Shell.tsx` ~584tok: Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays. · exports: QcProps, Shell · used by 16
-- `src/templates/shared/Shell.tsx` ~584tok: Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays. · exports: QcProps, Shell · used by 16
-- `src/templates/shared/Shell.tsx` ~584tok: Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays. · exports: QcProps, Shell · used by 16
+- `src/templates/shared/Hud.tsx` ~752tok: Persistent HUD until the end card: progress bar, logo bug, label, crop marks, business-card bars. · exports: Hud, DemoWatermark, MinimalBug · used by 1
+- `src/templates/shared/SafeZones.tsx` ~197tok: Preview overlay: light red bands = platform UI, red outline = safe area. Never rendered in final videos. · exports: SafeZones · used by 1
+- `src/templates/shared/Shell.tsx` ~584tok: Common frame for every template: backdrop, HUD, end card, music, demo/safe-zone overlays. · exports: QcProps, Shell · used by 14
 - `src/templates/shared/Step.tsx` ~413tok: Numbered beat: outlined numeral, bronze rule, headline + serif subline. · exports: Step · used by 2
 - `src/templates/shared/fonts.ts` ~348tok: Blocks rendering until brand fonts are loaded (no fallback-font frames). · exports: loadBrandFonts · used by 1
 - `src/templates/shared/motion.ts` ~224tok: 0→1 over `dur` frames starting at `start`, eased. · exports: ease, easeInOut, prog, pop, sceneFade · used by 12
@@ -219,9 +210,7 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - `src/three/dental.tsx` ~1670tok: Procedural 3D dental models (three.js, built in code: no downloaded models, no licences). · exports: MAT, Tooth, PreparedTooth, Crown, Implant, Abutment, JawSection, DentalLights · used by 3
 
 ### tests
-- `tests/brief.test.ts` ~3517tok: —
-- `tests/brief.test.ts` ~3517tok: —
-- `tests/brief.test.ts` ~3517tok: —
+- `tests/brief.test.ts` ~3542tok: —
 - `tests/talking-head.test.ts` ~1029tok: —
 - `tests/toolkit.test.ts` ~1075tok: —
 

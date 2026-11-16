@@ -289,11 +289,13 @@ describe("promo brief", () => {
     b.proof.consent = undefined;
     expect(errors(b).map((f) => f.rule)).toContain("consent");
   });
-  it("hook-first layout (R3) is 11 s, valid, and keeps the same photos and price as R2", () => {
+  it("R3 (quick pace, static price) is valid, shorter than R2, and keeps R2's photos and price", () => {
     const r3 = loadBrief("briefs/2026-11-wedding-whitening-r3.yaml") as Extract<Brief, { type: "promo" }>;
     const r2 = promo() as Extract<Brief, { type: "promo" }>;
-    expect(r3.layout).toBe("hook-first");
-    expect(durationSeconds(r3)).toBeCloseTo(11, 5);
+    expect(errors(r3)).toEqual([]);
+    expect(r3.pace).toBe("quick");
+    expect(r3.price.count_up).toBe(false);
+    expect(durationSeconds(r3)).toBeLessThan(durationSeconds(r2) - 3);
     expect(r3.price.now).toBe(r2.price.now);
     expect(r3.proof.before).toBe(r2.proof.before);
     const feed = loadBrief("briefs/2026-11-wedding-whitening-r3-feed.yaml") as Extract<Brief, { type: "promo" }>;

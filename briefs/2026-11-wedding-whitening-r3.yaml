@@ -1,27 +1,34 @@
-# R3 of the wedding-season whitening Reel: briefs/2026-11-wedding-whitening.yaml (R2) re-ordered from its Reel insights
-# (owner's R3 brief, 16 Nov 2026). Same look, photos, prices, music. What changed and why: docs/decisions/2026-11-wedding-whitening-r3.md
-# Photos in public/cases/whitening-2026-11/ (gitignored). 4:5 feed twin: 2026-11-wedding-whitening-r3-feed.yaml (keep in step).
+# R3 of the wedding-season whitening Reel: the original (briefs/2026-11-wedding-whitening.yaml, R2) kept as it is, with
+# the owner's R3 fixes from the Reel insights (16 Nov 2026): quick pace (hook 1.4 s, before + after in by ~2.4 s, text
+# already in place as each page slides in), static price, R3 wording. Photos appear once, on their own page (owner:
+# "rather than pasting these pre and post op pictures in every point"). Why: docs/decisions/2026-11-wedding-whitening-r3.md
+# 4:5 feed twin: 2026-11-wedding-whitening-r3-feed.yaml (keep the two in step).
 id: 2026-11-wedding-whitening-r3
 type: promo
-layout: hook-first
-title: Wedding-season teeth whitening offer, R3 hook-first (Reel ad)
+pace: quick
+title: Wedding-season teeth whitening offer, R3 quick pace (Reel ad)
 demo: false
 theme: brand
 season: wedding
 tone: contemporary
-language: roman-ur
+language: as-spoken
 fx: { transition: none, sfx: none }      # owner: "No operation theater sound."
-music: audio/wedding-celebration.mp3    # original, synthesised in this project
+music: audio/wedding-celebration.mp3    # original, synthesised by scripts/make_celebration_music.py
 label: Wedding season
-kicker: "Teeth whitening · Sialkot"
+kicker: "Brides · Grooms · Families"
 hook:
-  lines: ["Shaadi ki photos mein", "— perfect smile?"]
+  lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
   accent: perfect
+hero:
+  src: cases/whitening-2026-11/fabric.jpg
+  source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
 proof:
+  eyebrow: "Dental House whitening · actual case"
+  title: Real care.
   case_id: whitening-2026-11
   before: cases/whitening-2026-11/before.jpg
   after: cases/whitening-2026-11/after.jpg
-  labels: { before: "Before · actual case", after: After }
+  labels: { before: Before, after: After }
   note: "Lighting differs. Results vary. Subject to assessment."
   consent:
     method: verbal
@@ -31,6 +38,7 @@ proof:
     identity_hidden: true         # retractor close-up, no face or name
 value:
   eyebrow: Why Dental House?
+  title: What's included.
   points:
     - { title: Dentist-led, sub: "Pehle assessment, phir treatment", icon: dentist }
     - { title: Masooron ki hifazat, icon: shield }
@@ -43,12 +51,16 @@ price:
   save: Save 30%
   valid_until: 2026-12-15
   valid_label: Valid till
+  count_up: false                 # R2 rolled through 25,000; a paused frame could show a wrong price
   extra: Scaling + polishing shamil
 prices_confirmed_on: 2026-11-16   # repeated in the owner's R3 brief
 visit:
-  photo: cases/whitening-2026-11/clinic.jpg    # sits behind the CTA in this layout
+  photo: cases/whitening-2026-11/clinic.jpg
+  eyebrow: "Your visit · Sialkot"
+  title: See you here.
 end:
   eyebrow: Wedding season
   disclaimer: "Subject to assessment. Results vary."
+whatsapp_keyword: WHITE
 cta: WhatsApp par slot book karein
 address: short
