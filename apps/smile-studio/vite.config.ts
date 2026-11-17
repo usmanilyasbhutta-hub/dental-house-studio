@@ -42,7 +42,7 @@ export default defineConfig({
           readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
         const files = walk(out)
           .map((f) => relative(out, f).split(sep).join("/"))
-          .filter((f) => f !== "sw.js" && !f.endsWith(".map"))
+          .filter((f) => f !== "sw.js" && f !== "_headers" && !f.endsWith(".map"))
           .sort();
         const version = createHash("sha256").update(files.join("\n")).digest("hex").slice(0, 10);
         const src = readFileSync(swPath, "utf8")
