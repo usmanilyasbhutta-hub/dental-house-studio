@@ -1,7 +1,7 @@
 // Canvas drawing: photo, mockup teeth (clipped to the inner lip contour), guides and handles.
-import { DARKEN, designAngle, designHandles, pupilAngle, smoothClosed, toImage, toothBoxes, toothOutline } from "./geometry";
+import { bandLayout, bounds, designAngle, designHandles, pupilAngle, smoothClosed, watermarkTiles } from "./geometry";
 import type { Design, Guides, Pt } from "./model";
-import { mix, rgba, shadeById } from "./shades";
+import { blitLayer, drawOutlines, ensureLayer, newEntry } from "./teethLayer";
 
 export const C = {
   slate: "#333C39",
@@ -29,79 +29,19 @@ function pathFrom(ctx: CanvasRenderingContext2D, pts: Pt[]) {
   ctx.closePath();
 }
 
-/** Draws the teeth mockup in image coordinates onto ctx (caller sets the transform). */
-export function drawTeeth(ctx: CanvasRenderingContext2D, s: Scene, mode: "mockup" | "outline") {
-  const d = s.design;
-  const angle = designAngle(d, s.guides);
-  const shade = shadeById(d.shade);
-  const boxes = toothBoxes(d).sort((a, b) => b.kind - a.kind); // back teeth first
-  ctx.save();
-  if (mode === "mockup") {
-    pathFrom(ctx, smoothClosed(s.lips));
-    ctx.clip();
-    ctx.globalAlpha = d.opacity;
-  }
-  for (const box of boxes) {
-    const local = toothOutline(box, d.shape);
-    const pts = local.map((p) => toImage(p, d, angle));
-    if (mode === "outline") {
-      pathFrom(ctx, pts);
-      ctx.lineWidth = Math.max(1.5, d.width / 260);
-      ctx.strokeStyle = C.white;
-      ctx.setLineDash([]);
-      ctx.stroke();
-      continue;
-    }
-    const dk = DARKEN[box.kind];
-    const top = toImage({ x: (box.x0 + box.x1) / 2, y: box.top }, d, angle);
-    const bot = toImage({ x: (box.x0 + box.x1) / 2, y: box.bottom }, d, angle);
-    const left = toImage({ x: box.x0, y: (box.top + box.bottom) / 2 }, d, angle);
-    const right = toImage({ x: box.x1, y: (box.top + box.bottom) / 2 }, d, angle);
+const screenLayer = newEntry();
 
-    // body: cervical → body → slightly translucent incisal
-    const g = ctx.createLinearGradient(top.x, top.y, bot.x, bot.y);
-    g.addColorStop(0, rgba(shade.cervical, 1, dk + 0.04));
-    g.addColorStop(0.3, rgba(shade.body, 1, dk));
-    g.addColorStop(0.8, rgba(shade.body, 1, dk));
-    // incisal translucency: a touch of blue-grey at the edge
-    g.addColorStop(1, rgba(mix(shade.body, "#AEB8C2", 0.45), 1, dk));
-    pathFrom(ctx, pts);
-    ctx.fillStyle = g;
-    ctx.fill();
-
-    ctx.save();
-    pathFrom(ctx, pts);
-    ctx.clip();
-    // convex curvature: darker towards the mesial/distal edges
-    const hg = ctx.createLinearGradient(left.x, left.y, right.x, right.y);
-    hg.addColorStop(0, "rgba(60,50,40,0.22)");
-    hg.addColorStop(0.22, "rgba(60,50,40,0)");
-    hg.addColorStop(0.78, "rgba(60,50,40,0)");
-    hg.addColorStop(1, "rgba(60,50,40,0.22)");
-    ctx.fillStyle = hg;
-    ctx.fill();
-    // soft vertical highlight (line angle reflection)
-    const w = Math.hypot(right.x - left.x, right.y - left.y);
-    const hl = toImage({ x: box.x0 + (box.x1 - box.x0) * (box.side === 1 ? 0.38 : 0.62), y: box.top + (box.bottom - box.top) * 0.45 }, d, angle);
-    ctx.translate(hl.x, hl.y);
-    ctx.rotate(angle);
-    const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.32);
-    rg.addColorStop(0, "rgba(255,255,255,0.32)");
-    rg.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.scale(0.55, 1.6);
-    ctx.fillStyle = rg;
-    ctx.beginPath();
-    ctx.arc(0, 0, w * 0.32, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // interproximal line
-    pathFrom(ctx, pts);
-    ctx.lineWidth = Math.max(1, d.width / 420);
-    ctx.strokeStyle = "rgba(110,90,70,0.45)";
-    ctx.stroke();
-  }
-  ctx.restore();
+/**
+ * Draws the teeth mockup in image coordinates onto ctx (caller sets the transform).
+ * The mockup is one cached offscreen layer (rebuilt only when design, lips, shade, photo or zoom level change),
+ * composited once at the design opacity. "fast" skips texture, grain and softening (use while dragging).
+ */
+export function drawTeeth(ctx: CanvasRenderingContext2D, s: Scene, mode: "mockup" | "outline", quality: "fast" | "full" = "full") {
+  if (mode === "outline") return drawOutlines(ctx, s);
+  const m = ctx.getTransform();
+  const scale = Math.hypot(m.a, m.b);
+  const e = ensureLayer(screenLayer, s, quality, scale);
+  blitLayer(ctx, e, quality, s.design.opacity);
 }
 
 export interface Overlay {
@@ -211,15 +151,61 @@ export function hitHandle(s: Scene, step: Step, p: Pt, radius: number): string |
 
 export const WATERMARK = "SMILE SIMULATION · FOR DISCUSSION ONLY · NOT A TREATMENT RESULT";
 
+/** Faint rotated "SIMULATION" text repeated over a panel, kept off the teeth so it can't be cropped away. */
+function panelWatermark(ctx: CanvasRenderingContext2D, s: Scene, x: number) {
+  const fs = Math.round(Math.max(s.imgW, s.imgH) * 0.032);
+  const angle = -Math.PI / 7;
+  ctx.save();
+  ctx.font = `600 ${fs}px Oswald, sans-serif`;
+  const text = "SIMULATION";
+  const tw = ctx.measureText(text).width;
+  // keep clear of the lip contour (teeth), with a margin of one text height
+  const lb = s.lips.length >= 3 ? bounds(s.lips) : undefined;
+  const avoid = lb && { x0: lb.x0 - fs, y0: lb.y0 - fs, x1: lb.x1 + fs, y1: lb.y1 + fs };
+  const tiles = watermarkTiles(s.imgW, s.imgH, tw * 1.9, angle, { w: tw, h: fs }, avoid);
+  ctx.beginPath();
+  ctx.rect(x, 0, s.imgW, s.imgH);
+  ctx.clip();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = Math.max(1, fs * 0.04);
+  for (const t of tiles) {
+    ctx.setTransform(1, 0, 0, 1, x + t.x, t.y);
+    ctx.rotate(angle);
+    ctx.strokeStyle = "rgba(28,34,32,0.08)";
+    ctx.strokeText(text, 0, 0);
+    ctx.fillStyle = "rgba(247,248,246,0.12)";
+    ctx.fillText(text, 0, 0);
+  }
+  ctx.restore();
+}
+
+const exportLayer = newEntry();
+const BRAND = "DENTAL HOUSE · SIALKOT";
+
 /** Renders a finished image (photo + mockup + permanent simulation label) at photo resolution. */
 export function exportCanvas(s: Scene, layout: "after" | "side-by-side"): HTMLCanvasElement {
-  const pad = Math.round(s.imgW * 0.02);
-  const band = Math.round(Math.max(s.imgW, s.imgH) * 0.05);
   const cols = layout === "side-by-side" ? 2 : 1;
+  const pad = Math.round(s.imgW * 0.02);
+  const width = s.imgW * cols + pad * (cols - 1);
+  // label band: font sized from the output width; the brand goes on a second line when both don't fit
+  const fs0 = Math.max(12, Math.round(Math.min(width * 0.017, Math.max(s.imgW, s.imgH) * 0.015)));
+  const labelFont = (f: number) => `500 ${f}px "JetBrains Mono", monospace`;
+  const brandFont = (f: number) => `700 ${Math.round(f * 1.25)}px Oswald, sans-serif`;
+
   const cv = document.createElement("canvas");
-  cv.width = s.imgW * cols + pad * (cols - 1);
-  cv.height = s.imgH + band;
   const ctx = cv.getContext("2d")!;
+  ctx.font = labelFont(fs0);
+  const labelW = ctx.measureText(WATERMARK).width;
+  ctx.font = brandFont(fs0);
+  const brandW = ctx.measureText(BRAND).width;
+  const lay = bandLayout(width, pad, labelW, brandW, fs0 * 2);
+  const fs = Math.max(8, Math.floor(fs0 * lay.scale));
+  const lineH = fs * 2.2;
+  const band = Math.round(lay.lines === 1 ? Math.max(lineH * 1.3, fs * 3) : lineH * 2 + fs);
+
+  cv.width = width; // resets the context state
+  cv.height = s.imgH + band;
   ctx.fillStyle = C.slateDeep;
   ctx.fillRect(0, 0, cv.width, cv.height);
   // both panels: identical box, same scale, no crop or warp
@@ -231,27 +217,34 @@ export function exportCanvas(s: Scene, layout: "after" | "side-by-side"): HTMLCa
   }
   ctx.save();
   ctx.translate(x, 0);
-  drawTeeth(ctx, s, "mockup");
+  blitLayer(ctx, ensureLayer(exportLayer, s, "full", 1), "full", s.design.opacity);
   ctx.restore();
+  panelWatermark(ctx, s, x);
 
-  const fs = Math.round(band * 0.3);
   ctx.textBaseline = "middle";
-  ctx.font = `500 ${fs}px "JetBrains Mono", monospace`;
+  ctx.textAlign = "left";
+  ctx.font = labelFont(fs);
   ctx.fillStyle = C.bronzeLight;
-  ctx.fillText(WATERMARK, pad, s.imgH + band / 2);
-  ctx.textAlign = "right";
-  ctx.font = `700 ${Math.round(fs * 1.25)}px Oswald, sans-serif`;
+  const y1 = lay.lines === 1 ? s.imgH + band / 2 : s.imgH + fs * 0.5 + lineH / 2;
+  ctx.fillText(WATERMARK, pad, y1);
+  ctx.font = brandFont(fs);
   ctx.fillStyle = C.white;
-  ctx.fillText("DENTAL HOUSE · SIALKOT", cv.width - pad, s.imgH + band / 2);
+  if (lay.lines === 1) {
+    ctx.textAlign = "right";
+    ctx.fillText(BRAND, cv.width - pad, y1);
+  } else {
+    ctx.fillText(BRAND, pad, y1 + lineH);
+  }
   if (cols === 2) {
     ctx.textAlign = "left";
+    const tfs = Math.round(Math.max(s.imgW, s.imgH) * 0.015);
     const tag = (t: string, tx: number) => {
-      ctx.font = `600 ${fs}px Oswald, sans-serif`;
-      const w = ctx.measureText(t).width + fs;
+      ctx.font = `600 ${tfs}px Oswald, sans-serif`;
+      const w = ctx.measureText(t).width + tfs;
       ctx.fillStyle = "rgba(28,34,32,0.75)";
-      ctx.fillRect(tx + pad, pad, w, fs * 1.8);
+      ctx.fillRect(tx + pad, pad, w, tfs * 1.8);
       ctx.fillStyle = C.white;
-      ctx.fillText(t, tx + pad + fs / 2, pad + fs * 0.9);
+      ctx.fillText(t, tx + pad + tfs / 2, pad + tfs * 0.9);
     };
     tag("NOW", 0);
     tag("SIMULATION", x);
