@@ -13,6 +13,7 @@ upload and no analytics. Cases live in the browser's on-device storage (IndexedD
 | Step | What you do | Why |
 |---|---|---|
 | 01 Face | Drag dots onto both pupils and the facial midline | Sets the horizontal reference (inter-pupillary line) and the midline |
+| 01 Level (close-up) | For a mouth-only photo (e.g. from the gallery), pick **Smile close-up**: dots go on the mouth corners and the dental midline | Fallback level when the eyes are not in the photo (pupils are better when available) |
 | 02 Lips | Drag 12 dots onto the inner edge of the lips | The new teeth are drawn only inside this line, so the lips stay in front |
 | 03 Teeth | Pick shape, proportion and count; drag to move / widen / lengthen | Builds the 6–10 tooth design along a smile arc, levelled to the pupils |
 | 04 Shade | Pick a shade tab, set blend | Screen preview only; the real shade is taken in the chair |

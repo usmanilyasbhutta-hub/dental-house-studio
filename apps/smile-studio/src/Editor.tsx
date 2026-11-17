@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { centralLength, centralWidth, deg, fitArcToLowerLip, measure, pupilAngle, PROPORTIONS, rad, SHAPE_LABELS, TOOTH_NAMES } from "./geometry";
 import { useHistory } from "./history";
-import { defaultLips, type CaseData, type Design, type Proportion, type ToothCount, type ToothShape } from "./model";
+import { defaultLips, initialLayout, type CaseData, type Design, type Proportion, type ToothCount, type ToothShape } from "./model";
 import { exportCanvas, type Scene, type Step } from "./render";
 import { SHADES } from "./shades";
 import { Stage, type Calib } from "./Stage";
@@ -141,6 +141,21 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const ppm = m.pxPerMm;
   const fmt = (px: number) => (ppm ? `${(px / ppm).toFixed(1)} mm` : `${Math.round(px)} px`);
   const pupilTilt = deg(pupilAngle(c.guides));
+  const closeup = c.framing === "closeup";
+  const ref = closeup ? "mouth corners" : "pupils";
+  const tiltWarn = closeup ? "Check the photo is level; mouth corners may be uneven." : "Check head tilt; pupils may be uneven.";
+  const stepLabel = (s: (typeof STEPS)[number]) => (s.id === "guides" && closeup ? "Level" : s.label);
+  const stepGoal = (s: (typeof STEPS)[number]) =>
+    s.id === "guides" && closeup ? "Set the level: both mouth corners and the dental midline." : s.goal;
+  /**
+   * Switching photo type: before the lips/teeth steps have been opened, everything is re-laid out for that type;
+   * afterwards only the reference dots move, so finished work is kept.
+   */
+  const setFraming = (framing: "face" | "closeup") =>
+    setC((x) => {
+      const fresh = initialLayout(x.imgW, x.imgH, framing);
+      return reached === 0 ? { ...x, framing, ...fresh } : { ...x, framing, guides: fresh.guides };
+    });
 
   const goTo = (s: Step) => {
     const i = STEPS.findIndex((x) => x.id === s);
@@ -251,7 +266,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           Calibrate for mm
         </button>
       )}
-      {Math.abs(pupilTilt) > 3 && <span className="amber">Check head tilt; pupils may be uneven.</span>}
+      {Math.abs(pupilTilt) > 3 && <span className="amber">{tiltWarn}</span>}
     </div>
   );
 
@@ -276,7 +291,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
               {save === "saved" ? "Saved ✓" : save === "saving" ? "Saving…" : "Not saved"}
             </span>
           </span>
-          <h1 className="h">{STEPS[idx].label}</h1>
+          <h1 className="h">{stepLabel(STEPS[idx])}</h1>
         </div>
         <button className={showOriginal ? "ghost pressed" : "ghost"} aria-pressed={showOriginal} onClick={() => setShowOriginal((v) => !v)}>
           Before
@@ -319,18 +334,35 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
 
       <div className="side">
         {readout}
-        <section className="panel" ref={panelRef} aria-label={`${STEPS[idx].label} controls`}>
-          <p className="goal">{calibrating ? "Calibrate: measure one existing central so the read-out shows mm." : STEPS[idx].goal}</p>
+        <section className="panel" ref={panelRef} aria-label={`${stepLabel(STEPS[idx])} controls`}>
+          <p className="goal">{calibrating ? "Calibrate: measure one existing central so the read-out shows mm." : stepGoal(STEPS[idx])}</p>
 
           {step === "guides" && (
             <>
-              <Hint>
-                Drag the two <b>bronze dots</b> onto the pupils and the <b>grey dot</b> onto the middle of the face (philtrum /
-                nose tip). Pinch to zoom.
-              </Hint>
+              <Chips
+                label="Photo type"
+                value={closeup ? "closeup" : "face"}
+                options={[
+                  { value: "face", label: "Full face" },
+                  { value: "closeup", label: "Smile close-up" },
+                ]}
+                onChange={setFraming}
+              />
+              {closeup ? (
+                <Hint>
+                  No eyes in the photo, so the <b>bronze dots</b> go on the two <b>mouth corners</b> and the <b>grey dot</b> on
+                  the <b>dental midline</b> (between the upper centrals, or the philtrum if visible). Pupils are the better level
+                  when you have a full-face photo. Pinch to zoom.
+                </Hint>
+              ) : (
+                <Hint>
+                  Drag the two <b>bronze dots</b> onto the pupils and the <b>grey dot</b> onto the middle of the face (philtrum /
+                  nose tip). Pinch to zoom.
+                </Hint>
+              )}
               <p className={Math.abs(pupilTilt) > 3 ? "mono small amber" : "mono small"}>
-                Pupil line {pupilTilt.toFixed(1)}° from level
-                {Math.abs(pupilTilt) > 3 && " · Check head tilt; pupils may be uneven."}
+                {closeup ? "Mouth-corner line" : "Pupil line"} {pupilTilt.toFixed(1)}° from level
+                {Math.abs(pupilTilt) > 3 && ` · ${tiltWarn}`}
               </p>
             </>
           )}
@@ -400,7 +432,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                   Center on midline
                 </button>
                 <button className="btn secondary" onClick={() => setDesign({ tilt: 0 })}>
-                  Level to pupils
+                  Level to {ref}
                 </button>
                 <button
                   className="btn secondary"
@@ -418,7 +450,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                 <Slider label="Central width / length" value={c.design.wl} min={0.65} max={0.95} step={0.01} format={wlLabel} onChange={(wl) => setDesign({ wl })} />
                 <Slider label="Smile arc" value={c.design.arc} min={0} max={1} step={0.01} format={(v) => (v < 0.15 ? "flat" : v < 0.55 ? "gentle" : "curved")} onChange={(arc) => setDesign({ arc })} />
                 <Slider label="Lateral step" value={c.design.lateralStep} min={0} max={0.25} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(lateralStep) => setDesign({ lateralStep })} />
-                <Slider label="Tilt vs pupil line" value={c.design.tilt} min={-6} max={6} step={0.1} format={(v) => `${v.toFixed(1)}°`} onChange={(tilt) => setDesign({ tilt: Math.round(tilt * 10) / 10 })} />
+                <Slider label={closeup ? "Tilt vs mouth corners" : "Tilt vs pupil line"} value={c.design.tilt} min={-6} max={6} step={0.1} format={(v) => `${v.toFixed(1)}°`} onChange={(tilt) => setDesign({ tilt: Math.round(tilt * 10) / 10 })} />
                 <table className="widths mono">
                   <caption className="sr-only">Tooth widths</caption>
                   <tbody>
@@ -526,7 +558,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
             return (
               <button key={s.id} className={s.id === step ? "step on" : "step"} onClick={() => goTo(s.id)} aria-current={s.id === step ? "step" : undefined}>
                 <span className="mono">{done ? "✓" : s.n}</span>
-                {s.label}
+                {stepLabel(s)}
                 {done && <span className="sr-only"> (done)</span>}
               </button>
             );
@@ -547,7 +579,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           }}
         >
           <ol className="coach">
-            <li><b>Face</b> · dots on the pupils and the midline</li>
+            <li><b>Face</b> · dots on the pupils and the midline (or the mouth corners for a smile close-up)</li>
             <li><b>Lips</b> · dots on the inside edge of the lips</li>
             <li><b>Teeth</b> · shape, proportion and size</li>
             <li><b>Shade</b> · a colour to discuss</li>

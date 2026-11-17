@@ -261,3 +261,13 @@ describe("round 2: rendering helpers", () => {
     expect(SHADES.map((s) => s.id)).toEqual(["BL1", "BL2", "BL3", "BL4", "B1", "A1", "B2", "A2", "A3", "B3", "A3.5"]);
   });
 });
+
+describe("smile close-up framing", () => {
+  it("puts the level dots on the mouth corners and a larger design in the frame", () => {
+    const face = initialLayout(1000, 800);
+    const close = initialLayout(1000, 800, "closeup");
+    expect(close.guides.pupilR.y).toBe(close.guides.pupilL.y); // level by default
+    expect(close.design.width).toBeGreaterThan(face.design.width);
+    expect(measure(close.design, close.guides).midlineDev).toBeCloseTo(0, 9);
+  });
+});

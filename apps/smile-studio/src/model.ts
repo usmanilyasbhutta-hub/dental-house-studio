@@ -6,8 +6,14 @@ export type ToothShape = "oval" | "square" | "triangular" | "soft";
 export type Proportion = "golden" | "red" | "natural";
 export type ToothCount = 6 | 8 | 10;
 
+/** Full face (eyes visible) or a smile close-up (mouth only, e.g. from the gallery). */
+export type Framing = "face" | "closeup";
+
 export interface Guides {
-  /** Patient's right pupil (appears on the LEFT of a frontal photo) and left pupil. */
+  /**
+   * Horizontal reference. Full face: the pupils (patient's right pupil appears on the LEFT of a frontal photo).
+   * Close-up: the two mouth corners (commissures), a fallback when the eyes are not in the photo.
+   */
   pupilR: Pt;
   pupilL: Pt;
   /** A point on the facial midline (usually the philtrum / nose tip). The line runs perpendicular to the pupil line. */
@@ -47,6 +53,8 @@ export interface CaseData {
   imgW: number;
   imgH: number;
   guides: Guides;
+  /** Photo type; missing on older cases means "face". */
+  framing?: Framing;
   /** Inner lip contour (closed), clockwise. Teeth are drawn only inside it. */
   lips: Pt[];
   design: Design;
@@ -73,7 +81,19 @@ export const DEFAULT_DESIGN: Omit<Design, "center" | "width"> = {
 };
 
 /** Reasonable starting guides/design/lips for a frontal smile photo of size w×h. */
-export function initialLayout(w: number, h: number) {
+export function initialLayout(w: number, h: number, framing: Framing = "face") {
+  if (framing === "closeup") {
+    // the mouth fills the photo: reference dots on the mouth corners, midline between the centrals
+    const guides: Guides = {
+      pupilR: { x: w * 0.2, y: h * 0.5 },
+      pupilL: { x: w * 0.8, y: h * 0.5 },
+      midline: { x: w * 0.5, y: h * 0.42 },
+    };
+    const width = w * 0.48;
+    const center = { x: w * 0.5, y: h * 0.58 };
+    const design: Design = { ...DEFAULT_DESIGN, center, width };
+    return { guides, design, lips: defaultLips(center, width) };
+  }
   const guides: Guides = {
     pupilR: { x: w * 0.36, y: h * 0.36 },
     pupilL: { x: w * 0.64, y: h * 0.36 },
