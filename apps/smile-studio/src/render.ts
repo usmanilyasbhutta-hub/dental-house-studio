@@ -1,5 +1,5 @@
 // Canvas drawing: photo, mockup teeth (clipped to the inner lip contour), guides and handles.
-import { bandLayout, bounds, designAngle, designHandles, pupilAngle, smoothClosed, watermarkTiles } from "./geometry";
+import { bandLayout, bounds, mockupAlpha, designAngle, designHandles, pupilAngle, smoothClosed, watermarkTiles } from "./geometry";
 import type { Design, Guides, Pt } from "./model";
 import { blitLayer, drawOutlines, ensureLayer, newEntry } from "./teethLayer";
 
@@ -41,7 +41,7 @@ export function drawTeeth(ctx: CanvasRenderingContext2D, s: Scene, mode: "mockup
   const m = ctx.getTransform();
   const scale = Math.hypot(m.a, m.b);
   const e = ensureLayer(screenLayer, s, quality, scale);
-  blitLayer(ctx, e, quality, s.design.opacity);
+  blitLayer(ctx, e, quality, mockupAlpha(s.design.opacity, s.design.backdrop));
 }
 
 export interface Overlay {
@@ -188,8 +188,10 @@ export function exportCanvas(s: Scene, layout: "after" | "side-by-side"): HTMLCa
   const cols = layout === "side-by-side" ? 2 : 1;
   const pad = Math.round(s.imgW * 0.02);
   const width = s.imgW * cols + pad * (cols - 1);
-  // label band: font sized from the output width; the brand goes on a second line when both don't fit
-  const fs0 = Math.max(12, Math.round(Math.min(width * 0.017, Math.max(s.imgW, s.imgH) * 0.015)));
+  // label band: fixed height (5 % of the photo's long side); text sized from it, then shrunk to the output
+  // width, or wrapped to two lines inside the band when one line would get too small
+  const band = Math.round(Math.max(s.imgW, s.imgH) * 0.05);
+  const fs0 = Math.max(10, Math.round(band * 0.3));
   const labelFont = (f: number) => `500 ${f}px "JetBrains Mono", monospace`;
   const brandFont = (f: number) => `700 ${Math.round(f * 1.25)}px Oswald, sans-serif`;
 
@@ -200,9 +202,8 @@ export function exportCanvas(s: Scene, layout: "after" | "side-by-side"): HTMLCa
   ctx.font = brandFont(fs0);
   const brandW = ctx.measureText(BRAND).width;
   const lay = bandLayout(width, pad, labelW, brandW, fs0 * 2);
-  const fs = Math.max(8, Math.floor(fs0 * lay.scale));
-  const lineH = fs * 2.2;
-  const band = Math.round(lay.lines === 1 ? Math.max(lineH * 1.3, fs * 3) : lineH * 2 + fs);
+  // two lines must also fit the band height (label + 1.25× brand, with leading)
+  const fs = Math.max(8, Math.floor(fs0 * Math.min(lay.scale, lay.lines === 2 ? band / (fs0 * 2.9) : 1)));
 
   cv.width = width; // resets the context state
   cv.height = s.imgH + band;
@@ -217,7 +218,7 @@ export function exportCanvas(s: Scene, layout: "after" | "side-by-side"): HTMLCa
   }
   ctx.save();
   ctx.translate(x, 0);
-  blitLayer(ctx, ensureLayer(exportLayer, s, "full", 1), "full", s.design.opacity);
+  blitLayer(ctx, ensureLayer(exportLayer, s, "full", 1), "full", mockupAlpha(s.design.opacity, s.design.backdrop));
   ctx.restore();
   panelWatermark(ctx, s, x);
 
@@ -225,7 +226,8 @@ export function exportCanvas(s: Scene, layout: "after" | "side-by-side"): HTMLCa
   ctx.textAlign = "left";
   ctx.font = labelFont(fs);
   ctx.fillStyle = C.bronzeLight;
-  const y1 = lay.lines === 1 ? s.imgH + band / 2 : s.imgH + fs * 0.5 + lineH / 2;
+  const lineH = fs * 1.35;
+  const y1 = lay.lines === 1 ? s.imgH + band / 2 : s.imgH + band / 2 - lineH * 0.55;
   ctx.fillText(WATERMARK, pad, y1);
   ctx.font = brandFont(fs);
   ctx.fillStyle = C.white;
@@ -233,7 +235,7 @@ export function exportCanvas(s: Scene, layout: "after" | "side-by-side"): HTMLCa
     ctx.textAlign = "right";
     ctx.fillText(BRAND, cv.width - pad, y1);
   } else {
-    ctx.fillText(BRAND, pad, y1 + lineH);
+    ctx.fillText(BRAND, pad, y1 + lineH * 1.12);
   }
   if (cols === 2) {
     ctx.textAlign = "left";

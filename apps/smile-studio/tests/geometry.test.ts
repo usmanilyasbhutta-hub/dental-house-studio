@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   bandLayout,
+  mockupAlpha,
   bounds,
   centralLength,
   centralWidth,
@@ -216,11 +217,23 @@ describe("round 2: rendering helpers", () => {
 
   it("export band: label and brand share a line only when they fit with a gap", () => {
     // QA case: portrait 1200 wide, label ~860 px, brand ~330 px → two lines
-    expect(bandLayout(1200, 24, 860, 330, 40)).toEqual({ lines: 2, scale: 1 });
+    // portrait 1200 px: shrinks to one line instead of overlapping
+    const p = bandLayout(1200, 24, 907, 330, 48);
+    expect(p.lines).toBe(1);
+    expect((907 + 48 + 330) * p.scale).toBeLessThanOrEqual(1200 - 48 + 1e-9);
+    expect(bandLayout(1200, 24, 860, 330, 40, 1)).toEqual({ lines: 2, scale: 1 });
     expect(bandLayout(2424, 24, 860, 330, 40)).toEqual({ lines: 1, scale: 1 });
     const tiny = bandLayout(600, 12, 860, 330, 40);
     expect(tiny.lines).toBe(2);
     expect(860 * tiny.scale).toBeLessThanOrEqual(600 - 24 + 1e-9);
+  });
+
+  it("mockup alpha covers fully at the default opacity with a backdrop, as is without", () => {
+    expect(mockupAlpha(0.92, true)).toBe(1);
+    expect(mockupAlpha(0.92, undefined)).toBe(1);
+    expect(mockupAlpha(0.46, true)).toBeCloseTo(0.5, 9);
+    expect(mockupAlpha(0.92, false)).toBe(0.92);
+    expect(mockupAlpha(1.5, false)).toBe(1);
   });
 
   it("gray-world gain is neutral for grey photos and follows the cast at 18 %", () => {

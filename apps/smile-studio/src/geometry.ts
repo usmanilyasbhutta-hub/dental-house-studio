@@ -272,15 +272,27 @@ export function watermarkTiles(
 }
 
 /**
- * Layout of the export label band: one line (label left, brand right) when both fit with a gap, otherwise
- * two lines. Widths are measured at font size `fs` (label) and `fs * brandScale` (brand); returns the scale to
- * apply to both so the widest line fits.
+ * Layout of the export label band: one line (label left, brand right) when both fit with a gap, shrinking
+ * both down to `minOne` if needed; otherwise two lines (label, then brand). Widths are measured at the base
+ * font size; returns the scale to apply to both so nothing overlaps or runs off the edge.
  */
-export function bandLayout(width: number, pad: number, labelW: number, brandW: number, gap: number) {
+export function bandLayout(width: number, pad: number, labelW: number, brandW: number, gap: number, minOne = 0.8) {
   const avail = width - 2 * pad;
-  if (labelW + gap + brandW <= avail) return { lines: 1 as const, scale: 1 };
+  const one = avail / (labelW + gap + brandW);
+  if (one >= 1) return { lines: 1 as const, scale: 1 };
+  if (one >= minOne) return { lines: 1 as const, scale: one };
   const widest = Math.max(labelW, brandW);
   return { lines: 2 as const, scale: Math.min(1, avail / widest) };
+}
+
+/**
+ * Alpha used to composite the mockup layer. With the mouth/gum backdrop on, the default opacity (0.92) already
+ * covers fully so the old teeth never ghost through the dark mouth; lower values still fade it out. Without a
+ * backdrop the opacity is used as is (see-through over the patient's own teeth).
+ */
+export function mockupAlpha(opacity: number, backdrop: boolean | undefined) {
+  const o = Math.max(0, Math.min(1, opacity));
+  return backdrop === false ? o : Math.min(1, o / 0.92);
 }
 
 /** Map a local design point to image coordinates. */

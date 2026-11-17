@@ -326,11 +326,11 @@ function makePaints(ctx: Ctx, shadeId: string, gain: RGB): Paints {
     ]),
     lobe: [1, 0.55, 0.2].map((t) =>
       radial([
-        [0, css(T(body), 0.5 * t)],
+        [0, css(T(body), 0.28 * t)],
         [1, css(T(body), 0)],
       ]),
     ),
-    rim: css(T("#FBFAF6"), 0.5),
+    rim: css(T("#FBFAF6"), 0.4),
     // gum: vertical in central-length units, y = -1.4 L (under the lip) … -0.25 L (papilla tips)
     gum: linY(-1.4, -0.25, [
       [0, css(T("#7A3236"))],
@@ -368,14 +368,21 @@ function makePaints(ctx: Ctx, shadeId: string, gain: RGB): Paints {
 const FAR = 16384;
 let DX = 0;
 
-/** Soft line: call `begin()` to set DX, build the path (with setLocal / setImage), then `blurStroke`. */
-function blurStroke(ctx: Ctx, width: number, style: string | CanvasGradient, color: string, blur: number) {
+/** Current local-frame scale (layer px per local unit), tracked by setLocal / setImage. */
+let SC = 1;
+
+/**
+ * Soft (Gaussian-blurred) stroke of a path built while DX = FAR (call `softBegin()` before building it).
+ * Only the stroke's shadow, offset back by FAR, lands on the layer; it takes the stroke's alpha (the style's alpha
+ * or gradient) tinted with `rgb`. `width` is in the current transform's units, `blur` is relative to it.
+ */
+function softStroke(ctx: Ctx, width: number, style: string | CanvasGradient, blur: number, rgb: string) {
   ctx.strokeStyle = style;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
   ctx.lineWidth = width;
-  ctx.shadowColor = color;
-  ctx.shadowBlur = blur;
+  ctx.shadowColor = rgb;
+  ctx.shadowBlur = Math.max(0.5, width * SC * blur);
   ctx.shadowOffsetX = FAR;
   ctx.shadowOffsetY = 0;
   ctx.stroke();
@@ -383,6 +390,9 @@ function blurStroke(ctx: Ctx, width: number, style: string | CanvasGradient, col
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
   DX = 0;
+}
+function softBegin() {
+  DX = FAR;
 }
 
 /**
@@ -507,11 +517,13 @@ const M = new Float64Array(6);
 
 function setLocal(ctx: Ctx, sx = 1, sy = 1, tx = 0, ty = 0) {
   // M · translate(tx,ty) · scale(sx,sy)
+  SC = Math.hypot(M[0], M[1]) * Math.max(sx, sy);
   ctx.setTransform(M[0] * sx, M[1] * sx, M[2] * sy, M[3] * sy, M[0] * tx + M[2] * ty + M[4] - DX, M[1] * tx + M[3] * ty + M[5]);
 }
 
 /** Image coordinates → layer pixels. */
 function setImage(ctx: Ctx, e: LayerEntry, k: number) {
+  SC = k;
   ctx.setTransform(k, 0, 0, k, -e.ox * k - DX, -e.oy * k);
 }
 
@@ -600,10 +612,11 @@ function build(e: LayerEntry, s: LayerScene, q: Quality, k: number) {
 
   // ---- upper-lip shadow: soft stroke along the contour, fading out below the gum line ----
   if (e.lipN) {
-    ctx.setTransform(k, 0, 0, k, -e.ox * k, -e.oy * k);
+    softBegin();
+    setImage(ctx, e, k);
     lipPath(ctx, e);
     setLocal(ctx, L, L);
-    softStroke(ctx, 0.75, p.lipShadow, 0.45);
+    softStroke(ctx, 0.75, p.lipShadow, 0.45, "rgb(46,20,18)");
   }
 
   // ---- texture (perikymata, horizontal) + grain matching the photo (full only) ----
@@ -621,7 +634,7 @@ function build(e: LayerEntry, s: LayerScene, q: Quality, k: number) {
     ctx.fillRect(-W * 2, -L * 3, W * 4, L * 6);
     // grain: one texel per photo pixel
     ctx.setTransform(k, 0, 0, k, -e.ox * k, -e.oy * k);
-    ctx.globalAlpha = 0.05;
+    ctx.globalAlpha = 0.035;
     ctx.fillStyle = e.pattern.grain;
     ctx.fillRect(e.ox, e.oy, e.lw, e.lh);
     ctx.globalAlpha = 1;
@@ -644,10 +657,11 @@ function drawTooth(ctx: Ctx, e: LayerEntry, b: ToothBox, shape: ToothShape) {
   const back = b.kind >= 3 ? 0.6 : b.kind === 2 ? 0.85 : 1;
 
   // contact / embrasure shadow cast on the tooth behind and the papilla (sides only: no line on the incisal edge)
+  softBegin();
   setLocal(ctx, w, h, b.x0, b.top);
   unitOpenPath(ctx, u, u.sides.start, u.sides.end);
   setLocal(ctx);
-  softStroke(ctx, Math.max(0.6, w * 0.13), p.contact, 1);
+  softStroke(ctx, Math.max(0.6, w * 0.13), p.contact, 1, "rgb(60,38,30)");
 
   ctx.save();
   setLocal(ctx, w, h, b.x0, b.top);
@@ -667,7 +681,7 @@ function drawTooth(ctx: Ctx, e: LayerEntry, b: ToothBox, shape: ToothShape) {
   if (b.kind <= 1) {
     ctx.fillStyle = p.lobe[0];
     for (let i = 0; i < 3; i++) {
-      setLocal(ctx, w * 0.1, h * 0.16, b.x0 + w * (0.27 + 0.23 * i), b.top + h * 0.8);
+      setLocal(ctx, w * 0.085, h * 0.2, b.x0 + w * (0.28 + 0.22 * i), b.top + h * 0.76);
       ctx.fillRect(-1, -1, 2, 2);
     }
   }
@@ -690,8 +704,8 @@ function drawTooth(ctx: Ctx, e: LayerEntry, b: ToothBox, shape: ToothShape) {
     unitOpenPath(ctx, u, u.sides.end, u.sides.start + u.n);
     setLocal(ctx);
     ctx.strokeStyle = p.rim;
-    ctx.lineWidth = Math.max(0.5, h * 0.035);
-    ctx.globalAlpha = b.kind === 2 ? 0.5 : 0.8;
+    ctx.lineWidth = Math.max(0.5, h * 0.03);
+    ctx.globalAlpha = b.kind === 2 ? 0.25 : 0.4;
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
