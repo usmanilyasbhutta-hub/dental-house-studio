@@ -559,7 +559,11 @@ async function offlineSuite(browser, face) {
         await page.getByRole("heading", { name: /Design the smile/ }).waitFor();
         await page.waitForTimeout(500);
       }
-      const cached = await page.evaluate(async () => (await (await caches.open("smile-studio-v1")).keys()).map((r) => new URL(r.url).pathname));
+      const cached = await page.evaluate(async () => {
+        const out = [];
+        for (const k of await caches.keys()) for (const r of await (await caches.open(k)).keys()) out.push(new URL(r.url).pathname);
+        return out;
+      });
       stopServer(srv);
       await sleep(500);
       await ctx.setOffline(true);

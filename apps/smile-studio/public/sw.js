@@ -1,7 +1,9 @@
 // Offline support. Same-origin GETs only; nothing is ever sent anywhere.
 // Network-first (so updates arrive), cache fallback offline. Only good responses are cached.
-const CACHE = "smile-studio-v2";
-const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png"];
+// The version below is replaced at build time with a hash of the file list, so each release gets a fresh cache.
+const CACHE = "smile-studio-__VERSION__";
+// The build fills in the hashed asset list below (see vite.config.ts "precache-list").
+const SHELL = ["./", /*__PRECACHE__*/];
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
@@ -30,7 +32,10 @@ self.addEventListener("fetch", (e) => {
         return res;
       })
       .catch(() =>
-        caches.match(req).then((r) => r || (req.mode === "navigate" ? caches.match("./") : Response.error())),
+        // ignoreVary: precached entries were fetched with different request headers than the page's own requests
+        caches
+          .match(req, { ignoreVary: true })
+          .then((r) => r || (req.mode === "navigate" ? caches.match("./", { ignoreVary: true }) : Response.error())),
       ),
   );
 });
