@@ -29,12 +29,12 @@ export const WL_RANGE = { upper: { min: 0.6, max: 0.95 }, lower: { min: 0.5, max
  */
 export function uiHandles(d: Design, angle: number) {
   const L = centralLength(d);
-  const f = d.arch === "lower" ? -1 : 1;
+  // the lower arch is mirrored inside geometry's toImage/toLocal, so the same local positions work for both arches
   return {
-    move: toImage({ x: 0, y: f * L * 0.6 }, d, angle),
-    widthR: toImage({ x: d.width / 2, y: -f * L * 0.3 }, d, angle),
-    widthL: toImage({ x: -d.width / 2, y: -f * L * 0.3 }, d, angle),
-    length: toImage({ x: 0, y: -f * L }, d, angle),
+    move: toImage({ x: 0, y: L * 0.6 }, d, angle),
+    widthR: toImage({ x: d.width / 2, y: -L * 0.3 }, d, angle),
+    widthL: toImage({ x: -d.width / 2, y: -L * 0.3 }, d, angle),
+    length: toImage({ x: 0, y: -L }, d, angle),
   };
 }
 
@@ -119,7 +119,7 @@ function moveHandle(s: Scene, calib: Calib | undefined, id: string, p: Pt, grab:
   if (id === "widthL" || id === "widthR") return { design: { ...d, width: Math.max(s.imgW * 0.04, Math.abs(l.x) * 2) } };
   if (id === "length") {
     const lower = d.arch === "lower";
-    const L = Math.max(4, lower ? l.y : -l.y);
+    const L = Math.max(4, -l.y); // toLocal already mirrors the lower arch
     const r = WL_RANGE[lower ? "lower" : "upper"];
     const wl = Math.min(r.max, Math.max(r.min, centralWidth(d) / L));
     return { design: { ...d, wl: Math.round(wl * 100) / 100 } };

@@ -535,18 +535,33 @@ async function deviceSuite(browser, devName, face) {
     const v = await view(page, "compare", c);
     const h = await handles(page, c);
     const tp = v.scr(h.toothMid);
+    // photo-real mode only changes the patient's real teeth, so compare a grid over the whole design area
+    const grid = (
+      await page.evaluate(async (c) => {
+        const g = await import("/src/geometry.ts");
+        const a = g.designAngle(c.design, c.guides);
+        const L = g.centralLength(c.design);
+        const out = [];
+        for (let i = -3; i <= 3; i++) for (let j = 1; j <= 4; j++) out.push(g.toImage({ x: (c.design.width / 2) * (i / 3.2), y: -L * (j / 5) }, c.design, a));
+        return out;
+      }, c)
+    ).map((q) => v.scr(q));
+    const gridPixels = async () => Promise.all(grid.map((q) => pixel(page, q)));
     const y = v.r.y + v.r.height * 0.15;
     // divider far left -> simulation everywhere right of it
     await T.drag({ x: v.r.x + v.r.width * 0.5, y }, { x: v.r.x + 4, y });
     await page.waitForTimeout(150);
     const sim = await pixel(page, tp);
+    const simGrid = await gridPixels();
     await shot("05-compare-left");
     // divider far right -> photo
     await T.drag({ x: v.r.x + 4, y }, { x: v.r.x + v.r.width - 4, y });
     await page.waitForTimeout(150);
     const now = await pixel(page, tp);
+    const nowGrid = await gridPixels();
     await shot("05-compare-right");
-    assert(cdiff(sim, now) > 25, `tooth pixel same either side of divider: sim ${sim} now ${now}`);
+    const maxDiff = Math.max(...simGrid.map((p, i) => cdiff(p, nowGrid[i])));
+    assert(maxDiff > 25, `teeth area identical either side of divider (max colour difference ${maxDiff})`);
     await T.drag({ x: v.r.x + v.r.width - 4, y }, { x: v.r.x + 4, y });
     await page.waitForTimeout(150);
     const before = page.getByRole("button", { name: "Before", exact: true });
