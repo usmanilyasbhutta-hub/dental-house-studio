@@ -101,5 +101,10 @@ kinetic type + serif accent word, numbered structure, Roman-Urdu word captions, 
 (captions in the bottom 20 %, cut-off watermarks, skin colour cast, mixed visual families). New reference videos go into `references/inbox/`
 (gitignored) and are measured with `python3 scripts/analyze_reference.py`.
 
+## Smile Studio app (apps/smile-studio)
+Phone app (PWA) for smile-design mockups in consultations: face lines → lip mask → tooth shapes/proportions → shade → compare/share.
+Self-contained (own package.json; `npm run check` inside it). Photos stay on the device; exports carry a permanent simulation label.
+Use the project skill `smile-studio` before changing it.
+
 ## Roadmap (see docs/roadmap.md)
 Urdu (Nastaliq) captions and voiceover captions · clinic b-roll from the Projects folder · CapCut draft export · Google Sheets content calendar · scheduled weekly drafts.
