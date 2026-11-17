@@ -2,6 +2,7 @@
 // rendered once into a canvas covering the lip contour and composited onto the photo at the design opacity.
 // The patient photo itself is never modified: it is only sampled (mean colour) for white balance.
 import {
+  archFlip,
   centralLength,
   centralWidth,
   designAngle,
@@ -12,7 +13,7 @@ import {
   type ToothBox,
 } from "./geometry";
 import type { Design, Pt, ToothShape } from "./model";
-import { css, grayWorldGain, mix, shadeById, tinted, type RGB } from "./shades";
+import { archShade, css, grayWorldGain, mix, tinted, type RGB } from "./shades";
 
 export type Quality = "fast" | "full";
 
@@ -35,12 +36,12 @@ interface Unit {
 }
 const SHAPE_ORDER: ToothShape[] = ["square", "oval", "triangular", "soft"];
 const unitCache: (Unit | undefined)[] = [];
-function unitOutline(shape: ToothShape, kind: number, side: -1 | 1): Unit {
-  const i = SHAPE_ORDER.indexOf(shape) * 10 + kind * 2 + (side === 1 ? 1 : 0);
+export function unitOutline(shape: ToothShape, kind: number, side: -1 | 1, arch: "upper" | "lower" = "upper"): Unit {
+  const i = (arch === "lower" ? 40 : 0) + SHAPE_ORDER.indexOf(shape) * 10 + kind * 2 + (side === 1 ? 1 : 0);
   let u = unitCache[i];
   if (!u) {
     const box = unitBox(kind, side);
-    const pts = toothOutline(box, shape);
+    const pts = toothOutline(box, shape, arch);
     const xy = new Float64Array(pts.length * 2);
     pts.forEach((p, j) => {
       xy[j * 2] = p.x;
@@ -207,6 +208,7 @@ function fillKey(s: LayerScene, k: number, q: Quality): number {
   K[i++] = PROP_IDX[d.proportion] ?? 0;
   K[i++] = SHAPE_ORDER.indexOf(d.shape);
   K[i++] = d.backdrop === false ? 0 : 1;
+  K[i++] = archFlip(d);
   K[i++] = k;
   K[i++] = q === "full" ? 1 : 0;
   K[i++] = s.guides.pupilR.x;
@@ -257,8 +259,8 @@ function lipPath(ctx: Ctx, e: LayerEntry) {
 
 const GREY_BLUE = "#A9B4C0";
 
-function makePaints(ctx: Ctx, shadeId: string, gain: RGB): Paints {
-  const sh = shadeById(shadeId);
+function makePaints(ctx: Ctx, shadeId: string, gain: RGB, arch: "upper" | "lower"): Paints {
+  const sh = archShade(shadeId, arch);
   const T = (hex: string, k = 1) => tinted(hex, gain, k);
   const cerv = sh.cervical;
   const body = sh.body;
@@ -466,8 +468,11 @@ export function ensureLayer(e: LayerEntry, s: LayerScene, q: Quality, targetScal
   }
   const ctx = e.ctx;
   const gain = photoGain(s.img);
-  if (!e.paints || e.paints.shade !== d.shade || e.paints.gain !== gain) {
-    e.paints = makePaints(ctx, d.shade, gain);
+  const arch = archFlip(d) === -1 ? "lower" : "upper";
+  const shadeKey = arch === "lower" ? d.shade + "|lower" : d.shade;
+  if (!e.paints || e.paints.shade !== shadeKey || e.paints.gain !== gain) {
+    e.paints = makePaints(ctx, d.shade, gain, arch);
+    e.paints.shade = shadeKey;
   }
   build(e, s, q, k);
   if (q === "full") soften(e, k);
@@ -534,10 +539,11 @@ function build(e: LayerEntry, s: LayerScene, q: Quality, k: number) {
   const angle = designAngle(d, s.guides);
   const ca = Math.cos(angle);
   const sa = Math.sin(angle);
+  const fy = archFlip(d);
   M[0] = k * ca;
   M[1] = k * sa;
-  M[2] = -k * sa;
-  M[3] = k * ca;
+  M[2] = -k * sa * fy;
+  M[3] = k * ca * fy;
   M[4] = k * (d.center.x - e.ox);
   M[5] = k * (d.center.y - e.oy);
   const L = centralLength(d);
@@ -600,7 +606,7 @@ function build(e: LayerEntry, s: LayerScene, q: Quality, k: number) {
   for (let kind = 4; kind >= 0; kind--) {
     for (let side = -1; side <= 1; side += 2) {
       const b = findBox(boxes, kind, side as -1 | 1);
-      if (b) drawTooth(ctx, e, b, shape);
+      if (b) drawTooth(ctx, e, b, shape, fy === -1 ? "lower" : "upper");
     }
   }
 
@@ -648,9 +654,9 @@ function findBox(boxes: ToothBox[], kind: number, side: -1 | 1) {
   return undefined;
 }
 
-function drawTooth(ctx: Ctx, e: LayerEntry, b: ToothBox, shape: ToothShape) {
+function drawTooth(ctx: Ctx, e: LayerEntry, b: ToothBox, shape: ToothShape, arch: "upper" | "lower") {
   const p = e.paints!;
-  const u = unitOutline(shape, b.kind, b.side);
+  const u = unitOutline(shape, b.kind, b.side, arch);
   const w = b.x1 - b.x0;
   const h = b.bottom - b.top;
   const variant = b.kind <= 1 ? 0 : b.kind === 2 ? 1 : 2;
@@ -717,13 +723,14 @@ export function drawOutlines(ctx: Ctx, s: LayerScene) {
   const d = s.design;
   const a = designAngle(d, s.guides);
   ctx.save();
-  ctx.transform(Math.cos(a), Math.sin(a), -Math.sin(a), Math.cos(a), d.center.x, d.center.y);
+  const fy = archFlip(d);
+  ctx.transform(Math.cos(a), Math.sin(a), -Math.sin(a) * fy, Math.cos(a) * fy, d.center.x, d.center.y);
   ctx.lineWidth = Math.max(1.5, d.width / 260);
   ctx.strokeStyle = "#F7F8F6";
   ctx.lineJoin = "round";
   ctx.setLineDash([]);
   for (const b of toothBoxes(d)) {
-    const u = unitOutline(d.shape, b.kind, b.side);
+    const u = unitOutline(d.shape, b.kind, b.side, fy === -1 ? "lower" : "upper");
     const w = b.x1 - b.x0;
     const h = b.bottom - b.top;
     ctx.beginPath();

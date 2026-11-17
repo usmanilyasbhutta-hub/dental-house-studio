@@ -26,6 +26,44 @@ export const PROPORTIONS: Record<Proportion, { label: string; note: string; rati
 
 export const TOOTH_NAMES = ["Central", "Lateral", "Canine", "1st premolar", "2nd premolar"];
 
+// ---------- lower arch (docs/round3-clinical.md A) ----------
+/** Mean mesiodistal widths, mm (textbook norms, no PMID; South Asian samples slightly smaller, PMID 38298295). */
+export const WIDTH_MM_LOWER = [5.3, 5.8, 6.8, 7.0, 7.2];
+/** Perceived frontal width relative to the lower central (geometric estimate: real width × cos(arch angle) ≈ 0°, 20°, 50°, 68°, 78°; not literature). */
+export const PROPORTIONS_LOWER = [1, 1.03, 0.8, 0.5, 0.3];
+/** Lower canine-to-canine perceived span ≈ 0.79 × upper span (derived). */
+export const LOWER_SPAN_FACTOR = 0.79;
+/** Crown length relative to lower central (textbook 9.0/9.5/11/8.5/8.0 mm; no PMID). */
+const LENGTH_LOWER = [1, 1.05, 1.15, 0.9, 0.85];
+/** Mirrored frame: + = margin more coronal than the central's (convention; no PMID). */
+const GINGIVA_LOWER = [0, 0, -0.03, 0.05, 0.08];
+/** Distal zenith offset (fraction of width); lower incisors ≈ centred (convention; no PMID). */
+const ZENITH_LOWER = [0, 0, 0.06, 0.03, 0.03];
+/** Lower central W/L ≈ 5.3 / 8.5 mm. */
+export const WL_LOWER = { default: 0.62, min: 0.5, max: 0.75 };
+/** Frontal incisal curve (fraction of lower central length): canine ≈ level, premolar cusps progressively gingival. */
+const INCISAL_DROP_LOWER = [0, 0, -0.02, 0.06, 0.12];
+/** Normal overbite, mm (textbook 2–3 mm). */
+export const OVERBITE_MM_DEFAULT = 2.5;
+
+export function isLower(d: Pick<Design, "arch">) {
+  return d.arch === "lower";
+}
+
+/** Perceived width ratios for this design (lower arch has its own fixed set). */
+export function widthRatios(d: Pick<Design, "arch" | "proportion">): number[] {
+  return isLower(d) ? PROPORTIONS_LOWER : PROPORTIONS[d.proportion].ratios;
+}
+
+/**
+ * Local design frame: x to the image right, y towards the GUM is negative. For the upper arch y points down the image;
+ * the lower arch is mirrored (y points UP the image) so every outline/box keeps "gum at top, incisal edge at y≈0" in
+ * local coordinates while the crowns grow DOWN the photo from the lower incisal line. Use toImage / toLocal.
+ */
+export function archFlip(d: Pick<Design, "arch">): 1 | -1 {
+  return isLower(d) ? -1 : 1;
+}
+
 /** Length of each tooth relative to the central's length. */
 const LENGTH = [1, 0.82, 0.97, 0.78, 0.72];
 /** Gingival margin drop below the central's margin (fraction of central length). */
@@ -61,7 +99,7 @@ export function designAngle(d: Design, g: Guides) {
 }
 
 export function centralWidth(d: Design) {
-  const r = PROPORTIONS[d.proportion].ratios;
+  const r = widthRatios(d);
   // width spans 2 × (central + lateral + canine)
   return d.width / (2 * (r[0] + r[1] + r[2]));
 }
@@ -72,6 +110,7 @@ export function centralLength(d: Design) {
 
 /** Tooth boxes in the design's local frame. */
 export function toothBoxes(d: Design): ToothBox[] {
+  if (isLower(d)) return lowerBoxes(d);
   const r = PROPORTIONS[d.proportion].ratios;
   const cw = centralWidth(d);
   const L = centralLength(d);
@@ -100,6 +139,44 @@ export function toothBoxes(d: Design): ToothBox[] {
         x1: side === 1 ? b : -a,
         top,
         bottom: Math.max(incisal, top + L * 0.4),
+      });
+    }
+  }
+  return boxes;
+}
+
+/**
+ * Lower arch boxes in the mirrored local frame (gum at top, incisal edge near y = 0). No lateral step; the smile arc
+ * moves whole teeth along the curve of the upper edges (canines towards the upper arch, i.e. +y here), and the
+ * incisal edge follows INCISAL_DROP_LOWER.
+ */
+function lowerBoxes(d: Design): ToothBox[] {
+  const r = PROPORTIONS_LOWER;
+  const cw = centralWidth(d);
+  const L = centralLength(d);
+  const perSide = d.count / 2;
+  const half = d.width / 2;
+  const boxes: ToothBox[] = [];
+  for (const side of [-1, 1] as const) {
+    let edge = 0;
+    for (let k = 0; k < perSide; k++) {
+      const w = cw * r[k];
+      const a = edge;
+      const b = edge + w;
+      edge = b;
+      const mid = (a + b) / 2;
+      const xn = Math.min(mid / half, 1.6);
+      const shift = d.arc * 0.35 * L * xn * xn * 0.5;
+      const top = -L + GINGIVA_LOWER[k] * L + shift;
+      const incisal = -INCISAL_DROP_LOWER[k] * L + shift;
+      const bottom = Math.min(top + LENGTH_LOWER[k] * L, incisal);
+      boxes.push({
+        kind: k,
+        side,
+        x0: side === 1 ? a : -b,
+        x1: side === 1 ? b : -a,
+        top,
+        bottom: Math.max(bottom, top + L * 0.4),
       });
     }
   }
@@ -156,15 +233,17 @@ const NECK_V = 0.1;
  * Canines get a cusp tip (mesial of centre); premolars are narrower at the incisal (they are seen at an angle).
  * The outline is affine in the box: scaling/translating the box scales/translates the outline the same way.
  */
-export function toothOutline(box: ToothBox, shape: ToothShape): Pt[] {
+export function toothOutline(box: ToothBox, shape: ToothShape, arch: "upper" | "lower" = "upper"): Pt[] {
   const s = { ...SHAPES[shape] };
   if (box.kind === 2) Object.assign(s, { incisal: 0.72, convex: 0.1, peak: 0.45 });
-  if (box.kind >= 3) Object.assign(s, { incisal: 0.75, convex: 0.08, neck: 0.75 });
+  if (box.kind >= 3) Object.assign(s, arch === "lower" ? { incisal: 0.8, convex: 0.08 } : { incisal: 0.75, convex: 0.08, neck: 0.75 });
+  // lower incisors: narrow neck, nearly straight incisal edge
+  if (arch === "lower" && box.kind <= 1) Object.assign(s, { neck: 0.6, peak: 0.75, incisal: 1, convex: 0.012 });
   const w = box.x1 - box.x0;
   const h = box.bottom - box.top;
   const cx = (box.x0 + box.x1) / 2;
   // gingival zenith sits distal of the tooth axis
-  const zen = box.side * w * ZENITH[box.kind];
+  const zen = box.side * w * (arch === "lower" ? ZENITH_LOWER : ZENITH)[box.kind];
   const N = 14;
   const right: Pt[] = [];
   const left: Pt[] = [];
@@ -296,10 +375,12 @@ export function mockupAlpha(opacity: number, backdrop: boolean | undefined) {
 }
 
 /** Map a local design point to image coordinates. */
+/** Map a local design point to image coordinates (lower arch: mirrored, see archFlip). */
 export function toImage(p: Pt, d: Design, angle: number): Pt {
   const c = Math.cos(angle);
   const s = Math.sin(angle);
-  return { x: d.center.x + p.x * c - p.y * s, y: d.center.y + p.x * s + p.y * c };
+  const y = p.y * archFlip(d);
+  return { x: d.center.x + p.x * c - y * s, y: d.center.y + p.x * s + y * c };
 }
 
 export function toLocal(p: Pt, d: Design, angle: number): Pt {
@@ -307,7 +388,24 @@ export function toLocal(p: Pt, d: Design, angle: number): Pt {
   const dy = p.y - d.center.y;
   const c = Math.cos(-angle);
   const s = Math.sin(-angle);
-  return { x: dx * c - dy * s, y: dx * s + dy * c };
+  return { x: dx * c - dy * s, y: (dx * s + dy * c) * archFlip(d) };
+}
+
+/** Planned tooth outlines in IMAGE coordinates, one closed polygon per tooth (same order as toothBoxes). */
+export function plannedOutlines(d: Design, angle: number): { box: ToothBox; pts: Pt[] }[] {
+  const arch = isLower(d) ? "lower" : "upper";
+  return toothBoxes(d).map((box) => ({ box, pts: toothOutline(box, d.shape, arch).map((p) => toImage(p, d, angle)) }));
+}
+
+/** FDI-like label with arch letter: "UR1" (upper right central) … "LL5". side −1 = patient's right. */
+export function toothLabel(d: Pick<Design, "arch">, kind: number, side: -1 | 1) {
+  return `${isLower(d) ? "L" : "U"}${side === -1 ? "R" : "L"}${kind + 1}`;
+}
+
+const SPOKEN_KIND = ["central", "lateral", "canine", "first premolar", "second premolar"];
+/** "Upper right central" for patient-facing text. */
+export function toothSpoken(d: Pick<Design, "arch">, kind: number, side: -1 | 1) {
+  return `${isLower(d) ? "Lower" : "Upper"} ${side === -1 ? "right" : "left"} ${SPOKEN_KIND[kind]}`;
 }
 
 /** Closed Catmull-Rom spline through the points, sampled for drawing / clipping. */
@@ -366,7 +464,7 @@ export function measure(d: Design, g: Guides, centralMm?: number, calib?: { a: P
   const dx = d.center.x - g.midline.x;
   const dy = d.center.y - g.midline.y;
   const midlineDev = dx * Math.cos(pa) + dy * Math.sin(pa);
-  const r = PROPORTIONS[d.proportion].ratios;
+  const r = widthRatios(d);
   return {
     centralW: cw,
     centralL: cl,

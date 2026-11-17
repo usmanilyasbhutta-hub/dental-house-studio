@@ -1,7 +1,13 @@
 // Canvas drawing: photo, mockup teeth (clipped to the inner lip contour), guides and handles.
 import { bandLayout, bounds, mockupAlpha, designAngle, designHandles, pupilAngle, smoothClosed, watermarkTiles } from "./geometry";
+import type { Mask } from "./contracts";
 import type { Design, Guides, Pt } from "./model";
+import { drawPhotoTeeth, photoRegion } from "./photoTeeth";
+import { setPrepPhotoReader } from "./prep";
 import { blitLayer, drawOutlines, ensureLayer, newEntry } from "./teethLayer";
+
+// the prep guide reads the same photo pixels as the photo renderer (keeps prep.ts DOM-free for tests)
+setPrepPhotoReader((s) => photoRegion(s));
 
 export const C = {
   slate: "#333C39",
@@ -21,6 +27,11 @@ export interface Scene {
   guides: Guides;
   lips: Pt[];
   design: Design;
+  /**
+   * Existing-teeth mask (e.g. clinician-corrected, from CaseData.toothMask). When missing, the photo renderer
+   * detects it once inside the lips and caches it. Edit masks only through paintMask (or pass a new object).
+   */
+  existing?: Mask;
 }
 
 function pathFrom(ctx: CanvasRenderingContext2D, pts: Pt[]) {
@@ -32,16 +43,23 @@ function pathFrom(ctx: CanvasRenderingContext2D, pts: Pt[]) {
 const screenLayer = newEntry();
 
 /**
- * Draws the teeth mockup in image coordinates onto ctx (caller sets the transform).
- * The mockup is one cached offscreen layer (rebuilt only when design, lips, shade, photo or zoom level change),
- * composited once at the design opacity. "fast" skips texture, grain and softening (use while dragging).
+ * Draws the teeth in image coordinates onto ctx (caller sets the transform), clipped to the inner lip contour.
+ * design.render "photo" (default): the planned teeth are rebuilt from the patient's own tooth pixels (photoTeeth.ts);
+ * "fast" uses a half-resolution grid without grain (dragging), "full" the photo resolution.
+ * design.render "drawn": the illustrated mockup, one cached offscreen layer composited at the design opacity.
  */
 export function drawTeeth(ctx: CanvasRenderingContext2D, s: Scene, mode: "mockup" | "outline", quality: "fast" | "full" = "full") {
   if (mode === "outline") return drawOutlines(ctx, s);
+  if (s.design.render !== "drawn" && drawPhotoTeeth(ctx, s, quality, photoAlpha(s.design.opacity))) return;
   const m = ctx.getTransform();
   const scale = Math.hypot(m.a, m.b);
   const e = ensureLayer(screenLayer, s, quality, scale);
   blitLayer(ctx, e, quality, mockupAlpha(s.design.opacity, s.design.backdrop));
+}
+
+/** Photo mode: opacity is the strength of the simulated change (default 0.92 → full). */
+function photoAlpha(opacity: number) {
+  return Math.max(0, Math.min(1, opacity / 0.92));
 }
 
 export interface Overlay {
@@ -218,7 +236,8 @@ export function exportCanvas(s: Scene, layout: "after" | "side-by-side"): HTMLCa
   }
   ctx.save();
   ctx.translate(x, 0);
-  blitLayer(ctx, ensureLayer(exportLayer, s, "full", 1), "full", mockupAlpha(s.design.opacity, s.design.backdrop));
+  if (s.design.render === "drawn" || !drawPhotoTeeth(ctx, s, "full", photoAlpha(s.design.opacity), "export"))
+    blitLayer(ctx, ensureLayer(exportLayer, s, "full", 1), "full", mockupAlpha(s.design.opacity, s.design.backdrop));
   ctx.restore();
   panelWatermark(ctx, s, x);
 
