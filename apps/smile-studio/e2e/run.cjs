@@ -123,7 +123,7 @@ async function current(page) {
 async function view(page, step, c) {
   const r = await page.locator(".stage canvas").boundingBox();
   let s, ox, oy;
-  if (step === "guides" || step === "compare") {
+  if (step === "guides" || step === "compare-face") {
     s = Math.min(r.width / c.imgW, r.height / c.imgH);
     ox = (r.width - c.imgW * s) / 2;
     oy = (r.height - c.imgH * s) / 2;
@@ -202,8 +202,14 @@ async function gotoStep(page, label) {
 async function importPhoto(page, file) {
   await page.locator('input[type="file"]:not([capture])').setInputFiles(file);
   await page.locator(".topbar .title .h").waitFor();
-  await page.waitForFunction(() => !document.querySelector(".stage.loading"));
+  await page.waitForFunction(() => document.querySelector(".stage canvas")?.clientWidth > 0);
+  await dismissCoach(page);
   await page.waitForTimeout(200);
+}
+/** First-run coach sheet (once per device): dismiss it with its own button. */
+async function dismissCoach(page) {
+  const got = page.getByRole("button", { name: "Got it" });
+  if (await got.isVisible().catch(() => false)) await got.click();
 }
 
 // Stub the share sheet so exports can be captured (phones take this path; Chromium desktop has no share()).
@@ -245,7 +251,7 @@ async function deviceSuite(browser, devName, face) {
     const expect = [
       ["Face", "01", /Pupil line/i],
       ["Lips", "02", /Reset lip line/i],
-      ["Teeth", "03", /Central width \/ length/i],
+      ["Teeth", "03", /Follow lower lip/i],
       ["Shade", "04", /Blend with photo/i],
       ["Compare", "05", /Share side by side/i],
     ];
@@ -255,7 +261,7 @@ async function deviceSuite(browser, devName, face) {
       assert((await page.locator(".topbar .title .h").textContent()) === label, `title not ${label}`);
       assert((await page.locator(".topbar .title .mono").textContent()).startsWith(n), `counter not ${n}`);
       assert(re.test(await page.locator(".panel").innerText()), `${label} panel missing ${re}`);
-      const cur = page.locator('.steps [aria-current="true"]');
+      const cur = page.locator('.steps [aria-current]');
       assert((await cur.count()) === 1 && (await cur.innerText()).toLowerCase().includes(label.toLowerCase()), `aria-current not on ${label}`);
       const nav = await page.locator(".steps").boundingBox();
       assert(nav.y + nav.height <= vp.height + 1, `${label}: step bar off screen (bottom ${Math.round(nav.y + nav.height)} > ${vp.height})`);
@@ -389,14 +395,13 @@ async function deviceSuite(browser, devName, face) {
     assert(cdiff(sim, now) > 25, `tooth pixel same either side of divider: sim ${sim} now ${now}`);
     await T.drag({ x: v.r.x + v.r.width - 4, y }, { x: v.r.x + 4, y });
     await page.waitForTimeout(150);
-    const hold = page.getByRole("button", { name: /Hold to see the original/ });
-    const hb = await hold.boundingBox();
-    await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
-    await page.mouse.down();
+    const before = page.getByRole("button", { name: "Before", exact: true });
+    await before.click();
     await page.waitForTimeout(150);
     const held = await pixel(page, tp);
-    await page.mouse.up();
-    assert(cdiff(held, now) < 25, `Hold: before still shows teeth: ${held} vs photo ${now}`);
+    assert((await before.getAttribute("aria-pressed")) === "true", "Before toggle not pressed");
+    await before.click();
+    assert(cdiff(held, now) < 25, `Before: still shows teeth: ${held} vs photo ${now}`);
     return `sim ${sim} / photo ${now}`;
   });
 
@@ -409,6 +414,9 @@ async function deviceSuite(browser, devName, face) {
     ]) {
       await page.evaluate(() => (window.__shared = []));
       await page.getByRole("button", { name: btn, exact: true }).click();
+      // first share of a case asks whether the patient agreed
+      const agree = page.getByRole("button", { name: "Yes, patient agreed" });
+      if (await agree.isVisible({ timeout: 1000 }).catch(() => false)) await agree.click();
       await page.waitForFunction(() => window.__shared.length > 0, null, { timeout: 15000 });
       const info = await page.evaluate(async () => {
         const f = window.__shared[0];
@@ -483,6 +491,7 @@ async function deviceSuite(browser, devName, face) {
     await page.locator(".card-open").first().waitFor();
     await page.locator(".card-open").first().click();
     await page.locator(".topbar .title .h").waitFor();
+    await page.waitForFunction(() => document.querySelector(".stage canvas")?.clientWidth > 0);
     const c1 = await current(page);
     assert(near(c1.guides.midline.x, want.x, 0.01), `midline ${c1.guides.midline.x} != saved ${want.x}`);
   });
@@ -515,16 +524,20 @@ async function deviceSuite(browser, devName, face) {
     assert((await page.locator(".card-open img").count()) === 1, "no thumbnail after ‹ Cases");
     await shot("06-home-with-case");
     const n0 = (await cases(page)).length;
-    page.once("dialog", (d) => d.dismiss());
-    await page.locator(".card-del").first().click();
+    // in-app sheet: ⋯ > Delete > Keep / Delete
+    const sheet = page.getByRole("dialog");
+    await page.locator(".card-more").first().click();
+    await sheet.getByRole("button", { name: "Delete", exact: true }).click();
+    await sheet.getByRole("button", { name: "Keep" }).click();
     await page.waitForTimeout(300);
-    assert((await cases(page)).length === n0, "cancel deleted the case");
-    page.once("dialog", (d) => d.accept());
-    await page.locator(".card-del").first().click();
+    assert((await cases(page)).length === n0, "Keep deleted the case");
+    await page.locator(".card-more").first().click();
+    await sheet.getByRole("button", { name: "Delete", exact: true }).click();
+    await sheet.getByRole("button", { name: "Delete", exact: true }).click();
     await page.waitForTimeout(500);
     assert((await cases(page)).length === n0 - 1, "OK did not delete the case");
     assert((await page.locator(".card").count()) === n0 - 1, "card still listed after delete");
-    if (n0 === 1) assert(/No designs yet/.test(await page.locator(".cases").innerText()), "empty-state text missing");
+    if (n0 === 1) assert(/No designs on this phone yet/.test(await page.locator(".cases").innerText()), "empty-state text missing");
   });
 
   const jsErr = errors.filter((e) => !/favicon/.test(e));

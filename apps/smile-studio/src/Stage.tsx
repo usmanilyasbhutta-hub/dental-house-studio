@@ -7,13 +7,6 @@ import type { Design, Guides, Pt } from "./model";
 import { C, drawOverlay, drawTeeth, hitHandle, type Scene, type Step } from "./render";
 import { haptic } from "./ui";
 
-// drawTeeth gains a 4th "quality" argument (graphics work in parallel); calling it this way works before and after.
-const drawTeethQ = drawTeeth as unknown as (
-  ctx: CanvasRenderingContext2D,
-  s: Scene,
-  mode: "mockup" | "outline",
-  quality?: "fast" | "full",
-) => void;
 
 interface View {
   scale: number;
@@ -163,7 +156,7 @@ export function Stage(props: Props) {
       if (p.step === "lips") {
         ctx.save();
         ctx.globalAlpha = 0.5;
-        drawTeethQ(ctx, s, "outline", q);
+        drawTeeth(ctx, s, "outline", q);
         ctx.restore();
       } else if (p.step === "compare") {
         ctx.save();
@@ -171,10 +164,10 @@ export function Stage(props: Props) {
         ctx.beginPath();
         ctx.rect(x, 0, s.imgW * 2, s.imgH);
         ctx.clip();
-        drawTeethQ(ctx, s, "mockup", q);
+        drawTeeth(ctx, s, "mockup", q);
         ctx.restore();
       } else if ((p.step === "design" && !cal) || p.step === "shade") {
-        drawTeethQ(ctx, s, p.step === "design" && p.mode === "outline" ? "outline" : "mockup", q);
+        drawTeeth(ctx, s, p.step === "design" && p.mode === "outline" ? "outline" : "mockup", q);
       }
       if (cal) drawCalib(ctx, calib, v.scale, active.current ?? selRef.current);
       else drawOverlay(ctx, s, { step: p.step, scale: v.scale, activeHandle: active.current ?? selRef.current });
@@ -256,6 +249,7 @@ export function Stage(props: Props) {
     if (!w) return;
     const scale = Math.min(w / s.imgW, h / s.imgH);
     view.current = { scale, ox: (w - s.imgW * scale) / 2, oy: (h - s.imgH * scale) / 2 };
+    userView.current = false;
     requestDraw();
   }, [requestDraw]);
 
@@ -265,6 +259,7 @@ export function Stage(props: Props) {
     if (!w) return;
     const scale = Math.min(w / (d.width * 1.6), h / (d.width * 0.95), 8);
     view.current = { scale, ox: w / 2 - d.center.x * scale, oy: h * 0.5 - (d.center.y - d.width * 0.12) * scale };
+    userView.current = false;
     requestDraw();
   }, [requestDraw]);
 
@@ -280,10 +275,19 @@ export function Stage(props: Props) {
   }, []);
 
   // Face: whole photo. Lips / teeth / shade: zoom to the mouth. Compare: mouth by default, face on request.
+  // A small size change (a hint line appearing in the panel below) keeps the view as it is: the stage's top edge does not
+  // move, so the photo stays still under a finger mid-drag. A new step, a rotation or the first layout re-frames.
+  const framed = useRef({ step: "", view: "", w: 0, h: 0 });
+  const userView = useRef(false); // the clinician zoomed or panned by hand: keep their framing on small resizes
   useEffect(() => {
     if (!size.w) return;
-    if (step === "guides" || (step === "compare" && compareView === "face")) fit();
+    const f = framed.current;
+    const small = f.w > 0 && Math.abs(size.w - f.w) < f.w * 0.25 && Math.abs(size.h - f.h) < f.h * 0.25;
+    if (f.step === step && f.view === compareView && small && view.current && (gesture.current || userView.current)) {
+      requestDraw();
+    } else if (step === "guides" || (step === "compare" && compareView === "face")) fit();
     else mouth();
+    framed.current = { step, view: compareView, w: size.w, h: size.h };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, compareView, size.w, size.h]);
 
@@ -390,8 +394,10 @@ export function Stage(props: Props) {
       const ix = (g.m0.x - g.view.ox) / g.view.scale;
       const iy = (g.m0.y - g.view.oy) / g.view.scale;
       view.current = { scale, ox: m.x - ix * scale, oy: m.y - iy * scale };
+      userView.current = true;
     } else if (g.kind === "pan") {
       view.current = { ...g.view, ox: g.view.ox + p.x - g.start.x, oy: g.view.oy + p.y - g.start.y };
+      userView.current = true;
     } else if (g.kind === "handle") {
       const { s, calib } = current();
       const ip = toImg(p);
@@ -425,6 +431,7 @@ export function Stage(props: Props) {
     const ix = (p.x - v.ox) / v.scale;
     const iy = (p.y - v.oy) / v.scale;
     view.current = { scale, ox: p.x - ix * scale, oy: p.y - iy * scale };
+    userView.current = true;
     startFast();
     endFast();
     requestDraw();

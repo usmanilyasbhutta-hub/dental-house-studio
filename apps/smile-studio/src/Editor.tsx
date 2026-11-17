@@ -52,6 +52,12 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const latest = useRef(c);
   latest.current = c;
   const dirty = useRef(false);
+  const flushNext = useRef(false);
+  const panelRef = useRef<HTMLElement>(null);
+  // each step / mode starts at the top of its panel (goal line first)
+  useEffect(() => {
+    panelRef.current?.scrollTo?.({ top: 0 });
+  }, [step, calibrating]);
 
   useEffect(() => {
     let alive = true;
@@ -89,7 +95,9 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     dirty.current = true;
     setSave("saving");
     window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(saveNow, 500);
+    // a finished drag saves straight away (the phone may be locked right after); control changes are debounced
+    saveTimer.current = window.setTimeout(saveNow, flushNext.current ? 0 : 500);
+    flushNext.current = false;
   }, [c, initial, saveNow]);
 
   // the page can be hidden or closed inside the debounce: save straight away
@@ -250,7 +258,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   return (
     <div className={present ? "editor present" : "editor"}>
       <header className="topbar">
-        <button className="ghost" onClick={close} aria-label="Back to saved designs">
+        <button className="ghost" onClick={close} aria-label="Back to cases">
           ‹ Cases
         </button>
         <div className="hist">
@@ -288,7 +296,10 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           onLips={(lips) => setC((x) => ({ ...x, lips }))}
           onDesign={(design) => setC((x) => ({ ...x, design }))}
           onCalib={(calib: Calib) => setC((x) => ({ ...x, calib }))}
-          onGesture={history.gesture}
+          onGesture={(active) => {
+            history.gesture(active);
+            if (!active) flushNext.current = true;
+          }}
         />
       ) : (
         <div className="stage loading" role="status">
@@ -304,7 +315,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
 
       <div className="side">
         {readout}
-        <section className="panel" aria-label={`${STEPS[idx].label} controls`}>
+        <section className="panel" ref={panelRef} aria-label={`${STEPS[idx].label} controls`}>
           <p className="goal">{calibrating ? "Calibrate: measure one existing central so the read-out shows mm." : STEPS[idx].goal}</p>
 
           {step === "guides" && (

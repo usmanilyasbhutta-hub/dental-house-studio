@@ -65,6 +65,18 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
     refresh();
   };
 
+  // returning users see their designs first; the photo tips lead only while the list is empty
+  const tips = (
+    <section className="tips">
+      <p className="mono kicker">For a good photo</p>
+      <ol>
+        <li>Face straight to the camera, eyes visible, natural full smile.</li>
+        <li>Phone at mouth height, about 1 m away, zoom 2×. Even light, no flash glare.</li>
+        <li>Ask the patient before taking or sharing any photo.</li>
+      </ol>
+    </section>
+  );
+
   const ask = (source: Source) => setDialog({ kind: "consent", source });
 
   return (
@@ -99,14 +111,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
         )}
       </section>
 
-      <section className="tips">
-        <p className="mono kicker">For a good photo</p>
-        <ol>
-          <li>Face straight to the camera, eyes visible, natural full smile.</li>
-          <li>Phone at mouth height, about 1 m away, zoom 2×. Even light, no flash glare.</li>
-          <li>Ask the patient before taking or sharing any photo.</li>
-        </ol>
-      </section>
+      {!cases?.length && tips}
 
       <section className="cases">
         <div className="cases-head">
@@ -150,6 +155,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
           </button>
         )}
       </section>
+      {!!cases?.length && tips}
       <footer className="foot mono">Private: nothing leaves this device unless you share it · Simulations are for discussion, not a promised result</footer>
 
       {dialog?.kind === "consent" && (

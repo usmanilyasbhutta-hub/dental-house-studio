@@ -224,6 +224,8 @@ input[type="range"] { flex: 1; min-width: 0; accent-color: var(--bronze-light); 
   .step { min-height: 44px; }
   .step .mono { display: none; }
   .goal { font-size: 0.78rem; }
-  .stepper { padding: 6px 10px; }
-  .stepper .btn { min-height: 44px; }
+  /* little height: the step bar already moves between steps, so Back / Next go and the read-out tightens */
+  .stepper { display: none; }
+  .readout { padding: 6px 12px; gap: 2px 10px; font-size: 0.6rem; }
+  .panel { padding-top: 8px; }
 }
