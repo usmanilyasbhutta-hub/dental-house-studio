@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { archOf, withArch } from "./arch";
+import { computePrep, detectTeeth, maskFromToothMask, toothMaskFromMask, type Mask } from "./engineShim";
 import { centralLength, centralWidth, deg, fitArcToLowerLip, measure, pupilAngle, PROPORTIONS, rad, SHAPE_LABELS, TOOTH_NAMES } from "./geometry";
 import { useHistory } from "./history";
-import { defaultLips, initialLayout, type CaseData, type Design, type Proportion, type ToothCount, type ToothShape } from "./model";
-import { exportCanvas, type Scene, type Step } from "./render";
+import { defaultLips, initialLayout, type Arch, type CaseData, type Design, type Proportion, type RenderMode, type ToothCount, type ToothShape } from "./model";
+import { PrepDisclaimer, PrepLegend, PrepPanel } from "./PrepPanel";
+import { exportCanvas, type Step } from "./render";
 import { SHADES } from "./shades";
-import { Stage, type Calib } from "./Stage";
-import { saveCase, thumbnail } from "./storage";
+import { caseCodeProblem, rootLabel } from "./sheetCopy";
+import { canvasToFile, clinicianSheet, patientSheet, type SheetScene, type SheetView } from "./sheets";
+import { Stage, WL_RANGE, type Calib, type MaskTool } from "./Stage";
+import { listCases, saveCase, thumbnail } from "./storage";
 import { Chips, Hint, Sheet, Slider, Toggle, useToast } from "./ui";
 
 const STEPS: { id: Step; label: string; n: string; goal: string }[] = [
@@ -18,11 +24,13 @@ const STEPS: { id: Step; label: string; n: string; goal: string }[] = [
 
 const COACH_KEY = "smile-studio.coach.v1";
 
-type Snap = Pick<CaseData, "guides" | "lips" | "design" | "calib" | "centralMm">;
+type Snap = Pick<CaseData, "guides" | "lips" | "design" | "calib" | "centralMm" | "toothMask">;
+type SheetKind = "clinician" | "patient";
 
 /** Central width/length descriptor for the slider. */
-export function wlLabel(v: number) {
+export function wlLabel(v: number, arch: Arch = "upper") {
   const pct = `${Math.round(v * 100)}%`;
+  if (arch === "lower") return v >= 0.58 && v <= 0.66 ? `${pct} · typical lower central` : pct;
   if (v < 0.72) return `${pct} · long / narrow`;
   if (v >= 0.75 && v <= 0.8) return `${pct} · ideal range`;
   if (v > 0.85) return `${pct} · short / square (worn look)`;
@@ -44,8 +52,21 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const [present, setPresent] = useState(false);
   const [save, setSave] = useState<"saved" | "saving" | "error">("saved");
   const [coach, setCoach] = useState(() => !localStorage.getItem(COACH_KEY));
-  const [shareAsk, setShareAsk] = useState<null | "after" | "side-by-side">(null);
+  const [shareAsk, setShareAsk] = useState<null | { what: string; run: () => void }>(null);
   const [busy, setBusy] = useState(false);
+  // round 3: existing-teeth mask tool, prep map, sheets
+  const [lipTool, setLipTool] = useState<"lips" | "teeth">("lips");
+  const [brushMode, setBrushMode] = useState<MaskTool["mode"]>("paint");
+  const [brushSize, setBrushSize] = useState(16);
+  const [prepOn, setPrepOn] = useState(false);
+  const [mask, setMask] = useState<Mask | null>(null);
+  const encoded = useRef<string | undefined>(undefined);
+  const [sheetDlg, setSheetDlg] = useState<SheetKind | null>(null);
+  const [printCode, setPrintCode] = useState(false);
+  const [showDiff, setShowDiff] = useState(true);
+  const [siblings, setSiblings] = useState<CaseData[]>([]);
+  const [extra, setExtra] = useState<string[]>([]);
+  const [printPages, setPrintPages] = useState<string[] | null>(null);
   const toast = useToast();
   const showToast = toast.show;
   const saveTimer = useRef(0);
@@ -113,8 +134,8 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   }, [saveNow]);
 
   const snap: Snap = useMemo(
-    () => ({ guides: c.guides, lips: c.lips, design: c.design, calib: c.calib, centralMm: c.centralMm }),
-    [c.guides, c.lips, c.design, c.calib, c.centralMm],
+    () => ({ guides: c.guides, lips: c.lips, design: c.design, calib: c.calib, centralMm: c.centralMm, toothMask: c.toothMask }),
+    [c.guides, c.lips, c.design, c.calib, c.centralMm, c.toothMask],
   );
   const history = useHistory<Snap>(snap, (s) => setC((x) => ({ ...x, ...s })));
 
@@ -132,13 +153,60 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     return () => window.removeEventListener("keydown", key);
   }, [history]);
 
-  const scene: Scene | null = useMemo(
-    () => (img ? { img, imgW: c.imgW, imgH: c.imgH, guides: c.guides, lips: c.lips, design: c.design } : null),
-    [img, c.imgW, c.imgH, c.guides, c.lips, c.design],
+  // existing-teeth mask: the saved (clinician-checked) one, else detected from the photo inside the lip line
+  const needMask = (step === "lips" && lipTool === "teeth") || prepOn || c.design.render !== "drawn";
+  const autoKey = c.toothMask ? "" : JSON.stringify(c.lips);
+  useEffect(() => {
+    if (!img) return;
+    const tm = c.toothMask;
+    if (tm) {
+      if (tm.png === encoded.current) return;
+      let alive = true;
+      maskFromToothMask(tm)
+        .then((mm) => {
+          if (!alive) return;
+          encoded.current = tm.png;
+          setMask(mm);
+        })
+        .catch(() => setMask(null));
+      return () => {
+        alive = false;
+      };
+    }
+    encoded.current = undefined;
+    if (!needMask) return;
+    const t = window.setTimeout(() => setMask(detectTeeth(img, c.imgW, c.imgH, latest.current.lips)), mask ? 250 : 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [img, c.toothMask, autoKey, needMask]);
+
+  const scene: SheetScene | null = useMemo(
+    () => (img ? { img, imgW: c.imgW, imgH: c.imgH, guides: c.guides, lips: c.lips, design: c.design, existing: mask ?? undefined } : null),
+    [img, c.imgW, c.imgH, c.guides, c.lips, c.design, mask],
   );
   const setDesign = (d: Partial<Design>) => setC((x) => ({ ...x, design: { ...x.design, ...d } }));
   const m = measure(c.design, c.guides, c.centralMm, c.calib);
   const ppm = m.pxPerMm;
+  const arch = archOf(c.design);
+  const lower = arch === "lower";
+  const prep = useMemo(() => (prepOn && scene && mask ? computePrep(scene, mask, ppm) : null), [prepOn, scene, mask, ppm]);
+
+  const onMaskEdited = () => {
+    if (!mask) return;
+    const tm = toothMaskFromMask(mask);
+    encoded.current = tm.png;
+    setMask({ ...mask }); // same pixels, new identity: the renderer and the prep map see the edit
+    setC((x) => ({ ...x, toothMask: tm }));
+  };
+  const autoDetect = () => {
+    if (!img) return;
+    const mm = detectTeeth(img, c.imgW, c.imgH, c.lips);
+    const tm = toothMaskFromMask(mm);
+    encoded.current = tm.png;
+    setMask(mm);
+    setC((x) => ({ ...x, toothMask: tm }));
+    toast.show("Teeth found inside the lip line. Check the blue area and correct it with the brush.");
+  };
   const fmt = (px: number) => (ppm ? `${(px / ppm).toFixed(1)} mm` : `${Math.round(px)} px`);
   const pupilTilt = deg(pupilAngle(c.guides));
   const closeup = c.framing === "closeup";
@@ -165,6 +233,32 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   };
   const idx = STEPS.findIndex((s) => s.id === step);
 
+  /** Share sheet on phones, downloads elsewhere. Returns false when the user cancelled. */
+  const deliver = async (files: File[], title: string) => {
+    let shared = false;
+    if (navigator.canShare?.({ files })) {
+      try {
+        await navigator.share({ files, title });
+        shared = true;
+      } catch (e) {
+        if ((e as Error).name === "AbortError") {
+          toast.hide();
+          return;
+        }
+      }
+    }
+    if (!shared) {
+      for (const f of files) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(f);
+        a.download = f.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      }
+    }
+    toast.show(shared ? "Shared" : files.length > 1 ? `${files.length} pages saved to downloads` : "Image saved to downloads");
+  };
+
   const doExport = async (layout: "after" | "side-by-side") => {
     if (!scene) return;
     setBusy(true);
@@ -173,36 +267,103 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
       await document.fonts.load('700 20px "Oswald"');
       await document.fonts.load('500 20px "JetBrains Mono"');
       const cv = exportCanvas(scene, layout);
-      const blob = await new Promise<Blob>((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error("encode"))), "image/png"));
       const date = new Date().toISOString().slice(0, 10);
-      const file = new File([blob], `smile-simulation-${layout}-${date}.png`, { type: "image/png" });
-      let shared = false;
-      if (navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: "Smile simulation" });
-          shared = true;
-        } catch (e) {
-          if ((e as Error).name === "AbortError") {
-            toast.hide();
-            return;
-          }
-        }
-      }
-      if (!shared) {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = file.name;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-      }
-      toast.show(shared ? "Shared" : "Image saved to downloads");
+      const file = await canvasToFile(cv, `smile-simulation-${layout}-${date}.png`);
+      await deliver([file], "Smile simulation");
     } catch {
       toast.show("Could not make the image. Try again, or close other apps to free memory.", "error", 6000);
     } finally {
       setBusy(false);
     }
   };
-  const askExport = (layout: "after" | "side-by-side") => (c.consentShareAt ? doExport(layout) : setShareAsk(layout));
+  /** Anything that leaves the app asks once per case whether the patient agreed. */
+  const withConsent = (what: string, run: () => void) => (c.consentShareAt ? run() : setShareAsk({ what, run }));
+  const askExport = (layout: "after" | "side-by-side") => withConsent("this image", () => void doExport(layout));
+
+  // ---------- sheets ----------
+  const openSheet = (kind: SheetKind) => {
+    setSheetDlg(kind);
+    if (kind === "patient")
+      listCases()
+        .then((all) => setSiblings(all.filter((x) => x.id !== c.id && rootLabel(x.label) === rootLabel(c.label))))
+        .catch(() => setSiblings([]));
+  };
+
+  const buildSheet = async (kind: SheetKind): Promise<HTMLCanvasElement[]> => {
+    if (!scene || !img) throw new Error("no photo");
+    const em = mask ?? detectTeeth(img, c.imgW, c.imgH, c.lips);
+    const base: SheetScene = { ...scene, existing: em };
+    const view: SheetView = { scene: base, prep: computePrep(base, em, ppm), pxPerMm: ppm };
+    if (kind === "clinician") {
+      const code = printCode && !caseCodeProblem(c.label) ? c.label : undefined;
+      return clinicianSheet({ view, caseCode: code, date: new Date(), centralMm: c.centralMm });
+    }
+    const views = [view];
+    for (const x of siblings.filter((o) => extra.includes(o.id))) {
+      const bmp = await createImageBitmap(x.photo);
+      const xm = x.toothMask ? await maskFromToothMask(x.toothMask) : detectTeeth(bmp, x.imgW, x.imgH, x.lips);
+      const sc: SheetScene = { img: bmp, imgW: x.imgW, imgH: x.imgH, guides: x.guides, lips: x.lips, design: x.design, existing: xm };
+      const px = measure(x.design, x.guides, x.centralMm, x.calib).pxPerMm;
+      views.push({ scene: sc, prep: computePrep(sc, xm, px), pxPerMm: px, title: archOf(x.design) === "lower" ? "Lower teeth" : "Another view" });
+    }
+    return patientSheet({ views, showDiff });
+  };
+
+  const sheetName = (kind: SheetKind) => (kind === "clinician" ? "prep-guide" : "smile-design-sheet");
+
+  const shareSheet = async (kind: SheetKind) => {
+    setBusy(true);
+    toast.show("Preparing sheet…", "info", 0);
+    try {
+      const pages = await buildSheet(kind);
+      const date = new Date().toISOString().slice(0, 10);
+      const files = await Promise.all(
+        pages.map((cv, i) => canvasToFile(cv, `${sheetName(kind)}-${date}${pages.length > 1 ? `-p${i + 1}` : ""}.png`)),
+      );
+      pages.forEach((cv) => (cv.width = 0));
+      await deliver(files, kind === "clinician" ? "Preparation guide" : "Smile design sheet");
+    } catch {
+      toast.show("Could not make the sheet. Try again, or close other apps to free memory.", "error", 6000);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const printSheet = async (kind: SheetKind) => {
+    setBusy(true);
+    toast.show("Preparing sheet…", "info", 0);
+    try {
+      const pages = await buildSheet(kind);
+      const urls = await Promise.all(pages.map((cv) => canvasToFile(cv, "page.png").then((f) => URL.createObjectURL(f))));
+      pages.forEach((cv) => (cv.width = 0));
+      toast.hide();
+      setPrintPages(urls);
+    } catch {
+      toast.show("Could not make the sheet. Try again, or close other apps to free memory.", "error", 6000);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // print: the pages go into a print-only container, the app is hidden by the print style sheet
+  useEffect(() => {
+    if (!printPages) return;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      printPages.forEach((u) => URL.revokeObjectURL(u));
+      setPrintPages(null);
+    };
+    window.addEventListener("afterprint", finish);
+    const imgs = [...document.querySelectorAll<HTMLImageElement>(".print-root img")];
+    Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(() => {
+      window.print();
+      // a fallback for browsers that never fire afterprint (the pages stay hidden on screen meanwhile)
+      window.setTimeout(finish, 60000);
+    });
+    return () => window.removeEventListener("afterprint", finish);
+  }, [printPages]);
 
   const close = async () => {
     window.clearTimeout(saveTimer.current);
@@ -307,6 +468,11 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           calibrating={calibrating}
           calib={c.calib}
           compareView={compareView}
+          showPrep={prepOn}
+          prep={prep}
+          maskTool={step === "lips" && lipTool === "teeth" ? { mode: brushMode, size: brushSize } : null}
+          mask={mask}
+          onMaskEdited={onMaskEdited}
           onGuides={(guides) => setC((x) => ({ ...x, guides }))}
           onLips={(lips) => setC((x) => ({ ...x, lips }))}
           onDesign={(design) => setC((x) => ({ ...x, design }))}
@@ -335,7 +501,13 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
       <div className="side">
         {readout}
         <section className="panel" ref={panelRef} aria-label={`${stepLabel(STEPS[idx])} controls`}>
-          <p className="goal">{calibrating ? "Calibrate: measure one existing central so the read-out shows mm." : stepGoal(STEPS[idx])}</p>
+          <p className="goal">
+            {calibrating
+              ? "Calibrate: measure one existing central so the read-out shows mm."
+              : step === "lips" && lipTool === "teeth"
+                ? "Mark the patient's own teeth. Used for the prep map and the photo-real teeth."
+                : stepGoal(STEPS[idx])}
+          </p>
 
           {step === "guides" && (
             <>
@@ -369,12 +541,58 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
 
           {step === "lips" && (
             <>
-              <Hint>
-                Drag the dots onto the <b>inside edge of the lips</b>. The teeth outline shows where the design sits.
-              </Hint>
-              <button className="btn secondary" onClick={() => setC((x) => ({ ...x, lips: defaultLips(x.design.center, x.design.width) }))}>
-                Reset lip line around the teeth
-              </button>
+              <Chips
+                label="Tool"
+                value={lipTool}
+                options={[
+                  { value: "lips", label: "Lip line" },
+                  { value: "teeth", label: "Existing teeth" },
+                ]}
+                onChange={setLipTool}
+              />
+              {lipTool === "lips" ? (
+                <>
+                  <Hint>
+                    Drag the dots onto the <b>inside edge of the lips</b>. The teeth outline shows where the design sits.
+                  </Hint>
+                  <button className="btn secondary" onClick={() => setC((x) => ({ ...x, lips: defaultLips(x.design.center, x.design.width) }))}>
+                    Reset lip line around the teeth
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="row tight">
+                    <button className="btn" onClick={autoDetect} disabled={!img}>
+                      Auto-detect
+                    </button>
+                    <button
+                      className="btn secondary"
+                      onClick={() => {
+                        setC((x) => ({ ...x, toothMask: undefined }));
+                        toast.show("Back to the automatic outline");
+                      }}
+                      disabled={!c.toothMask}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  <Chips
+                    label="Brush"
+                    value={brushMode}
+                    options={[
+                      { value: "paint", label: "Paint" },
+                      { value: "erase", label: "Erase" },
+                    ]}
+                    onChange={setBrushMode}
+                  />
+                  <Slider label="Brush size" value={brushSize} min={6} max={40} step={2} format={(v) => (v < 12 ? "fine" : v < 24 ? "medium" : "large")} onChange={setBrushSize} />
+                  <Hint>
+                    The <b>blue tint</b> should cover the patient's own teeth only. One finger paints or erases; two fingers zoom
+                    and move the photo.
+                  </Hint>
+                  <p className="mono small">{c.toothMask ? "Checked by you · saved with this design" : mask ? "Found automatically · not checked yet" : "Finding the teeth…"}</p>
+                </>
+              )}
             </>
           )}
 
@@ -409,6 +627,37 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           {step === "design" && !calibrating && (
             <>
               <Chips
+                label="Arch"
+                value={arch}
+                options={[
+                  { value: "upper", label: "Upper" },
+                  { value: "lower", label: "Lower" },
+                ]}
+                onChange={(a) => setC((x) => ({ ...x, design: withArch(x.design, x.guides, a) }))}
+              />
+              <Chips
+                label="Teeth look"
+                value={c.design.render ?? "photo"}
+                options={[
+                  { value: "photo", label: "Photo-real" },
+                  { value: "drawn", label: "Drawn" },
+                ]}
+                onChange={(render: RenderMode) => setDesign({ render })}
+              />
+              <Toggle label="Prep map" note="Design vs existing teeth: green added, red reduced" checked={prepOn} onChange={setPrepOn} />
+              {prepOn && (
+                <PrepPanel
+                  prep={prep}
+                  pxPerMm={ppm}
+                  onCalibrate={startCalibrate}
+                  onMarkTeeth={() => {
+                    setLipTool("teeth");
+                    goTo("lips");
+                  }}
+                  manualMask={!!c.toothMask}
+                />
+              )}
+              <Chips
                 label="Shape"
                 value={c.design.shape}
                 options={(Object.keys(SHAPE_LABELS) as ToothShape[]).map((k) => ({ value: k, label: SHAPE_LABELS[k] }))}
@@ -434,22 +683,32 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                 <button className="btn secondary" onClick={() => setDesign({ tilt: 0 })}>
                   Level to {ref}
                 </button>
-                <button
-                  className="btn secondary"
-                  onClick={() => {
-                    setDesign({ arc: fitArcToLowerLip(c.lips, c.design, c.guides) });
-                    toast.show("Smile arc now follows the lower lip");
-                  }}
-                >
-                  Follow lower lip
-                </button>
+                {!lower && (
+                  <button
+                    className="btn secondary"
+                    onClick={() => {
+                      setDesign({ arc: fitArcToLowerLip(c.lips, c.design, c.guides) });
+                      toast.show("Smile arc now follows the lower lip");
+                    }}
+                  >
+                    Follow lower lip
+                  </button>
+                )}
               </div>
               <details className="fine">
                 <summary>Fine-tune</summary>
                 <Toggle label="Outline view" note="Edges only, like a wax-up template" checked={mode === "outline"} onChange={(v) => setMode(v ? "outline" : "mockup")} />
-                <Slider label="Central width / length" value={c.design.wl} min={0.65} max={0.95} step={0.01} format={wlLabel} onChange={(wl) => setDesign({ wl })} />
+                <Slider
+                  label={lower ? "Lower central width / length" : "Central width / length"}
+                  value={c.design.wl}
+                  min={lower ? WL_RANGE.lower.min : 0.65}
+                  max={lower ? WL_RANGE.lower.max : 0.95}
+                  step={0.01}
+                  format={(v) => wlLabel(v, arch)}
+                  onChange={(wl) => setDesign({ wl })}
+                />
                 <Slider label="Smile arc" value={c.design.arc} min={0} max={1} step={0.01} format={(v) => (v < 0.15 ? "flat" : v < 0.55 ? "gentle" : "curved")} onChange={(arc) => setDesign({ arc })} />
-                <Slider label="Lateral step" value={c.design.lateralStep} min={0} max={0.25} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(lateralStep) => setDesign({ lateralStep })} />
+                {!lower && <Slider label="Lateral step" value={c.design.lateralStep} min={0} max={0.25} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(lateralStep) => setDesign({ lateralStep })} />}
                 <Slider label={closeup ? "Tilt vs mouth corners" : "Tilt vs pupil line"} value={c.design.tilt} min={-6} max={6} step={0.1} format={(v) => `${v.toFixed(1)}°`} onChange={(tilt) => setDesign({ tilt: Math.round(tilt * 10) / 10 })} />
                 <table className="widths mono">
                   <caption className="sr-only">Tooth widths</caption>
@@ -467,7 +726,14 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                   {ppm ? "Recalibrate" : "Calibrate for mm"}
                 </button>
               </details>
-              <Hint>Drag ✛ (below the teeth) to move, the side dots for width and the top dot for length.</Hint>
+              {lower ? (
+                <Hint>
+                  Line the design up with the <b>lower incisal edges</b>. Drag ✛ (above the teeth) to move, the side dots for width
+                  and the bottom dot for length.
+                </Hint>
+              ) : (
+                <Hint>Drag ✛ (below the teeth) to move, the side dots for width and the top dot for length.</Hint>
+              )}
             </>
           )}
 
@@ -491,6 +757,12 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                   ))}
                 </div>
               </div>
+              {lower && (
+                <p className="note">
+                  Lower teeth start from the upper shade (linked). Take the lower shade separately (cervical/body/incisal), at the same
+                  session and light as the upper.
+                </p>
+              )}
               {c.design.shade.startsWith("BL") && <p className="note">Bleach shades need whitening or new restorations; discuss before showing.</p>}
               <Slider label="Blend with photo" value={c.design.opacity} min={0.4} max={1} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(opacity) => setDesign({ opacity })} />
               <Toggle
@@ -514,7 +786,15 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                 ]}
                 onChange={setCompareView}
               />
-              <Hint>Slide across the photo to compare now and the simulation.</Hint>
+              <Toggle label="Prep map" note="Instead of the slider: green added, red reduced" checked={prepOn} onChange={setPrepOn} />
+              {prepOn ? (
+                <>
+                  <PrepDisclaimer />
+                  <PrepLegend />
+                </>
+              ) : (
+                <Hint>Slide across the photo to compare now and the simulation.</Hint>
+              )}
               <button
                 className="btn secondary wide"
                 onClick={() => {
@@ -533,6 +813,17 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                 </button>
               </div>
               <Hint>Every exported image carries a permanent “Smile simulation · for discussion only” label. It is not a promised result.</Hint>
+              <div className="field sheets">
+                <span className="field-label">Printable sheets · A4</span>
+                <div className="row tight">
+                  <button className="btn secondary" onClick={() => openSheet("clinician")} disabled={busy}>
+                    Prep sheet
+                  </button>
+                  <button className="btn secondary" onClick={() => openSheet("patient")} disabled={busy}>
+                    Patient sheet
+                  </button>
+                </div>
+              </div>
             </>
           )}
         </section>
@@ -580,10 +871,10 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
         >
           <ol className="coach">
             <li><b>Face</b> · dots on the pupils and the midline (or the mouth corners for a smile close-up)</li>
-            <li><b>Lips</b> · dots on the inside edge of the lips</li>
-            <li><b>Teeth</b> · shape, proportion and size</li>
+            <li><b>Lips</b> · dots on the inside edge of the lips, then check the existing teeth</li>
+            <li><b>Teeth</b> · upper or lower, shape, proportion and size; prep map</li>
             <li><b>Shade</b> · a colour to discuss</li>
-            <li><b>Compare</b> · now and simulation, then share</li>
+            <li><b>Compare</b> · now and simulation, then share or print a sheet</li>
           </ol>
           <p className="hint">One finger drags a dot or moves the photo. Two fingers zoom. ↶ undoes any change.</p>
           <button
@@ -598,17 +889,77 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
         </Sheet>
       )}
 
+      {sheetDlg && !shareAsk && (
+        <Sheet
+          title={sheetDlg === "clinician" ? <>Prep <em>sheet</em></> : <>Patient <em>sheet</em></>}
+          onClose={() => setSheetDlg(null)}
+        >
+          {sheetDlg === "clinician" ? (
+            <>
+              <p className="hint">
+                For the clinician and the lab: today, design and prep map, per-tooth outline changes
+                {ppm ? " in mm" : " (calibrate for mm)"}, enamel reference values and the planning disclaimer.
+              </p>
+              <Toggle
+                label="Print the case code"
+                note={caseCodeProblem(c.label) ?? `“${c.label}” · the clinic's own code, never the patient's name`}
+                checked={printCode && !caseCodeProblem(c.label)}
+                onChange={(v) => setPrintCode(v && !caseCodeProblem(c.label))}
+              />
+            </>
+          ) : (
+            <>
+              <p className="hint">For the patient: today and the design idea, with plain wording and the simulation footer. No name or ID.</p>
+              <Toggle label="Show where the design adds / is smaller" note="A close-up of the mouth with shaded and outlined areas" checked={showDiff} onChange={setShowDiff} />
+              {siblings.length > 0 && (
+                <div className="field">
+                  <span className="field-label">Add other designs of this patient</span>
+                  {siblings.map((x) => (
+                    <Toggle
+                      key={x.id}
+                      label={x.label}
+                      note={`${archOf(x.design) === "lower" ? "Lower" : "Upper"} teeth · ${x.framing === "closeup" ? "smile close-up" : "full face"}`}
+                      checked={extra.includes(x.id)}
+                      onChange={(v) => setExtra((e) => (v ? [...e, x.id] : e.filter((i) => i !== x.id)))}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          <div className="row">
+            <button className="btn" disabled={busy} onClick={() => withConsent("this sheet", () => void shareSheet(sheetDlg))}>
+              Share PNG
+            </button>
+            <button className="btn secondary" disabled={busy} onClick={() => withConsent("this sheet", () => void printSheet(sheetDlg))}>
+              Print / PDF
+            </button>
+          </div>
+          <p className="mono small">A4 portrait · every page carries the simulation label</p>
+        </Sheet>
+      )}
+
+      {printPages &&
+        createPortal(
+          <div className="print-root" aria-hidden="true">
+            {printPages.map((u) => (
+              <img key={u} src={u} alt="" />
+            ))}
+          </div>,
+          document.body,
+        )}
+
       {shareAsk && (
-        <Sheet title="Share this image?" onClose={() => setShareAsk(null)}>
-          <p>Patient agreed to share this image? It will leave the app (WhatsApp, gallery, cloud backup).</p>
+        <Sheet title={`Share ${shareAsk.what}?`} onClose={() => setShareAsk(null)}>
+          <p>Patient agreed to share {shareAsk.what}? It will leave the app (WhatsApp, gallery, print, cloud backup).</p>
           <div className="row">
             <button
               className="btn"
               onClick={() => {
-                const layout = shareAsk;
+                const run = shareAsk.run;
                 setShareAsk(null);
                 setC((x) => ({ ...x, consentShareAt: Date.now() }));
-                void doExport(layout);
+                run();
               }}
             >
               Yes, patient agreed

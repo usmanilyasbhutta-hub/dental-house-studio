@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { archOf, withArch } from "./arch";
 import { initialLayout, newId, type CaseData } from "./model";
 import { deleteCase, KEEP_DAYS, listCases, loadPhoto, purgeOld, saveCase, thumbnail, wipeAll } from "./storage";
 import { ago, Sheet, useToast } from "./ui";
@@ -63,6 +64,23 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
     await saveCase({ ...c, id: newId(), label: `${c.label} · variant`, createdAt: now, updatedAt: now, consentShareAt: undefined });
     toast.show("Variant added");
     refresh();
+  };
+
+  /** Same photo, lip line and existing-teeth outline; the design moves to the lower arch with the upper shade (linked). */
+  const planLower = async (c: CaseData) => {
+    const now = Date.now();
+    const copy: CaseData = {
+      ...c,
+      id: newId(),
+      label: `${c.label} · lower`,
+      createdAt: now,
+      updatedAt: now,
+      consentShareAt: undefined,
+      design: withArch(c.design, c.guides, "lower"),
+    };
+    await saveCase(copy);
+    toast.show("Lower-teeth design added");
+    onOpen(copy);
   };
 
   // returning users see their designs first; the photo tips lead only while the list is empty
@@ -200,6 +218,17 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
             >
               Duplicate as variant
             </button>
+            {archOf(dialog.c.design) === "upper" && (
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  setDialog(null);
+                  void planLower(dialog.c);
+                }}
+              >
+                Plan lower teeth (copy)
+              </button>
+            )}
             <button className="btn danger" onClick={() => setDialog({ kind: "delete", c: dialog.c })}>
               Delete
             </button>
