@@ -497,6 +497,7 @@ async function deviceSuite(browser, devName, face) {
   });
 
   await test(devName, "autosave: an edit made just before the page is closed is kept", async () => {
+    await page.waitForTimeout(400); // let the reopened editor settle its view before computing handle positions
     const c0 = await current(page);
     const v = await view(page, "guides", c0);
     const a = v.scr(c0.guides.pupilL);

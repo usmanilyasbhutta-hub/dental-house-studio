@@ -298,7 +298,11 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           onCalib={(calib: Calib) => setC((x) => ({ ...x, calib }))}
           onGesture={(active) => {
             history.gesture(active);
-            if (!active) flushNext.current = true;
+            if (!active) {
+              flushNext.current = true;
+              // the drag's last state is usually already in React state (debounced timer running): save it now
+              window.setTimeout(() => void saveNow(), 0);
+            }
           }}
         />
       ) : (
