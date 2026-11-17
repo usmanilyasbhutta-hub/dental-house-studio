@@ -1,21 +1,25 @@
 // Pure geometry for the smile design: tooth sizes, positions and outlines. No DOM here (unit-tested).
 import type { Design, Guides, Proportion, Pt, ToothShape } from "./model";
 
-/** Perceived (frontal) widths relative to the central incisor: central, lateral, canine, PM1, PM2. */
+/**
+ * Perceived (frontal) widths relative to the central incisor: central, lateral, canine, PM1, PM2.
+ * The premolar values (index 3, 4) are display approximations: the proportion rules are defined for the six
+ * anterior teeth only, premolars just need to keep shrinking plausibly into the buccal corridor.
+ */
 export const PROPORTIONS: Record<Proportion, { label: string; note: string; ratios: number[] }> = {
   golden: {
     label: "Golden",
-    note: "Each tooth looks 61.8 % of the one in front (1.618 : 1 : 0.618).",
-    ratios: [1, 0.618, 0.382, 0.236, 0.146],
+    note: "Each tooth looks 61.8 % of the one in front (1.618 : 1 : 0.618). Best suited to long teeth; often looks narrow on normal-length teeth.",
+    ratios: [1, 0.618, 0.382, 0.3, 0.22],
   },
   red: {
     label: "RED 70 %",
-    note: "Recurring esthetic dental proportion: each tooth looks 70 % of the one in front.",
-    ratios: [1, 0.7, 0.49, 0.343, 0.24],
+    note: "Recurring esthetic dental proportion: each tooth looks 70 % of the one in front. Preferred by most dentists for normal-length teeth (Ward 2007).",
+    ratios: [1, 0.7, 0.49, 0.38, 0.28],
   },
   natural: {
     label: "Natural",
-    note: "Average natural smiles (lateral ≈ 66 % of central, canine ≈ 84 % of lateral).",
+    note: "Average natural smiles (Preston): lateral ≈ 66 % of central, canine ≈ 84 % of lateral.",
     ratios: [1, 0.66, 0.554, 0.42, 0.32],
   },
 };
@@ -23,10 +27,13 @@ export const PROPORTIONS: Record<Proportion, { label: string; note: string; rati
 export const TOOTH_NAMES = ["Central", "Lateral", "Canine", "1st premolar", "2nd premolar"];
 
 /** Length of each tooth relative to the central's length. */
-const LENGTH = [1, 0.82, 0.94, 0.78, 0.72];
+const LENGTH = [1, 0.82, 0.97, 0.78, 0.72];
 /** Gingival margin drop below the central's margin (fraction of central length). */
-const GINGIVA = [0, 0.08, 0, 0.07, 0.1];
-/** Perspective darkening per tooth (buccal corridor). */
+const GINGIVA = [0, 0.095, 0, 0.07, 0.1];
+/**
+ * Perspective darkening per tooth (buccal corridor). The renderer now uses one warm radial over the whole arch;
+ * kept for callers that want a per-tooth value.
+ */
 export const DARKEN = [0, 0.03, 0.08, 0.16, 0.24];
 
 export interface ToothBox {
@@ -139,47 +146,153 @@ function chaikin(pts: Pt[], iterations: number): Pt[] {
   return p;
 }
 
+/** Distal offset of the gingival zenith per tooth kind, fraction of tooth width (Chu 2009, PMID 19368601). */
+const ZENITH = [0.12, 0.06, 0, 0, 0];
+/** Where the straight sides of the outline start (fraction of length below the zenith). */
+const NECK_V = 0.1;
+
 /**
  * Closed outline of one tooth in local design coordinates.
- * Canines get a cusp tip; premolars are narrower at the incisal (they are seen at an angle).
+ * Canines get a cusp tip (mesial of centre); premolars are narrower at the incisal (they are seen at an angle).
+ * The outline is affine in the box: scaling/translating the box scales/translates the outline the same way.
  */
 export function toothOutline(box: ToothBox, shape: ToothShape): Pt[] {
   const s = { ...SHAPES[shape] };
-  if (box.kind === 2) Object.assign(s, { incisal: 0.7, convex: 0.12, peak: 0.45 });
+  if (box.kind === 2) Object.assign(s, { incisal: 0.72, convex: 0.1, peak: 0.45 });
   if (box.kind >= 3) Object.assign(s, { incisal: 0.75, convex: 0.08, neck: 0.75 });
   const w = box.x1 - box.x0;
   const h = box.bottom - box.top;
   const cx = (box.x0 + box.x1) / 2;
-  // gingival zenith sits slightly distal on centrals and canines
-  const zen = box.kind === 0 || box.kind === 2 ? box.side * w * 0.06 : 0;
+  // gingival zenith sits distal of the tooth axis
+  const zen = box.side * w * ZENITH[box.kind];
   const N = 14;
   const right: Pt[] = [];
   const left: Pt[] = [];
   for (let i = 0; i <= N; i++) {
-    const v = 0.08 + (i / N) * 0.92;
+    const v = NECK_V + (i / N) * (1 - NECK_V);
     const hw = halfWidthAt(v, s) * w;
     const y = box.top + v * h;
     right.push({ x: cx + hw, y });
     left.push({ x: cx - hw, y });
   }
   const pts: Pt[] = [];
-  // gum line: an arch (scallop) from left side up through the zenith to the right side
-  const neckHw = halfWidthAt(0.08, s) * w;
+  // gum line: a round arch (scallop) from the left side up through the zenith to the right side
+  const neckHw = halfWidthAt(NECK_V, s) * w;
   const zt = zen / neckHw;
-  for (let i = 0; i <= 8; i++) {
-    const t = -1 + (i / 8) * 2;
+  for (let i = 0; i <= 10; i++) {
+    const t = -1 + (i / 10) * 2;
     const u = t < zt ? (t - zt) / (1 + zt) : (t - zt) / (1 - zt);
-    pts.push({ x: cx + t * neckHw, y: box.top + 0.08 * h * u * u });
+    // blend of a circular and a parabolic arch: round at the zenith, no corner where it meets the sides
+    const arch = 0.5 * (1 - Math.sqrt(Math.max(0, 1 - u * u))) + 0.5 * u * u;
+    pts.push({ x: cx + t * neckHw, y: box.top + NECK_V * h * arch });
   }
   pts.push(...right.slice(1));
-  // incisal edge, slightly convex (or a cusp for canines)
+  // incisal edge, slightly convex (or a cusp for canines, its tip mesial of centre)
   const incHw = halfWidthAt(1, s) * w;
+  const tip = box.kind === 2 ? -box.side * 0.15 : 0;
   for (let i = 1; i < 8; i++) {
     const t = 1 - (i / 8) * 2;
-    pts.push({ x: cx + t * incHw, y: box.bottom + s.convex * h * (1 - t * t) });
+    const y = box.bottom + s.convex * h * (1 - ((t - tip) / (1 + Math.abs(tip))) ** 2);
+    pts.push({ x: cx + t * incHw, y });
   }
   pts.push(...left.slice(1).reverse());
-  return chaikin(pts, 2);
+  return chaikin(pts, 3);
+}
+
+/** Unit box used to cache outlines: toothOutline(box) == mapUnit(toothOutline(unitBox(kind, side)), box). */
+export function unitBox(kind: number, side: -1 | 1): ToothBox {
+  return { kind, side, x0: 0, x1: 1, top: 0, bottom: 1 };
+}
+
+/**
+ * Index range [start, end) (wrapping, end may exceed length) of the outline points that are NOT the incisal
+ * edge, i.e. the gum arch and both sides. Used to draw contact shadows without a line on the incisal edge.
+ * `frac` is the fraction of the length (from the top) where the incisal part starts.
+ */
+export function outlineSides(pts: Pt[], box: ToothBox, frac = 0.82): { start: number; end: number } {
+  const lim = box.top + (box.bottom - box.top) * frac;
+  const n = pts.length;
+  // first incisal point, then the first non-incisal point after it: the sides run from there around
+  let i0 = -1;
+  for (let i = 0; i < n; i++) if (pts[i].y > lim && pts[(i - 1 + n) % n].y <= lim) i0 = i;
+  if (i0 < 0) return { start: 0, end: n };
+  let j = i0;
+  while (pts[j % n].y > lim && j < i0 + n) j++;
+  const start = j % n;
+  return { start, end: start + n - (j - i0) };
+}
+
+/** Axis-aligned bounds of points. */
+export function bounds(pts: Pt[]) {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const p of pts) {
+    if (p.x < x0) x0 = p.x;
+    if (p.y < y0) y0 = p.y;
+    if (p.x > x1) x1 = p.x;
+    if (p.y > y1) y1 = p.y;
+  }
+  return { x0, y0, x1, y1 };
+}
+
+/**
+ * Centres of a rotated, repeated watermark grid over a w×h panel, skipping tiles whose (tw×th, unrotated
+ * approximation) box overlaps the `avoid` rectangle (the teeth). `step` is the grid spacing, `angle` in radians.
+ */
+export function watermarkTiles(
+  w: number,
+  h: number,
+  step: number,
+  angle: number,
+  tile: { w: number; h: number },
+  avoid?: { x0: number; y0: number; x1: number; y1: number },
+): Pt[] {
+  const out: Pt[] = [];
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  const R = Math.hypot(w, h);
+  // rotated tile extent in image axes
+  const ex = (Math.abs(c) * tile.w + Math.abs(s) * tile.h) / 2;
+  const ey = (Math.abs(s) * tile.w + Math.abs(c) * tile.h) / 2;
+  for (let j = -Math.ceil(R / step); j <= Math.ceil(R / step); j++) {
+    for (let i = -Math.ceil(R / step); i <= Math.ceil(R / step); i++) {
+      // grid in rotated space, every other row offset by half a step
+      const gx = (i + (j & 1 ? 0.5 : 0)) * step;
+      const gy = j * step * 0.6;
+      const x = w / 2 + gx * c - gy * s;
+      const y = h / 2 + gx * s + gy * c;
+      if (x < -ex * 0.5 || x > w + ex * 0.5 || y < -ey * 0.5 || y > h + ey * 0.5) continue;
+      if (avoid && x + ex > avoid.x0 && x - ex < avoid.x1 && y + ey > avoid.y0 && y - ey < avoid.y1) continue;
+      out.push({ x, y });
+    }
+  }
+  return out;
+}
+
+/**
+ * Layout of the export label band: one line (label left, brand right) when both fit with a gap, shrinking
+ * both down to `minOne` if needed; otherwise two lines (label, then brand). Widths are measured at the base
+ * font size; returns the scale to apply to both so nothing overlaps or runs off the edge.
+ */
+export function bandLayout(width: number, pad: number, labelW: number, brandW: number, gap: number, minOne = 0.8) {
+  const avail = width - 2 * pad;
+  const one = avail / (labelW + gap + brandW);
+  if (one >= 1) return { lines: 1 as const, scale: 1 };
+  if (one >= minOne) return { lines: 1 as const, scale: one };
+  const widest = Math.max(labelW, brandW);
+  return { lines: 2 as const, scale: Math.min(1, avail / widest) };
+}
+
+/**
+ * Alpha used to composite the mockup layer. With the mouth/gum backdrop on, the default opacity (0.92) already
+ * covers fully so the old teeth never ghost through the dark mouth; lower values still fade it out. Without a
+ * backdrop the opacity is used as is (see-through over the patient's own teeth).
+ */
+export function mockupAlpha(opacity: number, backdrop: boolean | undefined) {
+  const o = Math.max(0, Math.min(1, opacity));
+  return backdrop === false ? o : Math.min(1, o / 0.92);
 }
 
 /** Map a local design point to image coordinates. */

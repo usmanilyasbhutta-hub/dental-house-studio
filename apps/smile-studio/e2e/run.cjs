@@ -460,8 +460,9 @@ async function deviceSuite(browser, devName, face) {
       assert(cdiff(info.corner, [0x1c, 0x22, 0x20]) < 6, `${btn}: band colour ${info.corner}`);
       assert(info.inkFirst >= 0, `${btn}: label band is empty`);
       assert(
-        info.leftEnd < info.rightStart - 8,
-        `${btn}: watermark (ends x=${Math.round(info.leftEnd)}) overlaps "DENTAL HOUSE · SIALKOT" (starts x=${Math.round(info.rightStart)}) on a ${info.W}px-wide portrait export`,
+        // measured on the PNG itself: the two texts in the band must be separated by a clear gap (or wrapped)
+        info.maxGap >= 24,
+        `${btn}: label band text has no clear gap (largest gap ${info.maxGap}px) on a ${info.W}px-wide export`,
       );
       out.push(`${info.W}x${info.H}`);
     }
