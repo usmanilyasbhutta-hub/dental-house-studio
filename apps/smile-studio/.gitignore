@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.local
 .netlify/
+smile-studio-site.zip
