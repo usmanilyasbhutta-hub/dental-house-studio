@@ -45,7 +45,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     [img, c],
   );
   const setDesign = (d: Partial<Design>) => setC((x) => ({ ...x, design: { ...x.design, ...d } }));
-  const m = measure(c.design, c.guides, c.centralMm);
+  const m = measure(c.design, c.guides, c.centralMm, c.calib);
   const mm = (px: number) => (m.pxPerMm ? `${(px / m.pxPerMm).toFixed(1)} mm` : `${Math.round(px)} px`);
 
   const doExport = async (layout: "after" | "side-by-side") => {

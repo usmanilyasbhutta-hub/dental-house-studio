@@ -27,6 +27,24 @@ export const listCases = async () =>
 export const saveCase = (c: CaseData) => tx("readwrite", (s) => s.put(c));
 export const deleteCase = (id: string) => tx("readwrite", (s) => s.delete(id));
 
+/** Deletes the whole database (stronger than deleting records: the browser drops the files). */
+export const wipeAll = () =>
+  new Promise<void>((resolve, reject) => {
+    const r = indexedDB.deleteDatabase(DB);
+    r.onsuccess = () => resolve();
+    r.onerror = () => reject(r.error);
+    r.onblocked = () => resolve();
+  });
+
+/** Days a case is kept on the phone before it is cleared automatically. */
+export const KEEP_DAYS = 30;
+
+/** Removes cases not touched for KEEP_DAYS (shared clinic phones should not keep faces forever). */
+export async function purgeOld(days = KEEP_DAYS) {
+  const cut = Date.now() - days * 864e5;
+  for (const c of await listCases()) if (c.updatedAt < cut) await deleteCase(c.id);
+}
+
 /** Loads a photo, applies EXIF orientation, downsizes to maxSide and strips metadata (re-encoded JPEG). */
 export async function loadPhoto(file: Blob, maxSide = 2048) {
   const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -38,7 +56,10 @@ export async function loadPhoto(file: Blob, maxSide = 2048) {
   cv.height = h;
   cv.getContext("2d")!.drawImage(bmp, 0, 0, w, h);
   bmp.close();
-  const blob = await new Promise<Blob>((r) => cv.toBlob((b) => r(b!), "image/jpeg", 0.92));
+  // re-encoding through a canvas drops all EXIF / GPS metadata
+  const blob = await new Promise<Blob>((res, rej) =>
+    cv.toBlob((b) => (b ? res(b) : rej(new Error("Could not encode photo"))), "image/jpeg", 0.92),
+  );
   return { blob, w, h };
 }
 

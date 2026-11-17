@@ -241,7 +241,11 @@ export interface Measurements {
   pxPerMm?: number;
 }
 
-export function measure(d: Design, g: Guides, centralMm?: number): Measurements {
+/**
+ * Measurements of the design. mm values need a photo calibration: the clinician taps both edges of the patient's
+ * existing central (calib) and enters its width measured in the mouth (centralMm).
+ */
+export function measure(d: Design, g: Guides, centralMm?: number, calib?: { a: Pt; b: Pt }): Measurements {
   const cw = centralWidth(d);
   const cl = centralLength(d);
   const pa = pupilAngle(g);
@@ -257,10 +261,34 @@ export function measure(d: Design, g: Guides, centralMm?: number): Measurements 
     cant: d.tilt,
     midlineDev,
     widths: r.slice(0, d.count / 2).map((k) => cw * k),
-    pxPerMm: centralMm ? cw / centralMm : undefined,
+    pxPerMm: centralMm && calib && dist(calib.a, calib.b) > 2 ? dist(calib.a, calib.b) / centralMm : undefined,
   };
 }
 
 export function dist(a: Pt, b: Pt) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+/**
+ * Smile-arc value that makes the incisal edges follow the lower lip (inner contour).
+ * Uses the lower half of the lip points that lie within the design width, fits y = c·x² in the design frame.
+ */
+export function fitArcToLowerLip(lips: Pt[], d: Design, g: Guides): number {
+  const a = designAngle(d, g);
+  const half = d.width / 2;
+  const local = lips.map((p) => toLocal(p, d, a)).filter((p) => p.y > -centralLength(d) * 0.3 && Math.abs(p.x) <= half * 1.4);
+  if (local.length < 3) return d.arc;
+  // lowest (largest y) point near the midline is the lip's reference
+  const y0 = Math.max(...local.filter((p) => Math.abs(p.x) < half * 0.4).map((p) => p.y), ...local.map((p) => p.y));
+  let num = 0;
+  let den = 0;
+  for (const p of local) {
+    const x2 = p.x * p.x;
+    num += x2 * (y0 - p.y);
+    den += x2 * x2;
+  }
+  if (den === 0) return d.arc;
+  const c = num / den; // rise per x² (px)
+  const arc = (c * half * half) / (0.35 * centralLength(d));
+  return Math.min(1, Math.max(0, arc));
 }

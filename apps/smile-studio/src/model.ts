@@ -48,20 +48,25 @@ export interface CaseData {
   /** Inner lip contour (closed), clockwise. Teeth are drawn only inside it. */
   lips: Pt[];
   design: Design;
-  /** Optional calibration: real central incisor width in mm (for mm read-outs). */
+  /** Optional calibration: width in mm of the patient's EXISTING central, measured in the mouth. */
   centralMm?: number;
+  /** Mesial and distal edges of that existing central, tapped on the photo (image px). */
+  calib?: { a: Pt; b: Pt };
+  /** When the clinician confirmed the patient agreed to the photo / to sharing the simulation. */
+  consentPhotoAt?: number;
+  consentShareAt?: number;
   thumb?: string;
 }
 
 export const DEFAULT_DESIGN: Omit<Design, "center" | "width"> = {
-  wl: 0.8,
+  wl: 0.78,
   proportion: "natural",
   shape: "soft",
   count: 10,
   arc: 0.35,
   tilt: 0,
   lateralStep: 0.1,
-  shade: "BL3",
+  shade: "A1",
   opacity: 0.92,
 };
 

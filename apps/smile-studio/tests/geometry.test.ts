@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   centralLength,
   centralWidth,
+  fitArcToLowerLip,
   measure,
   PROPORTIONS,
   smoothClosed,
@@ -98,14 +99,25 @@ describe("measurements and defaults", () => {
     expect(measure({ ...design, center: { x: 520, y: 720 } }, guides).midlineDev).toBeCloseTo(20, 9);
   });
 
-  it("converts to mm when calibrated", () => {
-    const m = measure(base, initialLayout(1000, 1000).guides, 8.5);
-    expect(m.centralW / m.pxPerMm!).toBeCloseTo(8.5, 9);
+  it("calibrates mm from the patient's existing central on the photo, not from the design", () => {
+    const g = initialLayout(1000, 1000).guides;
+    expect(measure(base, g, 8.5).pxPerMm).toBeUndefined();
+    const m = measure(base, g, 8.5, { a: { x: 400, y: 600 }, b: { x: 485, y: 600 } });
+    expect(m.pxPerMm).toBeCloseTo(10, 9);
+  });
+
+  it("fits the smile arc to a curved lower lip and gives ~0 for a flat one", () => {
+    const { guides, design } = initialLayout(1000, 1000);
+    const half = design.width / 2;
+    const flat = [-1, -0.5, 0, 0.5, 1].map((t) => ({ x: design.center.x + t * half, y: design.center.y + 10 }));
+    expect(fitArcToLowerLip(flat, design, guides)).toBeCloseTo(0, 6);
+    const curved = [-1, -0.5, 0, 0.5, 1].map((t) => ({ x: design.center.x + t * half, y: design.center.y + 10 - 30 * t * t }));
+    expect(fitArcToLowerLip(curved, design, guides)).toBeGreaterThan(0.3);
   });
 
   it("knows every shade and falls back safely", () => {
     expect(SHADES.length).toBeGreaterThan(5);
     expect(shadeById("A2").id).toBe("A2");
-    expect(shadeById("nope").id).toBe("BL3");
+    expect(shadeById("nope").id).toBe("A1");
   });
 });

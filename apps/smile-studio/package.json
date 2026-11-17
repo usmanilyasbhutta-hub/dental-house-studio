@@ -5,11 +5,13 @@
   "type": "module",
   "description": "Mobile smile-design mockup app for Dental House, Sialkot (on-device, offline PWA)",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
+    "dev:lan": "vite --host",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
     "test": "vitest run",
-    "check": "tsc --noEmit && vitest run"
+    "check": "tsc --noEmit && vitest run",
+    "e2e": "node e2e/run.cjs"
   },
   "dependencies": {
     "react": "^19.0.0",

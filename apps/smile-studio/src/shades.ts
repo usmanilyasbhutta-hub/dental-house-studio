@@ -22,7 +22,7 @@ export const SHADES: Shade[] = [
 ];
 
 export function shadeById(id: string): Shade {
-  return SHADES.find((s) => s.id === id) ?? SHADES[2];
+  return SHADES.find((s) => s.id === id) ?? SHADES.find((s) => s.id === "A1")!;
 }
 
 export function hexToRgb(hex: string): [number, number, number] {
