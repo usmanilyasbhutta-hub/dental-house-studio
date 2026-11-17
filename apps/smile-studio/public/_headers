@@ -1,0 +1,13 @@
+# Security headers for Netlify / Cloudflare Pages (static hosting). The app's own CSP is in index.html.
+/*
+  Content-Security-Policy: frame-ancestors 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000
+
+/sw.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache

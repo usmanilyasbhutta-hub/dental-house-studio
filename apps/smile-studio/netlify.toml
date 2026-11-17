@@ -1,0 +1,7 @@
+# Netlify: build the app from this folder (set "Base directory" to apps/smile-studio).
+[build]
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
