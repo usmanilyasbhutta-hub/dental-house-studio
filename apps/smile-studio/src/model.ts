@@ -20,6 +20,18 @@ export interface Guides {
   midline: Pt;
 }
 
+/** Which arch the design is for. */
+export type Arch = "upper" | "lower";
+/** "photo": simulated teeth are built from the patient's own photographed teeth (realistic). "drawn": illustrated teeth. */
+export type RenderMode = "photo" | "drawn";
+
+/** Black/white mask of the patient's EXISTING teeth (white = tooth), stored small as a PNG data URL. */
+export interface ToothMask {
+  w: number;
+  h: number;
+  png: string;
+}
+
 export interface Design {
   /** Contact point between the two centrals at the incisal edge. */
   center: Pt;
@@ -41,6 +53,10 @@ export interface Design {
   opacity: number;
   /** Draw a mouth/gum backdrop behind the mockup inside the lip line (hides the old teeth there). Default true. */
   backdrop?: boolean;
+  /** Default "upper". */
+  arch?: Arch;
+  /** Default "photo". */
+  render?: RenderMode;
 }
 
 export interface CaseData {
@@ -66,6 +82,8 @@ export interface CaseData {
   consentPhotoAt?: number;
   consentShareAt?: number;
   thumb?: string;
+  /** Clinician-corrected mask of the existing teeth; when missing it is detected automatically from the photo. */
+  toothMask?: ToothMask;
 }
 
 export const DEFAULT_DESIGN: Omit<Design, "center" | "width"> = {
