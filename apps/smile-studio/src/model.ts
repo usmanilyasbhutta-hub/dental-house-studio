@@ -33,6 +33,8 @@ export interface Design {
   shade: string;
   /** 0..1 how strongly the mockup covers the photo. */
   opacity: number;
+  /** Draw a mouth/gum backdrop behind the mockup inside the lip line (hides the old teeth there). Default true. */
+  backdrop?: boolean;
 }
 
 export interface CaseData {
