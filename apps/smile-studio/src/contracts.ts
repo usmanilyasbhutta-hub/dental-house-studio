@@ -9,7 +9,8 @@ export interface Mask {
   data: Uint8Array;
 }
 
-export type PrepCategory = "additive" | "minimal" | "reduction" | "unchanged" | "unknown";
+/** Outline-only classification from a 2D photo (never a prep type or depth; see docs/round3-clinical.md B). */
+export type PrepCategory = "additive" | "reduction" | "mixed" | "unchanged" | "unknown";
 
 /** Per-tooth comparison of the EXISTING outline (photo) with the PLANNED outline (design), frontal 2D only. */
 export interface ToothPrep {
@@ -20,8 +21,11 @@ export interface ToothPrep {
   label: string;
   /** incisal length change, image px: positive = add, negative = reduce */
   lengthPx: number;
-  /** mesiodistal width change, image px: positive = add, negative = reduce */
-  widthPx: number;
+  /** mesial / distal width change, image px: positive = add, negative = reduce */
+  mesialPx: number;
+  distalPx: number;
+  /** (planned ∩ existing) / existing, 0–100 */
+  overlapPct: number;
   /** % of the planned outline area that is added material (outside the existing tooth) */
   addPct: number;
   /** % of the existing tooth area (inside this tooth's box) that lies outside the plan (needs reduction) */
