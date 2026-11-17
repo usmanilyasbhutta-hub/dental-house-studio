@@ -219,7 +219,33 @@ const SHARE_STUB = () => {
   navigator.share = async (data) => {
     window.__shared.push(...(data.files || []));
   };
+  // print: record how many A4 pages were handed to the print style sheet, then behave like a closed dialog
+  window.__printed = [];
+  window.print = () => {
+    const imgs = [...document.querySelectorAll(".print-root img")];
+    window.__printed.push(imgs.map((i) => [i.naturalWidth, i.naturalHeight]));
+    setTimeout(() => window.dispatchEvent(new Event("afterprint")), 0);
+  };
 };
+/** Sizes and types of the files the app shared since the last reset. */
+const sharedInfo = (page) =>
+  page.evaluate(async () =>
+    Promise.all(
+      window.__shared.map(async (f) => {
+        const b = await createImageBitmap(f);
+        const png = await new Promise((r) => {
+          const fr = new FileReader();
+          fr.onload = () => r(String(fr.result).split(",")[1]);
+          fr.readAsDataURL(f);
+        });
+        return { name: f.name, type: f.type, w: b.width, h: b.height, png };
+      }),
+    ),
+  );
+async function agreeIfAsked(page) {
+  const agree = page.getByRole("button", { name: "Yes, patient agreed" });
+  if (await agree.isVisible({ timeout: 1000 }).catch(() => false)) await agree.click();
+}
 
 // ---------- device suite ----------
 async function deviceSuite(browser, devName, face) {
@@ -330,6 +356,134 @@ async function deviceSuite(browser, devName, face) {
     assert(c3.design.center.x > c2.design.center.x + 1, "move handle did not move the design");
     await shot("03-teeth-dragged");
     return `${r0.replace(/\n/g, " ")} => ${(await ro()).replace(/\n/g, " ")}`;
+  });
+
+  await test(devName, "Lips › Existing teeth: auto-detect saves a mask, the brush changes it, undo restores it", async () => {
+    await gotoStep(page, "Lips");
+    await page.getByRole("radio", { name: "Existing teeth" }).click();
+    await page.getByRole("button", { name: "Auto-detect" }).click();
+    await page.waitForTimeout(900);
+    const c0 = await current(page);
+    assert(c0.toothMask && /^data:image\/png/.test(c0.toothMask.png), "no toothMask saved after Auto-detect");
+    const on = await page.evaluate(async (tm) => {
+      const im = new Image();
+      im.src = tm.png;
+      await im.decode();
+      const cv = document.createElement("canvas");
+      cv.width = tm.w;
+      cv.height = tm.h;
+      const x = cv.getContext("2d");
+      x.drawImage(im, 0, 0);
+      const d = x.getImageData(0, 0, tm.w, tm.h).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (d[i] > 127) n++;
+      return n;
+    }, c0.toothMask);
+    assert(on > 50, `auto-detect found only ${on} tooth pixels on the synthetic face`);
+    await shot("02b-existing-teeth");
+    // paint a stroke on the upper lip (outside the detected teeth)
+    const v = await view(page, "lips", c0);
+    const d = c0.design;
+    const a = v.scr({ x: d.center.x - d.width * 0.2, y: d.center.y - d.width * 0.3 });
+    await T.drag(a, { x: a.x + 60, y: a.y });
+    await page.waitForTimeout(900);
+    const c1 = await current(page);
+    assert(c1.toothMask.png !== c0.toothMask.png, "painting did not change the saved mask");
+    assert(JSON.stringify(c1.lips) === JSON.stringify(c0.lips), "painting moved lip dots");
+    await shot("02c-existing-teeth-painted");
+    await page.getByRole("button", { name: "Undo" }).click();
+    await page.waitForTimeout(900);
+    const c2 = await current(page);
+    assert(c2.toothMask && c2.toothMask.png === c0.toothMask.png, "undo did not restore the mask");
+    await page.getByRole("radio", { name: "Lip line" }).click();
+    return `${on} px auto`;
+  });
+
+  await test(devName, "Teeth: Upper / Lower switch, lower length handle below, hint says lower incisal edges", async () => {
+    await gotoStep(page, "Teeth");
+    await page.getByRole("radio", { name: "Lower", exact: true }).click();
+    await page.waitForTimeout(800);
+    const c0 = await current(page);
+    assert(c0.design.arch === "lower", `arch ${c0.design.arch}`);
+    assert(/lower incisal edges/i.test(await page.locator(".panel").innerText()), "lower hint missing");
+    const h = await page.evaluate(async (c) => {
+      const g = await import("/src/geometry.ts");
+      const st = await import("/src/Stage.tsx");
+      return st.uiHandles(c.design, g.designAngle(c.design, c.guides));
+    }, c0);
+    assert(h.length.y > c0.design.center.y, "lower length handle is not below the incisal edge");
+    const v = await view(page, "design", c0);
+    const len = v.scr(h.length);
+    await T.drag(len, { x: len.x, y: len.y + 18 });
+    await page.waitForTimeout(800);
+    const c1 = await current(page);
+    assert(c1.design.wl < c0.design.wl && c1.design.wl >= 0.5, `lower wl ${c0.design.wl} -> ${c1.design.wl}`);
+    await shot("03b-teeth-lower");
+    await page.getByRole("radio", { name: "Upper", exact: true }).click();
+    await page.waitForTimeout(800);
+    const c2 = await current(page);
+    assert(c2.design.arch === "upper", "back to upper failed");
+    const pt = await page.locator(".panel").innerText();
+    assert(/Follow lower lip/i.test(pt), `upper controls missing after switching back: ${pt.slice(0, 400)}`);
+    return `wl ${c0.design.wl} -> ${c1.design.wl}`;
+  });
+
+  await test(devName, "Prep map: toggle shows the disclaimer, legend and per-tooth list (Teeth + Compare)", async () => {
+    await gotoStep(page, "Teeth");
+    const h0 = await canvasHash(page);
+    await page.getByRole("switch", { name: /Prep map/ }).click();
+    await page.waitForTimeout(600);
+    const txt = await page.locator(".panel").innerText();
+    assert(/Planning aid only\. Measured from a 2D photo/.test(txt), "disclaimer missing in Teeth");
+    assert(/Green/.test(txt) && /Red/.test(txt), "legend missing");
+    const n = await page.locator(".prep-list li").count();
+    assert(n >= 6, `per-tooth list has ${n} rows`);
+    assert(await page.locator(".disclaimer").isVisible(), "disclaimer not visible");
+    assert((await canvasHash(page)) !== h0, "map did not change the canvas");
+    await shot("03c-prep-map");
+    await page.getByRole("switch", { name: /Prep map/ }).click();
+    await gotoStep(page, "Compare");
+    await page.getByRole("switch", { name: /Prep map/ }).click();
+    await page.waitForTimeout(400);
+    assert(await page.locator(".panel .disclaimer").isVisible(), "disclaimer missing in Compare");
+    await shot("05b-compare-prep");
+    await page.getByRole("switch", { name: /Prep map/ }).click();
+    return `${n} teeth`;
+  });
+
+  await test(devName, "Sheets: clinician and patient sheets share A4 PNGs (1240x1754) and print", async () => {
+    await gotoStep(page, "Compare");
+    const out = [];
+    for (const [btn, kind] of [
+      ["Prep sheet", "clinician"],
+      ["Patient sheet", "patient"],
+    ]) {
+      await page.evaluate(() => (window.__shared = []));
+      await page.getByRole("button", { name: btn, exact: true }).click();
+      const dlg = page.getByRole("dialog");
+      await dlg.waitFor();
+      await shot(`07-sheet-dialog-${kind}`);
+      await dlg.getByRole("button", { name: "Share PNG" }).click();
+      await agreeIfAsked(page);
+      await page.waitForFunction(() => window.__shared.length > 0, null, { timeout: 20000 });
+      const files = await sharedInfo(page);
+      for (const f of files) {
+        fs.writeFileSync(path.join(EXPORTS, `${slug(devName)}-${f.name}`), Buffer.from(f.png, "base64"));
+        assert(f.type === "image/png" && /\.png$/.test(f.name), `${kind}: not a png ${f.name}`);
+        assert(f.w === 1240 && f.h === 1754, `${kind}: page ${f.w}x${f.h}, expected 1240x1754`);
+      }
+      // print path: the same pages go to the print style sheet
+      if (!(await dlg.isVisible().catch(() => false))) await page.getByRole("button", { name: btn, exact: true }).click();
+      await page.evaluate(() => (window.__printed = []));
+      await dlg.getByRole("button", { name: "Print / PDF" }).click();
+      await page.waitForFunction(() => window.__printed.length > 0, null, { timeout: 20000 });
+      const printed = await page.evaluate(() => window.__printed[0]);
+      assert(printed.length === files.length && printed.every(([w, h]) => w === 1240 && h === 1754), `${kind}: printed ${JSON.stringify(printed)}`);
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(200);
+      out.push(`${kind} ${files.length}p`);
+    }
+    return out.join(", ");
   });
 
   await test(devName, "pinch-zoom and wheel zoom never move handles", async () => {

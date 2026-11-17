@@ -2,9 +2,10 @@
 // Performance: live drag state lives in refs and is drawn on requestAnimationFrame (at most once per frame);
 // React state is updated throttled (~10 Hz) and on release. Teeth render in "fast" quality during gestures.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { centralWidth, designAngle, designHandles, toLocal } from "./geometry";
+import { drawPrepMap, paintMask, type Mask, type PrepResult } from "./engineShim";
+import { centralLength, centralWidth, designAngle, pupilAngle, smoothClosed, toImage, toLocal } from "./geometry";
 import type { Design, Guides, Pt } from "./model";
-import { C, drawOverlay, drawTeeth, hitHandle, type Scene, type Step } from "./render";
+import { C, drawOverlay, drawTeeth, type Scene, type Step } from "./render";
 import { haptic } from "./ui";
 
 
@@ -15,6 +16,27 @@ interface View {
 }
 
 export type Calib = { a: Pt; b: Pt };
+
+/** Existing-teeth brush: radius in screen px so it feels the same at any zoom. */
+export type MaskTool = { mode: "paint" | "erase"; size: number };
+
+/** Upper/lower wl limits for the length handle (lower central W/L ≈ 0.62, 0.5–0.75: docs/round3-clinical.md A). */
+export const WL_RANGE = { upper: { min: 0.6, max: 0.95 }, lower: { min: 0.5, max: 0.75 } };
+
+/**
+ * Design handles (image coords). Upper: length dot above the teeth (gum side), move cross below.
+ * Lower arch is mirrored: crowns grow down from the incisal edge, so the length dot sits below and the move cross above.
+ */
+export function uiHandles(d: Design, angle: number) {
+  const L = centralLength(d);
+  const f = d.arch === "lower" ? -1 : 1;
+  return {
+    move: toImage({ x: 0, y: f * L * 0.6 }, d, angle),
+    widthR: toImage({ x: d.width / 2, y: -f * L * 0.3 }, d, angle),
+    widthL: toImage({ x: -d.width / 2, y: -f * L * 0.3 }, d, angle),
+    length: toImage({ x: 0, y: -f * L }, d, angle),
+  };
+}
 
 interface Live {
   guides?: Guides;
@@ -35,8 +57,17 @@ interface Props {
   onLips: (l: Pt[]) => void;
   onDesign: (d: Design) => void;
   onCalib: (c: Calib) => void;
-  /** true when a handle drag starts, false when it ends (history commits then). */
+  /** true when a handle drag (or a brush stroke) starts, false when it ends (history commits then). */
   onGesture: (active: boolean) => void;
+  /** Reduction map over the photo (Teeth and Compare steps). */
+  showPrep?: boolean;
+  prep?: PrepResult | null;
+  /** Lips step, "Existing teeth" tool: brush state, the mask (painted in place) and its version. */
+  maskTool?: MaskTool | null;
+  mask?: Mask | null;
+  maskVersion?: number;
+  /** a brush stroke changed the mask (called at the end of each stroke) */
+  onMaskEdited?: () => void;
 }
 
 const HIT = 40; // css px: nearest handle within this radius wins
@@ -52,6 +83,7 @@ const NAMES: Record<string, string> = {
   widthL: "teeth width, left",
   widthR: "teeth width, right",
   length: "central length",
+  brush: "existing-teeth brush",
   calA: "first edge of the existing central",
   calB: "second edge of the existing central",
 };
@@ -63,7 +95,7 @@ function handlesOf(s: Scene, step: Step, calibrating: boolean, calib?: Calib): [
   if (step === "guides") return [["pupilR", s.guides.pupilR], ["pupilL", s.guides.pupilL], ["midline", s.guides.midline]];
   if (step === "lips") return s.lips.map((q, i) => [`lip${i}`, q]);
   if (step === "design") {
-    const h = designHandles(s.design, designAngle(s.design, s.guides));
+    const h = uiHandles(s.design, designAngle(s.design, s.guides));
     return [["move", h.move], ["widthL", h.widthL], ["widthR", h.widthR], ["length", h.length]];
   }
   return [];
@@ -86,8 +118,10 @@ function moveHandle(s: Scene, calib: Calib | undefined, id: string, p: Pt, grab:
   const l = toLocal(p, d, a);
   if (id === "widthL" || id === "widthR") return { design: { ...d, width: Math.max(s.imgW * 0.04, Math.abs(l.x) * 2) } };
   if (id === "length") {
-    const L = Math.max(4, -l.y);
-    const wl = Math.min(0.95, Math.max(0.6, centralWidth(d) / L));
+    const lower = d.arch === "lower";
+    const L = Math.max(4, lower ? l.y : -l.y);
+    const r = WL_RANGE[lower ? "lower" : "upper"];
+    const wl = Math.min(r.max, Math.max(r.min, centralWidth(d) / L));
     return { design: { ...d, wl: Math.round(wl * 100) / 100 } };
   }
   return {};
@@ -120,8 +154,34 @@ export function Stage(props: Props) {
     | { kind: "pan"; start: Pt; view: View }
     | { kind: "pinch"; d0: number; m0: Pt; view: View }
     | { kind: "divider" }
+    | { kind: "paint"; last: Pt; started: boolean }
     | null
   >(null);
+  const maskCv = useRef<HTMLCanvasElement | null>(null);
+  const brush = useRef<Pt | null>(null);
+  const painting = () => propsRef.current.step === "lips" && !!propsRef.current.maskTool;
+  const rebuildMask = useCallback(() => {
+    const m = propsRef.current.mask;
+    if (!m) {
+      maskCv.current = null;
+      return;
+    }
+    const cv = maskCv.current && maskCv.current.width === m.w && maskCv.current.height === m.h ? maskCv.current : document.createElement("canvas");
+    cv.width = m.w;
+    cv.height = m.h;
+    const ctx = cv.getContext("2d")!;
+    const im = ctx.createImageData(m.w, m.h);
+    for (let i = 0; i < m.data.length; i++)
+      if (m.data[i]) {
+        const o = i * 4;
+        im.data[o] = 70;
+        im.data[o + 1] = 170;
+        im.data[o + 2] = 255;
+        im.data[o + 3] = 120;
+      }
+    ctx.putImageData(im, 0, 0);
+    maskCv.current = cv;
+  }, []);
 
   const draw = useCallback(() => {
     raf.current = 0;
@@ -152,7 +212,33 @@ export function Stage(props: Props) {
     ctx.drawImage(s.img, 0, 0, s.imgW, s.imgH);
     const q = quality.current;
     const cal = p.step === "design" && p.calibrating;
-    if (!p.showOriginal) {
+    const prepOn = !!p.showPrep && !!p.prep && !cal && (p.step === "design" || p.step === "compare");
+    const paintOn = p.step === "lips" && !!p.maskTool;
+    if (!p.showOriginal && paintOn) {
+      // existing-teeth tool: translucent tint over the photo, lip line for orientation, no dots
+      if (maskCv.current) {
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(maskCv.current, 0, 0, s.imgW, s.imgH);
+        ctx.restore();
+      }
+      ctx.save();
+      ctx.beginPath();
+      smoothClosed(s.lips).forEach((q2, i) => (i ? ctx.lineTo(q2.x, q2.y) : ctx.moveTo(q2.x, q2.y)));
+      ctx.closePath();
+      ctx.setLineDash([6 / v.scale, 5 / v.scale]);
+      ctx.lineWidth = 1.5 / v.scale;
+      ctx.strokeStyle = "rgba(201,171,134,0.85)";
+      ctx.stroke();
+      ctx.restore();
+    } else if (!p.showOriginal && prepOn) {
+      drawPrepMap(ctx, s, p.prep!);
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      drawTeeth(ctx, s, "outline", q);
+      ctx.restore();
+      if (p.step === "design") drawDesignOverlay(ctx, s, v.scale, active.current ?? selRef.current);
+    } else if (!p.showOriginal) {
       if (p.step === "lips") {
         ctx.save();
         ctx.globalAlpha = 0.5;
@@ -170,11 +256,23 @@ export function Stage(props: Props) {
         drawTeeth(ctx, s, p.step === "design" && p.mode === "outline" ? "outline" : "mockup", q);
       }
       if (cal) drawCalib(ctx, calib, v.scale, active.current ?? selRef.current);
+      else if (p.step === "design") drawDesignOverlay(ctx, s, v.scale, active.current ?? selRef.current);
       else drawOverlay(ctx, s, { step: p.step, scale: v.scale, activeHandle: active.current ?? selRef.current });
     }
     ctx.restore();
 
-    if (p.step === "compare" && !p.showOriginal) {
+    // brush ring under the finger while painting the existing-teeth mask
+    if (paintOn && brush.current && p.maskTool) {
+      ctx.beginPath();
+      ctx.arc(brush.current.x, brush.current.y, p.maskTool.size, 0, Math.PI * 2);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = p.maskTool.mode === "erase" ? C.white : "rgb(70,170,255)";
+      ctx.setLineDash(p.maskTool.mode === "erase" ? [5, 4] : []);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    if (p.step === "compare" && !p.showOriginal && !prepOn) {
       const x = divider.current * w;
       // knob sits below the mouth so it never covers the teeth
       const mouthBottom = v.oy + (s.design.center.y + s.design.width * 0.32) * v.scale;
@@ -233,7 +331,24 @@ export function Stage(props: Props) {
   }, [draw]);
 
   // redraw whenever anything visible changes
-  useEffect(requestDraw, [requestDraw, props.scene, props.step, props.mode, props.showOriginal, props.calib, props.calibrating, selected, focused]);
+  useEffect(requestDraw, [
+    requestDraw,
+    props.scene,
+    props.step,
+    props.mode,
+    props.showOriginal,
+    props.calib,
+    props.calibrating,
+    props.showPrep,
+    props.prep,
+    props.maskTool,
+    selected,
+    focused,
+  ]);
+  useEffect(() => {
+    rebuildMask();
+    requestDraw();
+  }, [props.mask, props.maskVersion, rebuildMask, requestDraw]);
   useEffect(
     () => () => {
       cancelAnimationFrame(raf.current);
@@ -277,19 +392,20 @@ export function Stage(props: Props) {
   // Face: whole photo. Lips / teeth / shade: zoom to the mouth. Compare: mouth by default, face on request.
   // A small size change (a hint line appearing in the panel below) keeps the view as it is: the stage's top edge does not
   // move, so the photo stays still under a finger mid-drag. A new step, a rotation or the first layout re-frames.
-  const framed = useRef({ step: "", view: "", w: 0, h: 0 });
+  const framed = useRef({ step: "", view: "", arch: "", w: 0, h: 0 });
+  const arch = props.scene.design.arch ?? "upper";
   const userView = useRef(false); // the clinician zoomed or panned by hand: keep their framing on small resizes
   useEffect(() => {
     if (!size.w) return;
     const f = framed.current;
     const small = f.w > 0 && Math.abs(size.w - f.w) < f.w * 0.25 && Math.abs(size.h - f.h) < f.h * 0.25;
-    if (f.step === step && f.view === compareView && small && view.current && (gesture.current || userView.current)) {
+    if (f.step === step && f.view === compareView && f.arch === arch && small && view.current && (gesture.current || userView.current)) {
       requestDraw();
     } else if (step === "guides" || (step === "compare" && compareView === "face")) fit();
     else mouth();
-    framed.current = { step, view: compareView, w: size.w, h: size.h };
+    framed.current = { step, view: compareView, arch, w: size.w, h: size.h };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, compareView, size.w, size.h]);
+  }, [step, compareView, arch, size.w, size.h]);
 
   const toImg = (p: Pt): Pt => {
     const v = view.current!;
@@ -345,6 +461,8 @@ export function Stage(props: Props) {
     startFast();
     if (pointers.current.size === 2) {
       if (gesture.current?.kind === "handle") endHandle();
+      if (gesture.current?.kind === "paint") endStroke();
+      brush.current = null;
       const [a, b] = [...pointers.current.values()];
       gesture.current = { kind: "pinch", d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, m0: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, view: view.current };
       requestDraw();
@@ -354,8 +472,15 @@ export function Stage(props: Props) {
     const ip = toImg(p);
     const { s, calib } = current();
     const pr = propsRef.current;
+    if (painting() && !pr.showOriginal) {
+      // one finger paints (after a few px, so a second finger can still turn it into a pinch); two fingers zoom / pan
+      gesture.current = { kind: "paint", last: p, started: false };
+      brush.current = p;
+      requestDraw();
+      return;
+    }
     const cal = pr.step === "design" && pr.calibrating;
-    let id = cal ? nearest(handlesOf(s, pr.step, true, calib), ip, Infinity) : hitHandle(s, pr.step, ip, HIT / view.current.scale);
+    let id = cal ? nearest(handlesOf(s, pr.step, true, calib), ip, Infinity) : nearest(handlesOf(s, pr.step, false, calib), ip, HIT / view.current.scale);
     if (pr.showOriginal) id = null;
     if (id) {
       const grab = id === "move" ? { x: ip.x - s.design.center.x, y: ip.y - s.design.center.y } : { x: 0, y: 0 };
@@ -406,14 +531,60 @@ export function Stage(props: Props) {
       if (performance.now() - lastPush.current > PUSH_MS) push();
     } else if (g.kind === "divider") {
       divider.current = Math.min(1, Math.max(0, p.x / sizeRef.current.w));
+    } else if (g.kind === "paint") {
+      brush.current = p;
+      if (!g.started && Math.hypot(p.x - g.last.x, p.y - g.last.y) < 4) return requestDraw();
+      if (!g.started) {
+        g.started = true;
+        propsRef.current.onGesture(true);
+        haptic();
+      }
+      paintSeg(g.last, p);
+      g.last = p;
     }
     requestDraw();
+  };
+
+  /** Dabs along a screen-space segment, spaced at a third of the brush radius. */
+  const paintSeg = (a: Pt, b: Pt) => {
+    const pr = propsRef.current;
+    const v = view.current;
+    if (!pr.mask || !pr.maskTool || !v) return;
+    const r = pr.maskTool.size;
+    const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / (r / 3)));
+    const val = pr.maskTool.mode === "erase" ? 0 : 255;
+    for (let i = 1; i <= n; i++) {
+      const q = { x: a.x + ((b.x - a.x) * i) / n, y: a.y + ((b.y - a.y) * i) / n };
+      paintMask(pr.mask, toImg(q), r / v.scale, val, pr.scene.imgW, pr.scene.imgH);
+    }
+    rebuildMask();
+  };
+
+  const endStroke = () => {
+    const g = gesture.current;
+    if (g?.kind !== "paint") return;
+    if (g.started) {
+      propsRef.current.onMaskEdited?.();
+      propsRef.current.onGesture(false);
+    }
+    gesture.current = null;
   };
 
   const onUp = (e: React.PointerEvent) => {
     pointers.current.delete(e.pointerId);
     if (pointers.current.size === 0) {
       if (gesture.current?.kind === "handle") endHandle();
+      const g = gesture.current;
+      if (g?.kind === "paint") {
+        // a tap without a drag leaves one dab
+        if (!g.started && e.type === "pointerup") {
+          g.started = true;
+          propsRef.current.onGesture(true);
+          paintSeg(g.last, { x: g.last.x + 0.01, y: g.last.y });
+        }
+        endStroke();
+        brush.current = null;
+      }
       gesture.current = null;
       endFast();
       requestDraw();
@@ -485,13 +656,23 @@ export function Stage(props: Props) {
         onBlur={() => setFocused(false)}
         role="application"
         aria-roledescription="photo editor"
-        aria-label="Smile design photo. Drag the round dots with one finger; pinch to zoom. With a keyboard: arrow keys move the selected dot, [ and ] pick another."
+        aria-label={
+          props.maskTool && step === "lips"
+            ? `Existing teeth mask. One finger ${props.maskTool.mode === "erase" ? "erases" : "paints"} the patient's own teeth; two fingers zoom and move the photo.`
+            : "Smile design photo. Drag the round dots with one finger; pinch to zoom. With a keyboard: arrow keys move the selected dot, [ and ] pick another."
+        }
       />
       <span className="sr-only" aria-live="polite">
         {selName && `Selected: ${selName}`}
       </span>
       {showOriginal && <span className="stage-tag mono">Before · original photo</span>}
-      {step === "compare" && !showOriginal && (
+      {props.showPrep && props.prep && !showOriginal && (step === "compare" || (step === "design" && !calibrating)) && (
+        <span className="stage-tag mono prep-tag">Prep map · 2D outline, not depth</span>
+      )}
+      {props.maskTool && step === "lips" && !showOriginal && (
+        <span className="stage-tag mono">Existing teeth · {props.maskTool.mode === "erase" ? "erase" : "paint"}</span>
+      )}
+      {step === "compare" && !showOriginal && !props.showPrep && (
         <>
           <span className="stage-tag mono">Now</span>
           <span className="stage-tag right mono">Simulation</span>
@@ -528,8 +709,58 @@ function handlePos(s: Scene, calib: Calib | undefined, id: string): Pt | null {
   if (id === "calB") return calib?.b ?? null;
   if (id === "pupilR" || id === "pupilL" || id === "midline") return s.guides[id];
   if (id.startsWith("lip")) return s.lips[Number(id.slice(3))] ?? null;
-  const h = designHandles(s.design, designAngle(s.design, s.guides));
+  const h = uiHandles(s.design, designAngle(s.design, s.guides));
   return (h as Record<string, Pt>)[id] ?? null;
+}
+
+function dot(ctx: CanvasRenderingContext2D, p: Pt, r: number, active: boolean, color: string) {
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+  ctx.fillStyle = active ? color : "rgba(28,34,32,0.55)";
+  ctx.fill();
+  ctx.lineWidth = r * 0.28;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+}
+
+/** Teeth-step overlay: pupil line, facial midline, incisal plane and the four design handles (upper or lower arch). */
+function drawDesignOverlay(ctx: CanvasRenderingContext2D, s: Scene, scale: number, activeId: string | null) {
+  const u = 1 / scale;
+  const r = 11 * u;
+  const len = Math.max(s.imgW, s.imgH) * 2;
+  const g = s.guides;
+  const pa = pupilAngle(g);
+  const line = (p: Pt, a: number) => {
+    ctx.beginPath();
+    ctx.moveTo(p.x - Math.cos(a) * len, p.y - Math.sin(a) * len);
+    ctx.lineTo(p.x + Math.cos(a) * len, p.y + Math.sin(a) * len);
+    ctx.stroke();
+  };
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineWidth = 1.5 * u;
+  ctx.setLineDash([8 * u, 6 * u]);
+  ctx.strokeStyle = "rgba(201,171,134,0.9)";
+  line(g.pupilR, pa);
+  ctx.strokeStyle = "rgba(196,202,202,0.9)";
+  line(g.midline, pa + Math.PI / 2);
+  ctx.strokeStyle = "rgba(201,171,134,0.55)";
+  line(s.design.center, pa);
+  ctx.setLineDash([]);
+  const h = uiHandles(s.design, designAngle(s.design, g));
+  dot(ctx, h.widthL, r, activeId === "widthL", C.bronzeLight);
+  dot(ctx, h.widthR, r, activeId === "widthR", C.bronzeLight);
+  dot(ctx, h.length, r, activeId === "length", C.mist);
+  dot(ctx, h.move, r * 1.15, activeId === "move", C.white);
+  ctx.lineWidth = 2 * u;
+  ctx.strokeStyle = C.white;
+  ctx.beginPath();
+  ctx.moveTo(h.move.x - r * 0.55, h.move.y);
+  ctx.lineTo(h.move.x + r * 0.55, h.move.y);
+  ctx.moveTo(h.move.x, h.move.y - r * 0.55);
+  ctx.lineTo(h.move.x, h.move.y + r * 0.55);
+  ctx.stroke();
+  ctx.restore();
 }
 
 /** Calibration pins on the existing central: two points joined by a measuring line with end ticks. */
