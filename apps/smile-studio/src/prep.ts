@@ -222,8 +222,9 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
     lens.sort((a, b) => a - b);
     const lengthPx = lens.length && !lengthHidden ? lens[lens.length >> 1] / k : 0;
     // proximal: planned vs matched existing boundary (positive = plan extends further = add)
-    const left = an.bFound[i] ? an.bE[i] - an.bP[i] : 0;
-    const right = an.bFound[i + 1] ? an.bP[i + 1] - an.bE[i + 1] : 0;
+    // with a gap (diastema) the existing tooth ends at the gap edge, not the gap centre
+    const left = an.bFound[i] ? an.gER[i] - an.bP[i] : 0;
+    const right = an.bFound[i + 1] ? an.bP[i + 1] - an.gEL[i + 1] : 0;
     const side = t.box.side;
     const mesialPx = (side === 1 ? left : right) / k;
     const distalPx = (side === 1 ? right : left) / k;

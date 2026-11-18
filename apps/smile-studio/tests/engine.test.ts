@@ -456,3 +456,47 @@ describe("prep: opposing teeth hide part of the plan (round 6)", () => {
     expect(prepWording({ ...t, hiddenPct: 25 }, 10).clinician[0]).toBe(HIDDEN_NOTE);
   });
 });
+
+describe("diastema: a gap between the centrals is closed by the plan (round 8)", () => {
+  // existing teeth = the planned outlines minus a vertical gap at the midline; the photo shows the gap dark
+  const gap = 10; // px, ~16 % of the central width
+  const inside = lipCoverage(lips, W, H, 1);
+  const acc = new Float32Array(W * H);
+  for (const o of plannedOutlines(upper, 0)) rasterPolygon(acc, W, H, o.pts);
+  const existing = newMask(W, H);
+  const px = new Uint8ClampedArray(W * H * 4);
+  for (let i = 0; i < W * H; i++) {
+    const x = i % W;
+    const tooth = acc[i] >= 0.5 && inside[i] >= 0.5 && Math.abs(x + 0.5 - 200) > gap / 2;
+    existing.data[i] = tooth ? 255 : 0;
+    const c = inside[i] < 0.5 ? [196, 96, 98] : tooth ? [226, 214, 190] : [45, 22, 24];
+    px.set([c[0], c[1], c[2], 255], i * 4);
+  }
+  const scene = { img: null as unknown as CanvasImageSource, imgW: W, imgH: H, guides, lips, design: upper };
+
+  for (const [name, mask] of [
+    ["mask leaves the gap open", existing],
+    ["mask wrongly painted over the gap (photo decides)", (() => {
+      const m = newMask(W, H);
+      for (let i = 0; i < W * H; i++) m.data[i] = acc[i] >= 0.5 && inside[i] >= 0.5 ? 255 : 0;
+      return m;
+    })()],
+  ] as const) {
+    it(`centrals get a mesial addition and the gap is marked added: ${name}`, () => {
+      setPrepPhotoReader(() => ({ data: px, rx: 0, ry: 0, rw: W, rh: H }));
+      try {
+        const res = computePrep(scene, mask);
+        for (const lab of ["UR1", "UL1"]) {
+          const t = res.teeth.find((x) => x.label === lab)!;
+          expect(t.mesialPx).toBeGreaterThan(gap * 0.3);
+          expect(t.category === "additive" || t.category === "mixed").toBe(true);
+        }
+        let inGap = 0;
+        for (let y = 0; y < H; y++) for (let x = 197; x <= 203; x++) if (res.add.data[y * W + x]) inGap++;
+        expect(inGap).toBeGreaterThan(20);
+      } finally {
+        setPrepPhotoReader(null);
+      }
+    });
+  }
+});

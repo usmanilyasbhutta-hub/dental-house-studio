@@ -247,6 +247,8 @@ export interface PlanTooth {
 
 export interface Plan {
   teeth: PlanTooth[];
+  /** columns covered only by the embrasure fill between two outlines */
+  joined: Uint8Array;
   /** union of the planned outlines per grid column: top / bottom (NaN outside) */
   pTop: Float32Array;
   pBot: Float32Array;
@@ -314,6 +316,8 @@ export function planInGrid(f: Frame, d: Design): Plan {
       poly,
     });
   }
+  /** 1 where a column is only covered by the embrasure fill below (not by a planned outline itself) */
+  const joined = new Uint8Array(f.gw);
   // columns between two outlines that only touch at the contact: take the shallower neighbour (a tiny embrasure)
   for (let c = Math.max(1, ax0); c < Math.min(f.gw - 1, ax1); c++) {
     if (pBot[c] === pBot[c]) continue;
@@ -324,9 +328,10 @@ export function planInGrid(f: Frame, d: Design): Plan {
     if (pBot[l] === pBot[l] && pBot[r] === pBot[r] && r - l <= 4) {
       pBot[c] = Math.min(pBot[l], pBot[r]);
       pTop[c] = Math.max(pTop[l], pTop[r]);
+      joined[c] = 1;
     }
   }
-  return { teeth, pTop, pBot, x0: ax0 === Infinity ? 0 : ax0, x1: ax1 === -Infinity ? 0 : ax1, L: centralLength(d) * f.k, lower: isLower(d) };
+  return { teeth, pTop, pBot, joined, x0: ax0 === Infinity ? 0 : ax0, x1: ax1 === -Infinity ? 0 : ax1, L: centralLength(d) * f.k, lower: isLower(d) };
 }
 
 // ---------- column analysis ----------
@@ -349,6 +354,9 @@ export interface Analysis {
   bP: number[];
   bE: number[];
   bFound: boolean[];
+  /** measured gap edges per boundary (equal to bE for a normal contact): left tooth ends / right tooth starts */
+  gEL: number[];
+  gER: number[];
   /** planned-tooth coverage T, existing-tooth E, added (T∖E) and reduced (E beyond the planned edge) masks, 0..1 */
   T: Float32Array;
   add: Float32Array;
@@ -388,6 +396,33 @@ function smoothNaN(a: Float32Array, r: number) {
 }
 
 /** Fills NaNs inside [x0, x1) by linear interpolation between the nearest known values (or nearest one). */
+/** True when pixel j sits in a thin (≤ 2 px) vertical gap with existing tooth on both sides in its row. */
+function contactLine(E: Float32Array, j: number, x: number, gw: number): boolean {
+  if (E[j] >= 0.5) return false; // a pixel the mask calls tooth is not a gap line
+  let l = false;
+  let r = false;
+  for (let d = 1; d <= 3; d++) {
+    if (x - d >= 0 && E[j - d] >= 0.5) l = true;
+    if (x + d < gw && E[j + d] >= 0.5) r = true;
+  }
+  if (!l || !r) return false;
+  // width of the gap in this row
+  let w = 1;
+  for (let d = 1; d <= 3 && x - d >= 0 && E[j - d] < 0.5; d++) w++;
+  for (let d = 1; d <= 3 && x + d < gw && E[j + d] < 0.5; d++) w++;
+  return w <= 2;
+}
+
+/** 3-tap moving average that skips NaN. */
+function smooth3(a: number[]): number[] {
+  return a.map((_v, j) => {
+    let s = 0;
+    let n = 0;
+    for (let q = j - 1; q <= j + 1; q++) if (q >= 0 && q < a.length && a[q] === a[q]) (s += a[q]), n++;
+    return n ? s / n : NaN;
+  });
+}
+
 function fillNaN(a: Float32Array, x0: number, x1: number) {
   let last = -1;
   for (let i = x0; i < x1; i++) {
@@ -506,6 +541,9 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
   const teeth = [...plan.teeth].sort((a, b) => a.gx0 - b.gx0);
   const bP: number[] = [];
   const bands: [number, number, number][] = []; // y0, y1, search half-width
+  const nbw: number[] = []; // width of the narrower planned neighbour at each boundary
+  /** detected gaps (photo columns x0..x1, darkness threshold, judged on the photo?) */
+  const gaps: [number, number, number, boolean][] = [];
   for (let i = 0; i <= teeth.length; i++) {
     const a = teeth[i - 1];
     const b = teeth[i];
@@ -514,28 +552,43 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
     const top = Math.max(...nb.map((t) => t.gtop));
     const bot = Math.min(...nb.map((t) => t.gbottom));
     const hw = Math.min(...nb.map((t) => t.gx1 - t.gx0)) * 0.35;
+    nbw.push(Math.min(...nb.map((t) => t.gx1 - t.gx0)));
     bP.push(x);
     bands.push([top + (bot - top) * 0.25, top + (bot - top) * 0.75, hw]);
   }
   // column profile: mean lightness of tooth pixels in the band (gaps count as 0)
   const bE: number[] = [];
   const bFound: boolean[] = [];
+  /** gap edges per boundary (equal to bE for a normal contact): left tooth ends at bL, right tooth starts at bR */
+  const bL: number[] = [];
+  const bR: number[] = [];
+  /** measured gap edges (no inset): the left tooth ends at gEL, the right tooth starts at gER */
+  const gEL: number[] = [];
+  const gER: number[] = [];
   for (let i = 0; i < bP.length; i++) {
     const [y0, y1, hw] = bands[i];
     const c0 = Math.max(0, Math.floor(bP[i] - hw));
     const c1 = Math.min(gw - 1, Math.ceil(bP[i] + hw));
     const prof: number[] = [];
+    const frac: number[] = []; // share of the band rows that are tooth (a true gap is open over the whole contact)
+    const rawL: number[] = []; // photo lightness regardless of the mask (a painted mask may cover a real gap)
     for (let x = c0; x <= c1; x++) {
       let acc = 0;
       let n = 0;
+      let t = 0;
+      let raw = 0;
       for (let y = Math.max(0, Math.floor(y0)); y < Math.min(gh, Math.ceil(y1)); y++) {
         const j = y * gw + x;
         if (lip[j] <= 0.5) continue;
         const e = E[j];
         acc += Lg ? (e >= 0.5 ? Lg[j * 3] : 0) : e * 100;
+        if (e >= 0.5) t++;
+        if (Lg) raw += Lg[j * 3];
         n++;
       }
       prof.push(n ? acc / n : NaN);
+      frac.push(n ? t / n : NaN);
+      rawL.push(Lg && n ? raw / n : NaN);
     }
     // smooth (3 px) and find the darkest column; it must be clearly darker than the window's median
     const sm = prof.map((_v, j) => {
@@ -559,9 +612,57 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
     const ok = bi >= 0 && sm[bi] < med * 0.86 && bi > 0 && bi < sm.length - 1;
     bE.push(ok ? c0 + bi + 0.5 : bP[i]);
     bFound.push(ok);
+    // a real gap (diastema / open contact) is a run of dark columns: keep its two edges, so each neighbouring tooth
+    // maps to its OWN mesial/distal surface and the planned contact is filled with enamel instead of the gap
+    let gl = bE[bE.length - 1];
+    let gr = gl;
+    let tL = gl; // un-inset gap edges (for measuring), = bE for a normal contact
+    let tR = gl;
+    // only a clearly dark run counts as a gap (an embrasure or shadow line between touching teeth does not)
+    // (between two planned teeth only: the outer ends of the arch border the dark mouth corners, not a gap).
+    // With the photo, darkness comes from the photo itself (the mask may have been painted over the gap); without it
+    // (mask-only), the mask must be open over the whole contact band.
+    const useRaw = rawL.some((v) => v === v);
+    const g = useRaw ? smooth3(rawL) : sm;
+    const gv = g.filter((v) => v === v).sort((a, b) => a - b);
+    const gmed = gv.length ? gv[gv.length >> 1] : NaN;
+    let gi = -1;
+    g.forEach((v, j) => {
+      if (v === v && (gi < 0 || v < g[gi]) && Math.abs(c0 + j + 0.5 - bP[i]) < hw) gi = j;
+    });
+    if (bFound[bFound.length - 1] && i > 0 && i < teeth.length && gi > 0 && gmed === gmed && g[gi] < gmed * 0.6) {
+      const thr = g[gi] + 0.55 * (gmed - g[gi]);
+      // width is measured on the unsmoothed profile (smoothing widens a 1–2 px contact line to 3 px)
+      const gRaw = useRaw ? rawL : prof;
+      const open = (j: number) => gRaw[j] === gRaw[j] && gRaw[j] < thr && (useRaw || frac[j] < 0.2);
+      bi = gi;
+      let jl = bi;
+      while (jl > 0 && open(jl - 1)) jl--;
+      let jr = bi;
+      while (jr < sm.length - 1 && open(jr + 1)) jr++;
+      // a gap is at least ~8 % of the narrower neighbour wide; thinner dark contact lines keep the normal mapping
+      const nw = nbw[i];
+      if (open(bi) && jr - jl + 1 >= Math.max(3, 0.06 * nw)) {
+        // edges of the gap, stepped 2 px into each tooth so the dark, blurred border of the gap is not copied
+        gl = c0 + jl - 2; // the left tooth ends here
+        gr = c0 + jr + 1 + 2; // the right tooth starts here
+        gaps.push([c0 + jl, c0 + jr + 1, thr, useRaw]);
+        tL = c0 + jl;
+        tR = c0 + jr + 1;
+      }
+    }
+    bL.push(gl);
+    bR.push(gr);
+    gEL.push(tL);
+    gER.push(tR);
   }
   // keep the matched boundaries in order
   for (let i = 1; i < bE.length; i++) if (bE[i] <= bE[i - 1] + 1) bE[i] = bE[i - 1] + 1;
+  for (let i = 0; i < bE.length; i++) {
+    bL[i] = Math.min(bL[i], bE[i]);
+    bR[i] = Math.max(bR[i], bE[i]);
+    if (i > 0 && bL[i] <= bR[i - 1] + 1) bL[i] = Math.min(bE[i], bR[i - 1] + 1);
+  }
 
   // ---- horizontal map (destination → source), piecewise linear between boundaries, identity outside ----
   const X = new Float32Array(gw);
@@ -571,13 +672,14 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
     if (bP.length >= 2 && xc >= bP[0] && xc <= bP[bP.length - 1]) {
       for (let i = 0; i + 1 < bP.length; i++) {
         if (xc >= bP[i] && xc <= bP[i + 1]) {
+          // tooth between boundaries i and i+1: from the right edge of gap i to the left edge of gap i+1
           const t = (xc - bP[i]) / Math.max(1e-6, bP[i + 1] - bP[i]);
-          sx = bE[i] + t * (bE[i + 1] - bE[i]);
+          sx = bR[i] + t * (bL[i + 1] - bR[i]);
           break;
         }
       }
-    } else if (bP.length >= 1 && xc < bP[0]) sx = xc + (bE[0] - bP[0]);
-    else if (bP.length >= 1) sx = xc + (bE[bE.length - 1] - bP[bP.length - 1]);
+    } else if (bP.length >= 1 && xc < bP[0]) sx = xc + (bL[0] - bP[0]);
+    else if (bP.length >= 1) sx = xc + (bR[bR.length - 1] - bP[bP.length - 1]);
     X[x] = sx;
   }
 
@@ -594,13 +696,17 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
     const pb0 = plan.pBot[x];
     if (pb0 !== pb0) continue;
     const sxc = Math.min(gw - 1, Math.max(0, Math.round(X[x] - 0.5)));
-    let c = cSrc[sxc];
+    // gum line: this column's own existing tooth when there is one (the texture map may point elsewhere, e.g. across
+    // a closed gap); inside a gap, the mapped neighbour's
+    let c = eC[x] === eC[x] ? eC[x] : cSrc[sxc];
     if (c !== c) c = plan.pTop[x];
     cDst[x] = c;
     // where this arch disappears behind the opposing teeth, the visible tooth is kept up to that junction (the
     // planned edge there can't be shown on a frontal photo; the prep guide still measures it)
-    const hid = hidden[sxc] === 1 && eI[sxc] === eI[sxc];
-    const pb = hid ? eI[sxc] : pb0;
+    // the hidden junction is judged at the destination column first (the source map can shift into a gap)
+    const hx = hidden[x] === 1 && eI[x] === eI[x] ? x : hidden[sxc] === 1 && eI[sxc] === eI[sxc] ? sxc : -1;
+    const hid = hx >= 0;
+    const pb = hid ? eI[hx] : pb0;
     pEnd[x] = pb;
     for (let y = Math.max(0, Math.floor(c)); y < Math.min(gh, Math.ceil(pb) + 1); y++) {
       const cov = Math.min(1, Math.max(0, y + 1 - c)) * Math.min(1, Math.max(0, pb - y));
@@ -608,7 +714,8 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
       const j = y * gw + x;
       T[j] = cov * (lip[j] > 0 ? 1 : 0);
       // added material: outside today's tooth, ignoring a thin band along the (kept) cervical line
-      if (E[j] < 0.5 && y > c + Math.max(2, 0.1 * (pb - c))) add[j] = T[j];
+      // (a contact line ≤ 2 px wide with tooth on both sides is a contact, not added material)
+      if (E[j] < 0.5 && y > c + Math.max(2, 0.1 * (pb - c)) && !contactLine(E, j, x, gw)) add[j] = T[j];
     }
     // reduction: existing tooth beyond the planned edge, up to its visible edge (or the occluding tooth)
     const lim = eI[sxc];
@@ -617,6 +724,21 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
         const j = y * gw + x;
         const r = Math.min(1, Math.max(0, y + 1 - pb)) * Math.min(1, Math.max(0, lim - y)) * Math.min(1, E[j] * 2);
         if (r > 0 && lip[j] > 0.5) reduce[j] = Math.max(reduce[j], r * (1 - T[j]));
+      }
+    }
+  }
+  // a gap closed by the plan is added material even where a painted mask wrongly covers it: judged on the photo
+  if (Lg) {
+    for (const [g0, g1, thr, raw] of gaps) {
+      if (!raw) continue;
+      for (let x = Math.max(plan.x0, Math.floor(g0)); x < Math.min(plan.x1, Math.ceil(g1)); x++) {
+        const c = cDst[x];
+        const pb = pEnd[x];
+        if (c !== c || pb !== pb) continue;
+        for (let y = Math.max(0, Math.floor(c)); y < Math.min(gh, Math.ceil(pb)); y++) {
+          const j = y * gw + x;
+          if (T[j] > 0 && Lg[j * 3] < thr && !contactLine(E, j, x, gw)) add[j] = Math.max(add[j], T[j]);
+        }
       }
     }
   }
@@ -640,7 +762,7 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
       }
     }
   }
-  return { plan, eC, eI, edge, hidden, occl, pEnd, X, bP, bE, bFound, T, add, reduce, cDst };
+  return { plan, eC, eI, edge, hidden, occl, pEnd, X, bP, bE, bFound, gEL, gER, T, add, reduce, cDst };
 }
 
 /**
