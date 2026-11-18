@@ -214,11 +214,11 @@ export function Sheet({ title, children, onClose, className }: { title: ReactNod
 
 export type ToastKind = "info" | "error";
 
-/** Small status message at the bottom of the screen (announced by screen readers). */
+/** Small status capsule (announced by screen readers): under the top bar in the editor, at the bottom on Home. */
 export function useToast() {
   const [toast, setToast] = useState<{ text: string; kind: ToastKind } | null>(null);
   const timer = useRef(0);
-  const show = useCallback((text: string, kind: ToastKind = "info", ms = 3500) => {
+  const show = useCallback((text: string, kind: ToastKind = "info", ms = 2200) => {
     window.clearTimeout(timer.current);
     setToast({ text, kind });
     if (ms) timer.current = window.setTimeout(() => setToast(null), ms);
@@ -279,6 +279,7 @@ const PATHS: Record<string, ReactNode> = {
   drop: <path d="M12 3.5s6 6.4 6 10.6a6 6 0 01-12 0C6 9.9 12 3.5 12 3.5z" />,
   compare: <path d="M12 3v18M4 6h16v12H4z" />,
   plan: <path d="M8 4.5h8V7H8zM6 6H4.5v14.5h15V6H18M8 12h8M8 16h5" />,
+  target: <path d="M12 4v3M12 17v3M4 12h3M17 12h3M12 15a3 3 0 100-6 3 3 0 000 6z" />,
   search: <path d="M10.5 17a6.5 6.5 0 100-13 6.5 6.5 0 000 13zM15.5 15.5L20 20" />,
 };
 

@@ -117,11 +117,14 @@ export interface ShadeSample {
   /** CIELAB (D65) median of a small disk around pt, from the photo */
   lab: [number, number, number];
   label?: string;
+  /** Round 6: sampled disk radius (image px) and sample quality (share rejected 0–1, spread of L* / b*, verdict). */
+  r?: number;
+  q?: { rej: number; sdL: number; sdB: number; ok: boolean };
 }
 
 export interface CasePlan {
   teeth: ToothPlan[];
-  shade: { samples: ShadeSample[]; targetTab?: string; whiteningFirst?: boolean; whiteningDone?: boolean };
+  shade: { samples: ShadeSample[]; targetTab?: string; whiteningFirst?: boolean; whiteningDone?: boolean; sampleSize?: "small" | "medium" };
   flags: { deepBite?: boolean; bruxism?: boolean; recession?: boolean; perioStable?: boolean };
   checklist: Record<string, boolean>;
 }

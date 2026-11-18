@@ -45,6 +45,100 @@ export function setPrepPhotoReader(fn: typeof photoReader) {
   photoReader = fn;
 }
 
+/** A tooth with more than this % of its planned outline behind the opposing teeth gets no length change (round 6). */
+export const HIDDEN_LENGTH_PCT = 20;
+/** Clinician / sheet wording for such a tooth, and the map legend (round 6). */
+export const HIDDEN_NOTE = "Partly hidden behind the upper teeth: length not measurable from this photo.";
+export const HIDDEN_NOTE_UPPER = "Partly hidden behind the lower teeth: length not measurable from this photo.";
+export const HIDDEN_LEGEND = "Hidden behind the upper teeth — not measurable";
+export const HIDDEN_LEGEND_UPPER = "Hidden behind the lower teeth — not measurable";
+export const hiddenNote = (lower: boolean) => (lower ? HIDDEN_NOTE : HIDDEN_NOTE_UPPER);
+export const hiddenLegend = (lower: boolean) => (lower ? HIDDEN_LEGEND : HIDDEN_LEGEND_UPPER);
+
+/**
+ * Planned-tooth pixels covered by the OPPOSING teeth (grid, 0..1), e.g. the lower incisal third behind the upper
+ * incisors in a normal overbite. Per planned column, the opposing teeth start where the existing run of this arch
+ * ends and, within a small gap (the shadow line between the arches), tooth again begins: tooth in the mask (an
+ * automatic mask holds both arches) or, when the photo is available, a light non-red pixel (a mask painted on the
+ * lower teeth only). An open space before the opposing teeth stays measurable. The column analysis' own "hidden
+ * edge" (the occlusal curve) also counts. For the upper arch only that last rule applies: in a normal bite the lower
+ * teeth sit BEHIND the upper ones, so pixels below the upper edge are visible, not hidden.
+ * `junction[x]` = 1 where the existing edge of this column is that boundary (its true length is not visible).
+ */
+export function hiddenByOpposing(
+  f: Frame,
+  plan: ReturnType<typeof planInGrid>,
+  an: ReturnType<typeof analyse>,
+  E: Float32Array,
+  lip: Float32Array,
+  Lg?: Float32Array,
+): { mask: Float32Array; junction: Uint8Array; any: boolean } {
+  const { gw, gh } = f;
+  const mask = new Float32Array(gw * gh);
+  const junction = new Uint8Array(gw);
+  const L = plan.L;
+  const gapTol = Math.max(2, L * 0.12);
+  const opp = (j: number) => {
+    if (lip[j] < 0.5) return false;
+    if (E[j] >= 0.5) return true;
+    if (!Lg) return false;
+    const l = Lg[j * 3];
+    const a = Lg[j * 3 + 1];
+    return l >= 58 && a < 15;
+  };
+  let any = false;
+  const osA = new Float32Array(gw).fill(NaN);
+  for (let x = plan.x0; x < plan.x1; x++) {
+    const pb = plan.pBot[x];
+    if (pb !== pb) continue;
+    const si = Math.min(gw - 1, Math.max(0, Math.round(an.X[x] - 0.5)));
+    const e = an.eI[si];
+    if (e !== e) continue;
+    let os = NaN;
+    if (an.hidden[si]) os = e;
+    else if (plan.lower && e < pb) {
+      for (let y = Math.max(0, Math.ceil(e)); y < Math.min(gh - 1, Math.ceil(pb) + 1); y++) {
+        if (opp(y * gw + x) && opp((y + 1) * gw + x)) {
+          os = y - e <= gapTol ? e : y;
+          break;
+        }
+      }
+    }
+    if (os !== os) continue;
+    if (os <= e + 0.5) junction[x] = 1;
+    osA[x] = os;
+  }
+  // thin columns without a run of their own (a contact or embrasure between two teeth) take their neighbours' value
+  const fill = Math.max(2, Math.round(L * 0.06));
+  for (let x = plan.x0; x < plan.x1; x++) {
+    if (osA[x] === osA[x] || plan.pBot[x] !== plan.pBot[x]) continue;
+    for (let dx = 1; dx <= fill; dx++) {
+      const l = x - dx >= 0 ? osA[x - dx] : NaN;
+      const r = x + dx < gw ? osA[x + dx] : NaN;
+      if (l === l || r === r) {
+        osA[x] = l === l && r === r ? Math.max(l, r) : l === l ? l : r;
+        break;
+      }
+    }
+  }
+  for (let x = plan.x0; x < plan.x1; x++) {
+    const pb = plan.pBot[x];
+    const os = osA[x];
+    if (pb !== pb || os !== os) continue;
+    const c = an.cDst[x] === an.cDst[x] ? an.cDst[x] : plan.pTop[x];
+    for (let y = Math.max(0, Math.floor(Math.max(os, c))); y < Math.min(gh, Math.ceil(pb)); y++) {
+      const j = y * gw + x;
+      if (lip[j] < 0.5) continue;
+      const cov = Math.min(1, Math.max(0, y + 1 - os)) * Math.min(1, Math.max(0, pb - y));
+      if (cov > 0) {
+        mask[j] = cov;
+        any = true;
+      }
+    }
+  }
+  return { mask, junction, any };
+}
+
 /**
  * Compares the planned outlines with the existing-teeth mask at mask resolution. Cervical outline differences are
  * ignored (the existing gum line is kept); incisal length and mesial/distal width changes are measured per tooth.
@@ -63,6 +157,9 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
   const { gw, gh } = f;
   const d = scene.design;
   const thrPx = pxPerMm ? PREP_THRESHOLDS.suppressMm * pxPerMm : centralWidth(d) * 0.04;
+  const hid = hiddenByOpposing(f, plan, an, E, lip, Lg);
+  // hidden pixels are not measurable: never "added" (reduction only exists on visible existing tooth)
+  for (let j = 0; j < hid.mask.length; j++) if (hid.mask[j] >= 0.5) an.add[j] = 0;
 
   // boundaries sorted left → right; teeth sorted the same way
   const sorted = [...plan.teeth].sort((a, b) => a.gx0 - b.gx0);
@@ -74,6 +171,9 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
     let both = 0;
     let addA = 0;
     let redA = 0;
+    let hidT = 0;
+    let planA = 0;
+    let hidA = 0;
     const h = t.gbottom - t.gtop;
     for (let x = t.c0; x < t.c1; x++) {
       const si = Math.min(gw - 1, Math.max(0, Math.round(an.X[x] - 0.5)));
@@ -89,8 +189,21 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
         if (tt && ee) both++;
         if (an.add[j] >= 0.5) addA++;
         if (an.reduce[j] >= 0.5) redA++;
+        if (tt && hid.mask[j] >= 0.5) hidT++;
       }
+      // planned area up to the PLANNED edge (also where it runs behind the opposing teeth) and its hidden part
+      const pb0 = plan.pBot[x];
+      const c0 = an.cDst[x];
+      if (pb0 === pb0 && c0 === c0)
+        for (let y = Math.max(0, Math.floor(c0)); y < Math.min(gh, Math.ceil(pb0)); y++) {
+          const j = y * gw + x;
+          if (lip[j] < 0.5) continue;
+          planA++;
+          if (hid.mask[j] >= 0.5) hidA++;
+        }
     }
+    const hiddenPct = planA ? (100 * hidA) / planA : 0;
+    const lengthHidden = hiddenPct > HIDDEN_LENGTH_PCT;
     // incisal length: middle half of the tooth, columns with a visible edge (or hidden but longer than the plan)
     const lens: number[] = [];
     const w = t.c1 - t.c0;
@@ -100,12 +213,14 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
       const pe = an.pEnd[x];
       const pb = plan.pBot[x];
       if (e !== e || pe !== pe) continue;
+      // the existing edge here is where the opposing teeth start: its true length is not visible
+      if (hid.junction[x]) continue;
       if (an.edge[si]) lens.push(pb - e);
       else if (an.hidden[si] && pb < e) lens.push(pb - e);
       else if (an.hidden[si]) lens.push(0);
     }
     lens.sort((a, b) => a - b);
-    const lengthPx = lens.length ? lens[lens.length >> 1] / k : 0;
+    const lengthPx = lens.length && !lengthHidden ? lens[lens.length >> 1] / k : 0;
     // proximal: planned vs matched existing boundary (positive = plan extends further = add)
     const left = an.bFound[i] ? an.bE[i] - an.bP[i] : 0;
     const right = an.bFound[i + 1] ? an.bP[i + 1] - an.bE[i + 1] : 0;
@@ -114,7 +229,8 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
     const distalPx = (side === 1 ? right : left) / k;
     const unknown = tArea === 0 || eArea < tArea * 0.05;
     const overlapPct = eArea ? (100 * both) / eArea : 0;
-    const addPct = tArea ? (100 * addA) / tArea : 0;
+    const visT = tArea - hidT;
+    const addPct = visT > 0 ? (100 * addA) / visT : 0;
     const reducePct = eArea ? (100 * redA) / eArea : 0;
     const add = addPct >= 3 || lengthPx > thrPx || mesialPx > thrPx || distalPx > thrPx;
     const red = reducePct >= 3 || lengthPx < -thrPx || mesialPx < -thrPx || distalPx < -thrPx;
@@ -129,6 +245,7 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
       addPct: unknown ? 100 : addPct,
       reducePct: unknown ? 0 : reducePct,
       category: unknown ? "unknown" : add && red ? "mixed" : add ? "additive" : red ? "reduction" : "unchanged",
+      ...(hiddenPct >= 0.5 ? { hiddenPct: Math.round(hiddenPct * 10) / 10 } : {}),
     });
   }
   // order: patient's right distal → left distal (as seen on the photo, left to right)
@@ -138,6 +255,7 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
   const add: Mask = { w: existing.w, h: existing.h, data: new Uint8Array(existing.w * existing.h) };
   const reduce: Mask = { w: existing.w, h: existing.h, data: new Uint8Array(existing.w * existing.h) };
   const scope: Mask = { w: existing.w, h: existing.h, data: new Uint8Array(existing.w * existing.h) };
+  const hidden: Mask = { w: existing.w, h: existing.h, data: new Uint8Array(existing.w * existing.h) };
   // scope: existing tooth inside the planned teeth's columns, up to the drawn edge / visible existing edge
   const inScope = new Uint8Array(gw * gh);
   for (let x = plan.x0; x < plan.x1; x++) {
@@ -160,9 +278,10 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
       if (an.add[g] >= 0.5) add.data[o] = 255;
       if (an.reduce[g] >= 0.5) reduce.data[o] = 255;
       if (inScope[g] && existing.data[o]) scope.data[o] = 255;
+      if (hid.mask[g] >= 0.5) hidden.data[o] = 255;
     }
   }
-  const res: PrepResult = { add, reduce, teeth };
+  const res: PrepResult = { add, reduce, teeth, ...(hid.any ? { hidden } : {}) };
   extras.set(res, { frame: f, scope, scale: k });
   return res;
 }
@@ -213,7 +332,9 @@ export function prepWording(t: ToothPrep, pxPerMm?: number): { clinician: string
     if (lower && t.kind <= 1) clinician.push(LOWER_INCISOR_NOTE);
     return { clinician, patient: `${name}: the design shows a tooth shape where the photo shows none today.` };
   }
-  clinician.push(`Incisal length: ${describe(t.lengthPx, pxPerMm)}`);
+  const hiddenLen = (t.hiddenPct ?? 0) > HIDDEN_LENGTH_PCT;
+  if (hiddenLen) clinician.push(hiddenNote(lower));
+  else clinician.push(`Incisal length: ${describe(t.lengthPx, pxPerMm)}`);
   clinician.push(`Mesial width: ${describe(t.mesialPx, pxPerMm)}`);
   clinician.push(`Distal width: ${describe(t.distalPx, pxPerMm)}`);
   clinician.push(`Outline overlap: ${Math.round(t.overlapPct)} %`);
@@ -222,14 +343,14 @@ export function prepWording(t: ToothPrep, pxPerMm?: number): { clinician: string
   else if (t.category === "mixed") clinician.push("Mixed: additive and reduction areas.");
   else if (t.category === "reduction") {
     const where: string[] = [];
-    if (t.lengthPx < -thr) where.push("incisal");
+    if (!hiddenLen && t.lengthPx < -thr) where.push("incisal");
     if (t.mesialPx < -thr) where.push("mesial");
     if (t.distalPx < -thr) where.push("distal");
     if (!where.length) where.push("incisal");
     clinician.push(`Outline reduction: tooth is outside the plan at the ${joinList(where)}.`);
   } else clinician.push("Outline unchanged in this view.");
   if (pxPerMm) {
-    if (-t.lengthPx / pxPerMm > PREP_THRESHOLDS.incisalWarnMm) clinician.push("Large incisal change: check occlusion, length and pulp before planning.");
+    if (!hiddenLen && -t.lengthPx / pxPerMm > PREP_THRESHOLDS.incisalWarnMm) clinician.push("Large incisal change: check occlusion, length and pulp before planning.");
     if (-t.mesialPx / pxPerMm > PREP_THRESHOLDS.proximalWarnMm || -t.distalPx / pxPerMm > PREP_THRESHOLDS.proximalWarnMm)
       clinician.push("Proximal reduction: contact areas involved; consider alignment or IPR alternatives.");
   }
@@ -241,10 +362,10 @@ export function prepWording(t: ToothPrep, pxPerMm?: number): { clinician: string
   if (pxPerMm) {
     const lm = t.lengthPx / pxPerMm;
     const wm = widthPx / pxPerMm;
-    if (Math.abs(lm) >= PREP_THRESHOLDS.suppressMm) parts.push(`${lm > 0 ? "longer" : "shorter"} by ${aboutMm(lm)}`);
+    if (!hiddenLen && Math.abs(lm) >= PREP_THRESHOLDS.suppressMm) parts.push(`${lm > 0 ? "longer" : "shorter"} by ${aboutMm(lm)}`);
     if (Math.abs(wm) >= PREP_THRESHOLDS.suppressMm) parts.push(`${wm > 0 ? "wider" : "narrower"} by ${aboutMm(wm)}`);
   } else {
-    if (Math.abs(t.lengthPx) >= thr * 2) parts.push(`a little ${t.lengthPx > 0 ? "longer" : "shorter"}`);
+    if (!hiddenLen && Math.abs(t.lengthPx) >= thr * 2) parts.push(`a little ${t.lengthPx > 0 ? "longer" : "shorter"}`);
     if (Math.abs(widthPx) >= thr * 2) parts.push(`a little ${widthPx > 0 ? "wider" : "narrower"}`);
   }
   const patient = parts.length ? `${name}: design is ${parts.join(" and ")}.` : `${name}: design keeps about the same outline.`;
@@ -273,8 +394,17 @@ export function drawPrepMap(ctx: CanvasRenderingContext2D, scene: EngineScene, p
     cv.height = prep.add.h;
     const c = cv.getContext("2d")!;
     const id = c.createImageData(cv.width, cv.height);
+    const hd = prep.hidden?.data;
+    const mw = cv.width;
     for (let i = 0; i < prep.add.data.length; i++) {
       const o = i * 4;
+      if (hd && hd[i] && !prep.add.data[i] && !prep.reduce.data[i]) {
+        // hidden behind the opposing teeth: neutral grey with diagonal hatching (reads as "no data", not a colour)
+        const on = ((i % mw) + ((i / mw) | 0)) % 6 < 2;
+        id.data[o] = id.data[o + 1] = id.data[o + 2] = on ? 235 : 120;
+        id.data[o + 3] = on ? 190 : 110;
+        continue;
+      }
       if (prep.add.data[i]) {
         id.data[o] = 40;
         id.data[o + 1] = 200;

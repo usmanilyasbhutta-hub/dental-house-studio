@@ -4,7 +4,7 @@ import type { Mask, ToothPrep } from "../src/contracts";
 import { centralLength, designHandles, plannedOutlines, PROPORTIONS_LOWER, toImage, toLocal, toothBoxes, toothLabel } from "../src/geometry";
 import { DEFAULT_DESIGN, type Design, type Pt } from "../src/model";
 import { analyse, lipGrid, makeFrame, planInGrid, pushPull, resampleLab, resampleMask, shadeTarget, synthesise } from "../src/photoTeeth";
-import { computePrep, contours, ENAMEL_MM, fmtMm, PREP_DISCLAIMER, prepWording } from "../src/prep";
+import { computePrep, contours, ENAMEL_MM, fmtMm, HIDDEN_LEGEND, HIDDEN_NOTE, PREP_DISCLAIMER, prepWording, setPrepPhotoReader } from "../src/prep";
 import { hexToLab, labToRgb, rgbToLab, shadeLab } from "../src/shades";
 import { detectTeethRGBA, lipCoverage, maskVersion, newMask, paintMask, rasterPolygon } from "../src/teethMask";
 
@@ -356,5 +356,103 @@ describe("lower arch geometry", () => {
     const rgb = [0, 0, 0];
     labToRgb(lab[0], lab[1], lab[2], rgb);
     expect(rgb.map(Math.round)).toEqual([0xdd, 0xcb, 0xa8]);
+  });
+});
+
+describe("prep: opposing teeth hide part of the plan (round 6)", () => {
+  // lower plan; the upper teeth cover the lower incisal third (normal overbite). Synthetic only.
+  const bl: Pt[] = [];
+  for (let i = 0; i < 32; i++) {
+    const a = (i / 32) * Math.PI * 2;
+    bl.push({ x: 200 + Math.cos(a) * 185, y: 140 + Math.sin(a) * 98 });
+  }
+  const low: Design = { ...upper, arch: "lower", center: { x: 200, y: 150 }, width: 190, wl: 0.62, arc: 0 };
+  const Ll = centralLength(low);
+  const upEdge = Math.round(150 + Ll * 0.3); // visible upper incisal edge, image y
+  const inside = lipCoverage(bl, W, H, 1);
+  const lowerMask = (from: number) => {
+    const acc = new Float32Array(W * H);
+    for (const o of plannedOutlines(low, 0)) rasterPolygon(acc, W, H, o.pts);
+    const m = newMask(W, H);
+    for (let i = 0; i < acc.length; i++) m.data[i] = acc[i] >= 0.5 && inside[i] >= 0.5 && Math.floor(i / W) >= from ? 255 : 0;
+    return m;
+  };
+  /** joined automatic mask: visible lower teeth + upper teeth down to `edge`, a 2 px shadow line between */
+  const joined = (edge: number) => {
+    const m = lowerMask(edge + 2);
+    for (let y = 60; y < edge; y++) for (let x = 95; x < 305; x++) if (inside[y * W + x] >= 0.5) m.data[y * W + x] = 255;
+    return m;
+  };
+  const scene = { img: null as unknown as CanvasImageSource, imgW: W, imgH: H, guides, lips: bl, design: low };
+
+  it("planned lower length behind the upper teeth is hidden, not added; length not reported", () => {
+    const res = computePrep(scene, joined(upEdge));
+    expect(res.hidden).toBeDefined();
+    for (const lab of ["LR1", "LL1", "LR2", "LL2"]) {
+      const t = res.teeth.find((x) => x.label === lab)!;
+      expect(t.hiddenPct!).toBeGreaterThan(20);
+      expect(t.lengthPx).toBe(0);
+      expect(t.addPct).toBeLessThan(3);
+      const w = prepWording(t, 10);
+      expect(w.clinician[0]).toBe(HIDDEN_NOTE);
+      expect(w.clinician.join(" ")).not.toMatch(/Incisal length/);
+      expect(w.patient).not.toMatch(/longer|shorter/);
+    }
+    // nothing added inside the band between the planned edge and the upper teeth
+    let addBand = 0;
+    for (let y = 151; y < upEdge; y++) for (let x = 150; x < 250; x++) addBand += res.add.data[y * W + x] ? 1 : 0;
+    expect(addBand).toBe(0);
+    expect(HIDDEN_LEGEND).toBe("Hidden behind the upper teeth — not measurable");
+  });
+
+  it("a mask painted on the lower teeth only uses the photo: light, non-red pixels beyond the edge are the upper teeth", () => {
+    const px = new Uint8ClampedArray(W * H * 4);
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++) {
+        const i = y * W + x;
+        let c = inside[i] < 0.5 ? [196, 96, 98] : y > 212 ? [205, 110, 115] : [40, 18, 20];
+        if (y >= 60 && y < upEdge && x >= 95 && x < 305) c = [240, 238, 230]; // bright upper ceramic
+        else if (y >= upEdge && y < upEdge + 2) c = [70, 60, 50]; // shadow under the upper edge
+        px.set([c[0], c[1], c[2], 255], i * 4);
+      }
+    const m = lowerMask(upEdge + 2);
+    for (let i = 0; i < W * H; i++) if (m.data[i]) px.set([214, 194, 140, 255], i * 4); // yellower lower teeth
+    setPrepPhotoReader(() => ({ data: px, rx: 0, ry: 0, rw: W, rh: H }));
+    try {
+      const res = computePrep(scene, m);
+      const c = res.teeth.find((x) => x.label === "LL1")!;
+      expect(c.hiddenPct!).toBeGreaterThan(20);
+      expect(c.lengthPx).toBe(0);
+      expect(c.addPct).toBeLessThan(3);
+    } finally {
+      setPrepPhotoReader(null);
+    }
+  });
+
+  it("an open space before the upper teeth stays measurable (added)", () => {
+    // upper teeth end well above the planned lower edge: the lower teeth are short and visible, nothing hides them
+    const m = lowerMask(upEdge + 2);
+    for (let y = 60; y < 120; y++) for (let x = 95; x < 305; x++) if (inside[y * W + x] >= 0.5) m.data[y * W + x] = 255;
+    const res = computePrep(scene, m);
+    const c = res.teeth.find((x) => x.label === "LR1")!;
+    expect(c.hiddenPct ?? 0).toBeLessThan(5);
+    expect(c.lengthPx).toBeGreaterThan(5);
+    expect(c.category).toBe("additive");
+  });
+
+  it("upper plan: the lower teeth behind the upper edge never hide it (normal overbite)", () => {
+    const up = { ...upper, center: { x: 200, y: 130 } };
+    const m = teethOf(up);
+    for (let y = 131; y < 170; y++) for (let x = 120; x < 280; x++) m.data[y * W + x] = 255; // lower teeth below
+    const res = computePrep({ img: null as unknown as CanvasImageSource, imgW: W, imgH: H, guides, lips, design: up }, m);
+    expect(res.teeth.every((t) => (t.hiddenPct ?? 0) === 0)).toBe(true);
+    expect(res.hidden).toBeUndefined();
+  });
+
+  it("hiddenPct is optional: old ToothPrep objects word exactly as before", () => {
+    const t: ToothPrep = { kind: 0, side: -1, label: "LR1", lengthPx: 12, mesialPx: 0, distalPx: 0, overlapPct: 100, addPct: 5, reducePct: 0, category: "additive" };
+    expect(prepWording(t, 10).clinician[0]).toBe("Incisal length: +1.2 mm (add) ±0.5 mm (photo)");
+    expect(prepWording({ ...t, hiddenPct: 15 }, 10).clinician[0]).toBe("Incisal length: +1.2 mm (add) ±0.5 mm (photo)");
+    expect(prepWording({ ...t, hiddenPct: 25 }, 10).clinician[0]).toBe(HIDDEN_NOTE);
   });
 });

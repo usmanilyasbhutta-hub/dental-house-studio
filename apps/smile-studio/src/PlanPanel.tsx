@@ -19,6 +19,7 @@ import {
   planSummary,
   planWarnings,
   position,
+  SAMPLE_WARNING,
   PREP_LABEL,
   removeClinicMaterial,
   setTooth,
@@ -50,6 +51,9 @@ interface Props {
   setTab: (t: PlanTab) => void;
   pickRole: PickRole;
   setPickRole: (r: PickRole) => void;
+  /** shade pin disk size (round 6) */
+  sampleSize: "small" | "medium";
+  setSampleSize: (s: "small" | "medium") => void;
   onMaterials: () => void;
   onLabSheet: () => void;
   onPrepSheet: () => void;
@@ -107,7 +111,7 @@ export function PlanPanel(p: Props) {
 
 const fmtLab = (l: number[]) => `L ${l[0].toFixed(1)} · a ${l[1].toFixed(1)} · b ${l[2].toFixed(1)}`;
 
-function ShadeCard({ plan, setPlan, pickRole, setPickRole }: Props) {
+function ShadeCard({ plan, setPlan, pickRole, setPickRole, sampleSize, setSampleSize }: Props) {
   const gap = planShadeGap(plan);
   const samples = plan.shade.samples;
   const setShade = (patch: Partial<CasePlan["shade"]>) => setPlan((x) => ({ ...x, shade: { ...x.shade, ...patch } }));
@@ -119,8 +123,20 @@ function ShadeCard({ plan, setPlan, pickRole, setPickRole }: Props) {
   useEffect(() => {
     if (dE) gapRef.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
   }, [dE]);
+  const unreliable = samples.some((x) => x.lab[0] > 0 && x.q && !x.q.ok);
+  // a pin just landed on gum / shadow: bring its warning into view (the list is below the fold on small phones)
+  const badKey = samples.map((x) => (x.q && !x.q.ok ? "1" : "0")).join("");
+  const listRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    if (badKey.includes("1")) listRef.current?.querySelector(".warn")?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+  }, [badKey]);
   const gapCard = gap && (
     <div className={`gap ${gap.band}`} aria-live="polite" ref={gapRef}>
+      {unreliable && (
+        <p className="gap-warn">
+          <Icon name="alert" size={16} /> A pin includes gum or shadow: this gap may be off.
+        </p>
+      )}
       <p className="gap-num">
         <span className="gap-k">ΔE00</span> {gap.dE00.toFixed(1)}
         <span className="band">
@@ -149,18 +165,39 @@ function ShadeCard({ plan, setPlan, pickRole, setPickRole }: Props) {
           </button>
         ))}
       </div>
+      <Chips
+        label="Sample size"
+        value={sampleSize}
+        options={[
+          { value: "small", label: "Small" },
+          { value: "medium", label: "Medium" },
+        ]}
+        onChange={setSampleSize}
+        segmented
+      />
       {!gap && samples.length > 0 && <p className="footnote">Place one reference and one tooth to match to see the gap.</p>}
       {samples.length > 0 && (
-        <ul className="samples group" aria-label="Shade samples">
+        <ul className="samples group" aria-label="Shade samples" ref={listRef}>
           {samples.map((s, i) => {
             const tag = s.role === "reference" ? `R${++nR}` : `M${++nM}`;
             const ok = s.lab[0] > 0;
+            const bad = ok && s.q && !s.q.ok;
             return (
-              <li key={i}>
+              <li key={i} className={bad ? "bad" : undefined}>
                 <span className={`tag ${s.role}`}>{tag}</span>
                 <span className="lab">
                   {s.role === "reference" ? "Reference" : "To match"}
                   <small>{ok ? `${fmtLab(s.lab)} · near ${nearestTab(s.lab).label}` : "Only shine or shadow here: move the pin onto the tooth"}</small>
+                  {ok && s.q && (
+                    <small className="quality">
+                      Sample quality: {Math.round(s.q.rej * 100)} % rejected{s.q.rej < 1 ? ` · spread L ${s.q.sdL.toFixed(1)} · b ${s.q.sdB.toFixed(1)}` : ""}
+                    </small>
+                  )}
+                  {bad && (
+                    <small className="warn" role="note">
+                      <Icon name="alert" size={14} /> {SAMPLE_WARNING}
+                    </small>
+                  )}
                 </span>
                 <button
                   className="icon"

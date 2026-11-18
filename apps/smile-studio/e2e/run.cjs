@@ -2,7 +2,8 @@
 // Smile Studio end-to-end suite (Playwright, preinstalled Chromium; no browser downloads).
 // Run: npm run e2e          (from apps/smile-studio)
 // Env: E2E_PORT (5184, vite dev), E2E_PREVIEW_PORT (5185, built app), E2E_DEVICES ("iPhone 13,Pixel 7,iPad (gen 7) landscape"),
-//      E2E_SKIP_OFFLINE=1, E2E_HEADED=1.
+//      E2E_SKIP_OFFLINE=1, E2E_HEADED=1, E2E_ONLY_BITE=1 (only the round-6 bite suite).
+// Test images are SYNTHETIC: e2e/make_face.py (face) and e2e/make_bite.py (retracted bite with overbite).
 // The test face is SYNTHETIC (e2e/make_face.py). Never point this at patient photos.
 // Artefacts: e2e/.tmp/ (face.jpg, shots/, exports/, report.json). Gitignored.
 "use strict";
@@ -845,6 +846,190 @@ async function deviceSuite(browser, devName, face) {
   await ctx.close();
 }
 
+// ---------- round 6: synthetic retracted bite (fit to teeth, shade pin quality, toast placement, hidden prep area) ----------
+/** Patch the most recent case in IndexedDB (test fixture: guides / lips for the synthetic bite). Editor must be closed. */
+const patchLatest = (page, patch) =>
+  page.evaluate(async (patch) => {
+    const db = await new Promise((res, rej) => {
+      const r = indexedDB.open("smile-studio", 1);
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+    const all = await new Promise((res) => {
+      const r = db.transaction("cases", "readonly").objectStore("cases").getAll();
+      r.onsuccess = () => res(r.result);
+    });
+    const c = all.sort((a, b) => b.updatedAt - a.updatedAt)[0];
+    const next = { ...c, ...patch, design: { ...c.design, ...(patch.design || {}) }, updatedAt: c.updatedAt + 1 };
+    await new Promise((res, rej) => {
+      const tx = db.transaction("cases", "readwrite");
+      tx.objectStore("cases").put(next);
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+    db.close();
+  }, patch);
+const boxOf = (page, sel) => page.locator(sel).first().boundingBox();
+const overlap = (a, b) => !!a && !!b && a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+async function biteSuite(browser, devName, bite, truth) {
+  const { defaultBrowserType, ...dev } = devices[devName];
+  const ctx = await browser.newContext({ ...dev, acceptDownloads: true });
+  await ctx.addInitScript(SHARE_STUB);
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  const shot = (n) => page.screenshot({ path: path.join(SHOTS, `${slug(devName)}-bite-${n}.png`) });
+  const T = await touch(page);
+  const dn = `${devName} · bite`;
+  console.log(`\n# ${dn}`);
+
+  await test(dn, "bite: import the synthetic retracted photo (close-up framing, lips around both arches)", async () => {
+    await page.goto(`http://127.0.0.1:${PORT}/`);
+    await page.getByRole("heading", { name: /Design the smile/ }).waitFor();
+    await importPhoto(page, bite);
+    await page.getByRole("button", { name: "Back to cases" }).click();
+    await page.locator(".card").first().waitFor();
+    await patchLatest(page, {
+      framing: "closeup",
+      guides: { pupilR: { x: 130, y: 440 }, pupilL: { x: 1070, y: 440 }, midline: { x: truth.midX, y: 300 } },
+      lips: truth.lips.map(([x, y]) => ({ x, y })),
+      design: { center: { x: truth.midX, y: truth.upperEdgeY }, width: 560, arch: "upper", count: 6 },
+    });
+    // Home lists cases once: reload so the card opens the patched record
+    await page.reload();
+    await page.locator(".card-open").first().waitFor();
+    await page.locator(".card-open").first().click();
+    await page.locator(".topbar .title .h").waitFor();
+    await page.waitForFunction(() => document.querySelector(".stage canvas")?.clientWidth > 0);
+    await page.waitForTimeout(1200); // let the editor autosave once, then check it kept the fixture
+    const c = await current(page);
+    assert(c.imgW === truth.w && c.lips.length === 16 && c.framing === "closeup", `fixture not applied (${c.imgW}, ${c.lips.length} lip points)`);
+  });
+
+  await test(dn, "Fit to teeth: two canine taps set width / centre / tilt of the lower template; undo restores", async () => {
+    await gotoStep(page, "Teeth");
+    await page.getByRole("radio", { name: "Lower", exact: true }).click();
+    await page.waitForTimeout(500);
+    assert(await page.locator(".fit-chip").isVisible(), "no 'Fit to teeth' hint chip after switching to Lower");
+    await shot("10-fit-before");
+    const before = (await current(page)).design;
+    await page.locator(".fit-chip").click();
+    await page.waitForTimeout(300);
+    assert(/right canine/.test(await page.locator(".panel").innerText()), "fit steps not shown");
+    assert(await page.locator(".side-tag.left", { hasText: "Patient's right" }).isVisible(), "patient's-right side tag missing");
+    await page.getByRole("button", { name: "Fit whole photo to screen" }).click();
+    await page.waitForTimeout(300);
+    const c0 = await current(page);
+    const v = await view(page, "guides", c0);
+    const [R, L] = [truth.lowerCanineR, truth.lowerCanineL].map(([x, y]) => ({ x, y }));
+    await T.tap(v.scr(R));
+    await page.waitForTimeout(250);
+    assert(/left canine/.test(await page.locator(".stage-tag.fit-tag").innerText()), "second prompt missing");
+    await T.tap(v.scr(L));
+    await page.waitForTimeout(900);
+    await shot("11-fit-taps");
+    const d = (await current(page)).design;
+    const want = 2 * truth.lowerCentralW * (1 + 1.03 + 0.8); // drawn canine-to-canine span of the synthetic lower teeth
+    const cw = truth.lowerCentralW;
+    assert(d.arch === "lower", `arch ${d.arch}`);
+    assert(Math.abs(d.width - want) / want < 0.06, `width ${d.width.toFixed(1)} vs drawn ${want.toFixed(1)}`);
+    assert(Math.abs(d.center.x - truth.midX) < cw * 0.3 + 8, `centre x ${d.center.x.toFixed(1)} vs ${truth.midX}`);
+    assert(d.center.y > truth.lowerIncisalY - 12 && d.center.y < truth.upperEdgeY, `centre y ${d.center.y.toFixed(1)}`);
+    assert(Math.abs(d.tilt) < 1.5, `tilt ${d.tilt}`);
+    const tips = await page.evaluate(async ({ d, g }) => (await import("/src/fit.ts")).canineTips(d, g), { d, g: c0.guides });
+    const miss = Math.max(Math.hypot(tips[0].x - R.x, tips[0].y - R.y), Math.hypot(tips[1].x - L.x, tips[1].y - L.y));
+    assert(miss < cw * 0.35 + 6, `canine boxes ${miss.toFixed(1)} px from the taps`);
+    await page.getByRole("button", { name: "Done", exact: true }).click();
+    await page.waitForTimeout(500);
+    await shot("12-fit-after");
+    await page.getByRole("button", { name: "Undo" }).click();
+    await page.waitForTimeout(500);
+    const u = (await current(page)).design;
+    assert(Math.abs(u.width - before.width) < 1, `undo: width ${u.width.toFixed(1)} (before ${before.width.toFixed(1)})`);
+    await page.getByRole("button", { name: "Redo" }).click();
+    await page.waitForTimeout(500);
+    return `width ${d.width.toFixed(0)} (drawn ${want.toFixed(0)}), centre ${d.center.x.toFixed(0)},${d.center.y.toFixed(0)}, wl ${d.wl}, miss ${miss.toFixed(1)} px`;
+  });
+
+  await test(dn, "Prep map on the lower plan: area behind the upper teeth is hatched, legend + per-tooth note", async () => {
+    await gotoStep(page, "Teeth");
+    await page.getByRole("switch", { name: /Prep map/ }).click();
+    await page.waitForTimeout(1200);
+    const txt = await page.locator(".panel").innerText();
+    assert(/Hidden behind the upper teeth — not measurable/.test(txt), `hidden legend missing: ${txt.slice(0, 300)}`);
+    assert(/Partly hidden behind the upper teeth: length not measurable from this photo\./.test(txt), "per-tooth hidden note missing");
+    assert(/Planning aid only\. Measured from a 2D photo/.test(txt), "disclaimer missing");
+    await shot("13-prep-hidden");
+    await page.getByRole("switch", { name: /Prep map/ }).click();
+  });
+
+  await test(dn, "Shade pin on the gum: ring + amber warning; moved onto the tooth it clears", async () => {
+    await gotoStep(page, "Plan");
+    await page.getByRole("tab", { name: /Shade/ }).click();
+    await page.waitForTimeout(200);
+    const c = await current(page);
+    const v = await view(page, "plan", c);
+    await page.getByRole("button", { name: "Pick tooth to match" }).click();
+    const gum = { x: truth.gumPinPt[0], y: truth.gumPinPt[1] };
+    await T.tap(v.scr(gum));
+    await page.waitForTimeout(500);
+    const s1 = (await current(page)).plan.shade.samples.slice(-1)[0];
+    assert(s1.q && s1.q.ok === false, `gum pin not flagged: ${JSON.stringify(s1.q)}`);
+    assert(s1.r > 1 && s1.r < cwOf(c) * 0.25, `sample radius ${s1.r}`);
+    const warn = page.locator(".samples .warn");
+    if (!(await warn.count())) throw new Error(`no warning in the shade card: ${(await page.locator(".panel").innerText()).slice(0, 500)}`);
+    assert(/This spot includes gum or shadow; move the pin onto the middle third of the tooth\./.test(await warn.first().innerText()), "warning text missing");
+    await shot("14-pin-gum");
+    // drag the pin up onto the middle third of the lower central
+    const tooth = { x: truth.toothPinPt[0], y: truth.toothPinPt[1] };
+    await T.drag(v.scr(gum), v.scr(tooth), 10);
+    await page.waitForTimeout(700);
+    const s2 = (await current(page)).plan.shade.samples.slice(-1)[0];
+    assert(s2.q && s2.q.ok === true, `pin on the tooth still flagged: ${JSON.stringify(s2.q)} at ${JSON.stringify(s2.pt)}`);
+    assert((await page.locator(".samples .warn").count()) === 0, "warning still shown");
+    await shot("15-pin-tooth");
+    return `gum: ${Math.round(s1.q.rej * 100)} % rejected; tooth: ${Math.round(s2.q.rej * 100)} %`;
+  });
+
+  await test(dn, "toast sits under the top bar: never over the controls sheet / tooth chart or the tab bar", async () => {
+    await page.getByRole("tab", { name: /Review/ }).click();
+    // no share sheet: the app downloads and says "Image saved to downloads"
+    await page.evaluate(() => (navigator.canShare = () => false));
+    await page.getByRole("button", { name: "Lab prescription" }).click();
+    const dlg = page.getByRole("dialog");
+    await dlg.waitFor();
+    await dlg.getByRole("button", { name: "Share PNG" }).click();
+    await agreeIfAsked(page);
+    await page.locator(".toast", { hasText: /saved to downloads/ }).waitFor({ timeout: 20000 });
+    if (await dlg.isVisible().catch(() => false)) await page.keyboard.press("Escape");
+    await page.getByRole("tab", { name: /Teeth/ }).click();
+    await page.waitForTimeout(120);
+    const toast = await boxOf(page, ".toast");
+    assert(toast, "toast gone too early to measure");
+    const chart = await boxOf(page, ".odonto");
+    const side = await boxOf(page, ".side");
+    const steps = await boxOf(page, ".steps");
+    const top = await boxOf(page, ".topbar");
+    await shot("16-toast");
+    assert(!overlap(toast, chart), `toast covers the tooth chart ${JSON.stringify(toast)} ${JSON.stringify(chart)}`);
+    assert(!overlap(toast, side), `toast covers the controls ${JSON.stringify(toast)} ${JSON.stringify(side)}`);
+    assert(!overlap(toast, steps), "toast covers the step bar");
+    assert(toast.y >= top.y + top.height - 1, "toast covers the top bar");
+    await page.waitForTimeout(2600);
+    assert((await page.locator(".toast").count()) === 0, "toast still visible after 2.6 s");
+    return `toast y ${Math.round(toast.y)}–${Math.round(toast.y + toast.height)}, sheet from ${Math.round(side.y)}`;
+  });
+
+  const jsErr = errors.filter((e) => !/favicon/.test(e));
+  await test(dn, "no JS errors in console", async () => {
+    assert(jsErr.length === 0, jsErr.slice(0, 5).join("\n"));
+  });
+  await ctx.close();
+}
+const cwOf = (c) => c.design.width / (2 * (1 + 1.03 + 0.8));
+
 // ---------- offline (built app + service worker) ----------
 async function offlineSuite(browser, face) {
   console.log(`\n# offline: built app on vite preview :${PPORT}`);
@@ -904,13 +1089,16 @@ async function offlineSuite(browser, face) {
   fs.mkdirSync(EXPORTS, { recursive: true });
   const face = path.join(TMP, "face.jpg");
   execFileSync("python3", [path.join(__dirname, "make_face.py"), face, String(IMG.w), String(IMG.h)], { stdio: "ignore" });
+  const bite = path.join(TMP, "bite.jpg");
+  const truth = JSON.parse(execFileSync("python3", [path.join(__dirname, "make_bite.py"), bite, "1200", "800"]).toString());
 
   const browser = await chromium.launch({ headless: !process.env.E2E_HEADED });
   try {
     await startServer([], PORT);
     for (const d of DEVICES) {
       assert(devices[d], `unknown device ${d}`);
-      await deviceSuite(browser, d, face);
+      if (!process.env.E2E_ONLY_BITE) await deviceSuite(browser, d, face);
+      await biteSuite(browser, d, bite, truth);
     }
     stopAll();
     if (!process.env.E2E_SKIP_OFFLINE) await offlineSuite(browser, face);

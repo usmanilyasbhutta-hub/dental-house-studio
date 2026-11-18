@@ -70,6 +70,142 @@ export function sampleLab(rgba: ArrayLike<number>, w: number, h: number, x: numb
   return [median(L), median(A), median(B)];
 }
 
+// ---------- shade sample quality (round 6) ----------
+
+/** Mask view for sampling (0 = not tooth), covering the photo at `w / imgW` mask px per image px. */
+export interface SampleMask {
+  w: number;
+  h: number;
+  data: ArrayLike<number>;
+}
+
+/** Thresholds for a trustworthy shade sample. */
+export const SAMPLE_RULES = {
+  /** below this L* a pixel is shadow / mouth */
+  darkL: 45,
+  /** or this far below the bright tooth part of the sample (75th percentile L*) */
+  darkDrop: 15,
+  /** gum-like: a* this much above the tooth part of the sample (median a* of its brighter half) … */
+  gumRelA: 7,
+  /** … or above this absolute a* */
+  gumA: 16,
+  /** more rejected pixels than this share makes the sample unreliable */
+  maxRejected: 0.3,
+  /** spread (standard deviation) limits of the kept pixels */
+  maxSdL: 7,
+  maxSdB: 6,
+};
+
+export interface SampleQuality {
+  /** pixels under the disk */
+  n: number;
+  /** share (0–1) rejected: not tooth in the mask, specular, dark/shadow or gum-like */
+  rejected: number;
+  /** counts per reason */
+  offMask: number;
+  specular: number;
+  dark: number;
+  gum: number;
+  /** standard deviation of L* and b* of the kept pixels */
+  sdL: number;
+  sdB: number;
+  reliable: boolean;
+}
+
+/** Sample disk radius (image px): a share of the planned central width, so narrow (lower) teeth get a smaller disk. */
+export function sampleRadius(centralWidthPx: number, size: "small" | "medium", imgMin: number) {
+  const r = centralWidthPx * (size === "small" ? 0.1 : 0.18);
+  return Math.max(2.5, Math.min(r, imgMin * 0.03));
+}
+
+const sd = (v: number[]) => {
+  if (v.length < 2) return 0;
+  const m = v.reduce((a, b) => a + b, 0) / v.length;
+  return Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / (v.length - 1));
+};
+const quant = (v: number[], q: number) => {
+  const s = [...v].sort((a, b) => a - b);
+  return s[Math.min(s.length - 1, Math.max(0, Math.round(q * (s.length - 1))))];
+};
+
+/**
+ * Shade sample with a quality report. Pixels in the disk are rejected when they are not tooth in the existing-teeth
+ * mask (when given), specular (L* > 93), dark (L* < 45, or 15 below the bright part of the sample) or gum-like
+ * (a* well above the tooth part of the sample). The Lab is the median of the kept pixels (or, when nothing is kept,
+ * of the non-specular, not-black pixels, on the mask first, else under the whole disk, so the clinician still sees a
+ * value; it is then flagged unreliable).
+ */
+export function sampleLabQ(
+  rgba: ArrayLike<number>,
+  w: number,
+  h: number,
+  x: number,
+  y: number,
+  r: number,
+  mask?: SampleMask | null,
+): { lab: Lab | null; q: SampleQuality } {
+  const R = SAMPLE_RULES;
+  const rr = Math.max(0.5, r);
+  const k = mask ? mask.w / w : 1;
+  const px: Lab[] = [];
+  const offPx: Lab[] = []; // pixels outside the tooth mask: only used to show what is under a pin that is off the teeth
+  let n = 0;
+  let offMask = 0;
+  let specular = 0;
+  for (let yy = Math.floor(y - rr); yy <= Math.ceil(y + rr); yy++) {
+    if (yy < 0 || yy >= h) continue;
+    for (let xx = Math.floor(x - rr); xx <= Math.ceil(x + rr); xx++) {
+      if (xx < 0 || xx >= w) continue;
+      if ((xx - x) ** 2 + (yy - y) ** 2 > rr * rr) continue;
+      n++;
+      const i = (yy * w + xx) * 4;
+      const lab = rgbToLab(rgba[i], rgba[i + 1], rgba[i + 2]);
+      if (mask) {
+        const mx = Math.min(mask.w - 1, Math.floor((xx + 0.5) * k));
+        const my = Math.min(mask.h - 1, Math.floor((yy + 0.5) * k));
+        if (!mask.data[my * mask.w + mx]) {
+          offMask++;
+          if (lab[0] <= SPECULAR_L && lab[0] >= DARK_L) offPx.push(lab);
+          continue;
+        }
+      }
+      if (lab[0] > SPECULAR_L) {
+        specular++;
+        continue;
+      }
+      px.push(lab);
+    }
+  }
+  let dark = 0;
+  let gum = 0;
+  let kept: Lab[] = [];
+  if (px.length) {
+    const Ls = px.map((p) => p[0]);
+    const p75 = quant(Ls, 0.75);
+    const lMed = quant(Ls, 0.5);
+    const aRef = quant(px.filter((p) => p[0] >= lMed).map((p) => p[1]), 0.5);
+    for (const p of px) {
+      if (p[1] > aRef + R.gumRelA || p[1] > R.gumA) gum++;
+      else if (p[0] < R.darkL || p[0] < p75 - R.darkDrop) dark++;
+      else kept.push(p);
+    }
+  }
+  const rejected = n ? (n - kept.length) / n : 1;
+  const sdL = sd(kept.map((p) => p[0]));
+  const sdB = sd(kept.map((p) => p[2]));
+  const reliable = kept.length >= 5 && rejected <= R.maxRejected && sdL <= R.maxSdL && sdB <= R.maxSdB;
+  if (!kept.length) kept = px.filter((p) => p[0] >= DARK_L);
+  if (!kept.length) kept = offPx;
+  const lab: Lab | null = kept.length ? [median(kept.map((p) => p[0])), median(kept.map((p) => p[1])), median(kept.map((p) => p[2]))] : null;
+  return { lab, q: { n, rejected, offMask, specular, dark, gum, sdL, sdB, reliable } };
+}
+
+/** The pin's warning copy (shade card and pin). */
+export const SAMPLE_WARNING = "This spot includes gum or shadow; move the pin onto the middle third of the tooth.";
+
+/** A sample counts as unreliable only when it carries a quality report that says so (older plans have none). */
+export const sampleReliable = (s: { q?: { ok: boolean } }) => !s.q || s.q.ok;
+
 export function deltaE76(p: Lab, q: Lab) {
   return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
 }
@@ -227,16 +363,17 @@ export function nearestTab(lab: Lab): { tab: string; dE00: number; label: string
 }
 
 /** Mean Lab of the samples with this role (null when none). */
-export function meanLab(samples: { role: string; lab: Lab }[], role: string): Lab | null {
+export function meanLab(samples: { role: string; lab: Lab; q?: { ok: boolean } }[], role: string, reliableOnly = false): Lab | null {
   // L* = 0 marks a pin with no usable tooth colour under it (only shine or shadow)
-  const s = samples.filter((x) => x.role === role && x.lab[0] > 0);
+  const s = samples.filter((x) => x.role === role && x.lab[0] > 0 && (!reliableOnly || sampleReliable(x)));
   if (!s.length) return null;
   return [0, 1, 2].map((i) => s.reduce((t, x) => t + x.lab[i], 0) / s.length) as Lab;
 }
 
-export function planShadeGap(plan: CasePlan): ShadeGap | null {
-  const r = meanLab(plan.shade.samples, "reference");
-  const m = meanLab(plan.shade.samples, "match");
+/** Shade gap of the plan's pins; `reliableOnly` leaves out pins whose sample includes gum or shadow (round 6). */
+export function planShadeGap(plan: CasePlan, reliableOnly = false): ShadeGap | null {
+  const r = meanLab(plan.shade.samples, "reference", reliableOnly);
+  const m = meanLab(plan.shade.samples, "match", reliableOnly);
   return r && m ? shadeGap(r, m) : null;
 }
 
@@ -497,6 +634,8 @@ export const W = {
     "Prep beyond additive without an approved mock-up: plan the reduction through an approved mock-up / silicone index, not the existing surface (Magne & Belser, PMID 15259539).",
   noMaterial: "In the plan but no material chosen yet.",
   visibilityUnknown: "Next to a planned tooth, visibility not recorded: mark whether it shows in smile or speech so the transition can be checked.",
+  sampleUnreliable:
+    "Shade sample unreliable: a pin includes gum or shadow (more than 30 % of its pixels rejected, or a wide spread). Move it onto the middle third of the tooth; it is left out of the whitening check until then.",
 };
 
 const visible = (t: ToothPlan) => t.visible === "smile" || t.visible === "speech";
@@ -562,7 +701,9 @@ export function planWarnings(plan: CasePlan, lib: Material[] = MATERIALS): PlanW
     }
   if (mixed.size) add([...mixed], "info", W.mixedMaterials);
 
-  const gap = planShadeGap(plan);
+  // whitening check uses only trustworthy pins (a pin on gum/shadow reads as "more chroma")
+  const gap = planShadeGap(plan, true);
+  if (plan.shade.samples.some((x) => x.lab[0] > 0 && !sampleReliable(x))) add([], "info", W.sampleUnreliable);
   if (resto.length && gap && gap.band !== "below" && gap.dominant === "chroma" && gap.dC > 0 && !plan.shade.whiteningDone)
     add([], "info", W.whitening);
   if (plan.flags.bruxism && !plan.checklist.nightGuard) add([], "caution", W.bruxism);

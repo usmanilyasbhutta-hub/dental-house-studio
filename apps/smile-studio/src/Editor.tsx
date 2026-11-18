@@ -4,9 +4,10 @@ import { archOf, withArch } from "./arch";
 import { computePrep, detectTeeth, maskFromToothMask, toothMaskFromMask, type Mask } from "./engineShim";
 import { centralLength, centralWidth, deg, fitArcToLowerLip, measure, pupilAngle, PROPORTIONS, rad, SHAPE_LABELS, TOOTH_NAMES } from "./geometry";
 import { useHistory } from "./history";
-import { defaultLips, initialLayout, type Arch, type CaseData, type CasePlan, type Design, type Proportion, type Pt, type RenderMode, type ToothCount, type ToothShape } from "./model";
+import { defaultLips, initialLayout, type Arch, type CaseData, type CasePlan, type Design, type Proportion, type Pt, type RenderMode, type ShadeSample, type ToothCount, type ToothShape } from "./model";
 import { MaterialsSheet, PlanPanel, type PickRole, type PlanTab } from "./PlanPanel";
-import { defaultPlan, loadClinicMaterials, materialLibrary, sampleLab, saveClinicMaterials, type Lab, type Material } from "./planner";
+import { fitToTeeth } from "./fit";
+import { defaultPlan, loadClinicMaterials, materialLibrary, sampleLabQ, sampleRadius, saveClinicMaterials, type Lab, type Material } from "./planner";
 import { PrepDisclaimer, PrepLegend, PrepPanel } from "./PrepPanel";
 import { exportCanvas, type Step } from "./render";
 import { SHADES } from "./shades";
@@ -14,7 +15,7 @@ import { caseCodeProblem, rootLabel } from "./sheetCopy";
 import { canvasToFile, clinicianSheet, labSheet, patientSheet, type SheetScene, type SheetView } from "./sheets";
 import { Stage, WL_RANGE, type Calib, type MaskTool } from "./Stage";
 import { listCases, saveCase, thumbnail } from "./storage";
-import { Chips, Hint, Icon, Sheet, Slider, tick, Toggle, useToast } from "./ui";
+import { Chips, Group, Hint, Icon, Sheet, Slider, tick, Toggle, useToast } from "./ui";
 
 const STEPS: { id: Step; label: string; n: string; goal: string; icon: string }[] = [
   { id: "guides", label: "Face", n: "01", icon: "face", goal: "Set the face level: both pupils and the facial midline." },
@@ -77,6 +78,10 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const [clinicMats, setClinicMats] = useState<Material[]>(() => loadClinicMaterials());
   const [matsOpen, setMatsOpen] = useState(false);
   const pixels = useRef<{ img: ImageBitmap; data: Uint8ClampedArray } | null>(null);
+  // round 6: fit to teeth (two canine taps, then the mask refines length and midline)
+  const [fitTaps, setFitTaps] = useState<Pt[] | null>(null);
+  const [fitNote, setFitNote] = useState("");
+  const [fitHint, setFitHint] = useState(false);
   const toast = useToast();
   const showToast = toast.show;
   const saveTimer = useRef(0);
@@ -168,7 +173,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   }, [history]);
 
   // existing-teeth mask: the saved (clinician-checked) one, else detected from the photo inside the lip line
-  const needMask = (step === "lips" && lipTool === "teeth") || prepOn || c.design.render !== "drawn";
+  const needMask = (step === "lips" && lipTool === "teeth") || prepOn || c.design.render !== "drawn" || !!fitTaps || step === "plan";
   const autoKey = c.toothMask ? "" : JSON.stringify(c.lips);
   useEffect(() => {
     if (!img) return;
@@ -210,10 +215,15 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const plan: CasePlan = useMemo(() => c.plan ?? defaultPlan(arch), [c.plan, arch]);
   const lib = useMemo(() => materialLibrary(clinicMats), [clinicMats]);
   const setPlan = (fn: (p: CasePlan) => CasePlan) => setC((x) => ({ ...x, plan: fn(x.plan ?? defaultPlan(archOf(x.design))) }));
-  const sampleR = Math.max(3, Math.round(Math.min(c.imgW, c.imgH) * 0.006));
-  /** Median Lab under a pin, from the full-resolution photo (decoded once). L* = 0 marks "only shine or shadow here". */
-  const labAt = (pt: Pt): Lab => {
-    if (!img) return [0, 0, 0];
+  // shade pin disk: a share of the planned central width (narrow lower teeth get a smaller disk); small / medium
+  const sampleSize = plan.shade.sampleSize ?? (lower ? "small" : "medium");
+  const sampleR = sampleRadius(centralWidth(c.design), sampleSize, Math.min(c.imgW, c.imgH));
+  /**
+   * Median Lab under a pin, from the full-resolution photo (decoded once), with its quality (gum / shadow / shine
+   * rejected; only tooth pixels of the existing-teeth mask when there is one). L* = 0 marks "only shine or shadow here".
+   */
+  const sampleAt = (pt: Pt, r = sampleR): Pick<ShadeSample, "lab" | "r" | "q"> => {
+    if (!img) return { lab: [0, 0, 0] };
     if (pixels.current?.img !== img) {
       const cv = document.createElement("canvas");
       cv.width = c.imgW;
@@ -223,8 +233,34 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
       pixels.current = { img, data: ctx.getImageData(0, 0, c.imgW, c.imgH).data };
       cv.width = 0;
     }
-    const lab = sampleLab(pixels.current.data, c.imgW, c.imgH, pt.x, pt.y, sampleR);
-    return lab ? (lab.map((v) => Math.round(v * 100) / 100) as Lab) : [0, 0, 0];
+    const { lab, q } = sampleLabQ(pixels.current.data, c.imgW, c.imgH, pt.x, pt.y, r, mask);
+    const r2 = (v: number) => Math.round(v * 100) / 100;
+    return {
+      lab: lab ? (lab.map(r2) as Lab) : [0, 0, 0],
+      r: r2(r),
+      q: { rej: r2(q.rejected), sdL: r2(q.sdL), sdB: r2(q.sdB), ok: q.reliable },
+    };
+  };
+  const setSampleSize = (size: "small" | "medium") => {
+    const r = sampleRadius(centralWidth(c.design), size, Math.min(c.imgW, c.imgH));
+    setPlan((x) => ({ ...x, shade: { ...x.shade, sampleSize: size, samples: x.shade.samples.map((s) => ({ ...s, ...sampleAt(s.pt, r) })) } }));
+  };
+
+  // ---------- fit to teeth ----------
+  const startFit = () => {
+    setCalibrating(false);
+    setFitHint(false);
+    setFitNote("");
+    setFitTaps([]);
+  };
+  const endFit = () => setFitTaps(null);
+  const onFitTaps = (pts: Pt[]) => {
+    setFitTaps(pts);
+    if (pts.length < 2) return;
+    const x = latest.current;
+    const r = fitToTeeth(x.design, x.guides, pts[0], pts[1], mask, x.imgW, x.lips);
+    setFitNote(r.note);
+    if (r.design !== x.design) setC((y) => ({ ...y, design: r.design }));
   };
   const updateMats = (list: Material[]) => {
     setClinicMats(list);
@@ -274,6 +310,10 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     setReached((r) => Math.max(r, i));
     if (s !== "design") setCalibrating(false);
     if (s !== "plan") setPickRole(null);
+    if (s !== "design") {
+      setFitTaps(null);
+      setFitHint(false);
+    }
     setStep(s);
   };
   const idx = STEPS.findIndex((s) => s.id === step);
@@ -427,6 +467,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   };
 
   const startCalibrate = () => {
+    setFitTaps(null);
     setStep("design");
     setReached((r) => Math.max(r, 2));
     if (!c.calib) {
@@ -520,13 +561,13 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           maskTool={step === "lips" && lipTool === "teeth" ? { mode: brushMode, size: brushSize } : null}
           mask={mask}
           onMaskEdited={onMaskEdited}
-          samples={step === "plan" ? plan.shade.samples : undefined}
+          samples={step === "plan" ? plan.shade.samples.map((x) => ({ pt: x.pt, role: x.role, r: x.r, ok: x.q ? x.q.ok : undefined })) : undefined}
           pickRole={step === "plan" && planTab === "shade" ? pickRole : null}
           sampleR={sampleR}
           onAddSample={(pt) => {
             const role = pickRole;
             if (!role) return;
-            setPlan((x) => ({ ...x, shade: { ...x.shade, samples: [...x.shade.samples, { role, pt, lab: labAt(pt) }] } }));
+            setPlan((x) => ({ ...x, shade: { ...x.shade, samples: [...x.shade.samples, { role, pt, ...sampleAt(pt) }] } }));
             setPickRole(null);
           }}
           onSamples={(pts) =>
@@ -534,7 +575,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
               ...x,
               shade: {
                 ...x.shade,
-                samples: pts.map((pt, i) => ({ ...(x.shade.samples[i] ?? { role: "match" as const }), pt, lab: labAt(pt) })),
+                samples: pts.map((pt, i) => ({ ...(x.shade.samples[i] ?? { role: "match" as const }), pt, ...sampleAt(pt, x.shade.samples[i]?.r ?? sampleR) })),
               },
             }))
           }
@@ -542,6 +583,8 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           onLips={(lips) => setC((x) => ({ ...x, lips }))}
           onDesign={(design) => setC((x) => ({ ...x, design }))}
           onCalib={(calib: Calib) => setC((x) => ({ ...x, calib }))}
+          fitTaps={step === "design" && !calibrating ? fitTaps : null}
+          onFitTaps={onFitTaps}
           onGesture={(active) => {
             history.gesture(active);
             if (!active) {
@@ -550,7 +593,18 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
               window.setTimeout(() => void saveNow(), 0);
             }
           }}
-        />
+        >
+          {fitHint && step === "design" && !fitTaps && !calibrating && !showOriginal && (
+            <div className="fit-chip-wrap">
+              <button className="fit-chip" onClick={startFit}>
+                <Icon name="target" size={16} /> Fit to teeth
+              </button>
+              <button className="fit-chip-x" onClick={() => setFitHint(false)} aria-label="Hide the fit to teeth hint">
+                <Icon name="close" size={14} />
+              </button>
+            </div>
+          )}
+        </Stage>
       ) : (
         <div className="stage loading" role="status">
           <span className="spinner" aria-hidden="true" /> Opening photo…
@@ -599,6 +653,8 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           <p className="goal">
             {calibrating
               ? "Calibrate: measure one existing central so the read-out shows mm."
+              : step === "design" && fitTaps
+                ? "Fit to teeth: tap both canine tips on the photo."
               : step === "lips" && lipTool === "teeth"
                 ? "Mark the patient's own teeth. Used for the prep map and the photo-real teeth."
                 : stepGoal(STEPS[idx])}
@@ -719,7 +775,49 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
             </>
           )}
 
-          {step === "design" && !calibrating && (
+          {step === "design" && !calibrating && fitTaps && (
+            <>
+              <ol className="fit-steps">
+                <li className={fitTaps.length >= 1 ? "done" : "on"}>
+                  <span className="n" aria-hidden="true">{fitTaps.length >= 1 ? <Icon name="check" size={14} /> : "1"}</span>
+                  <span>
+                    Tap the tip of the patient's <b>right canine</b> <small>(on the left of the photo)</small>
+                  </span>
+                </li>
+                <li className={fitTaps.length >= 2 ? "done" : fitTaps.length === 1 ? "on" : ""}>
+                  <span className="n" aria-hidden="true">{fitTaps.length >= 2 ? <Icon name="check" size={14} /> : "2"}</span>
+                  <span>
+                    Then the <b>left canine</b> <small>(on the right of the photo)</small>
+                  </span>
+                </li>
+              </ol>
+              {fitTaps.length < 2 ? (
+                <Hint>Zoom in with two fingers if needed. The loupe shows the point under your finger.</Hint>
+              ) : (
+                <p className="note" aria-live="polite">
+                  {fitNote} Drag a pin to adjust; undo goes back.
+                </p>
+              )}
+              <Group>
+                <Toggle
+                  label="Include premolars"
+                  note={c.design.count > 6 ? `${c.design.count} teeth: canine to ${c.design.count === 8 ? "first" : "second"} premolar` : "6 teeth: canine to canine"}
+                  checked={c.design.count > 6}
+                  onChange={(v) => setDesign({ count: v ? (c.design.count === 8 ? 8 : 10) : 6 })}
+                />
+              </Group>
+              <div className="row">
+                <button className="btn" onClick={endFit}>
+                  Done
+                </button>
+                <button className="btn secondary" onClick={startFit} disabled={!fitTaps.length}>
+                  Tap again
+                </button>
+              </div>
+            </>
+          )}
+
+          {step === "design" && !calibrating && !fitTaps && (
             <>
               <Chips
                 label="Arch"
@@ -728,8 +826,14 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                   { value: "upper", label: "Upper" },
                   { value: "lower", label: "Lower" },
                 ]}
-                onChange={(a) => setC((x) => ({ ...x, design: withArch(x.design, x.guides, a) }))}
+                onChange={(a) => {
+                  setC((x) => ({ ...x, design: withArch(x.design, x.guides, a) }));
+                  setFitHint(a === "lower");
+                }}
               />
+              <button className="btn fit-btn" onClick={startFit}>
+                <Icon name="target" size={20} /> Fit to teeth
+              </button>
               <Chips
                 label="Teeth look"
                 value={c.design.render ?? "photo"}
@@ -881,6 +985,8 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
               setTab={setPlanTab}
               pickRole={pickRole}
               setPickRole={setPickRole}
+              sampleSize={sampleSize}
+              setSampleSize={setSampleSize}
               onMaterials={() => setMatsOpen(true)}
               onLabSheet={() => openSheet("lab")}
               onPrepSheet={() => openSheet("clinician")}
@@ -903,7 +1009,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
               {prepOn ? (
                 <>
                   <PrepDisclaimer />
-                  <PrepLegend />
+                  <PrepLegend prep={prep} />
                 </>
               ) : (
                 <Hint>Slide across the photo to compare now and the simulation.</Hint>

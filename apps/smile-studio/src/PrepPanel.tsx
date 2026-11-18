@@ -1,6 +1,6 @@
 // Prep map side panel: mandatory disclaimer, legend and the per-tooth outline comparison (clinician wording).
 import { useEffect, useRef } from "react";
-import { PREP_DISCLAIMER, prepWording, type PrepResult } from "./engineShim";
+import { hiddenLegend, PREP_DISCLAIMER, prepWording, type PrepResult } from "./engineShim";
 import { TOOTH_NAMES } from "./geometry";
 import { CLINICIAN } from "./sheetCopy";
 
@@ -17,7 +17,9 @@ export function PrepDisclaimer() {
   );
 }
 
-export function PrepLegend() {
+/** Legend; `prep` adds the hatched "hidden behind the opposing teeth" swatch when the map has such an area. */
+export function PrepLegend({ prep }: { prep?: PrepResult | null }) {
+  const lower = prep?.teeth[0]?.label[0] === "L";
   return (
     <div className="legend" aria-label="Prep map legend">
       <span>
@@ -26,6 +28,11 @@ export function PrepLegend() {
       <span>
         <i className="sw reduce" aria-hidden="true" /> Red · {CLINICIAN.legendReduce.replace(/^Reduced: /, "reduced: ")}
       </span>
+      {prep?.hidden && (
+        <span className="legend-hidden">
+          <i className="sw hidden" aria-hidden="true" /> Grey hatch · {hiddenLegend(lower)}
+        </span>
+      )}
     </div>
   );
 }
@@ -47,7 +54,7 @@ export function PrepPanel({
   return (
     <div className="prep">
       <PrepDisclaimer />
-      <PrepLegend />
+      <PrepLegend prep={prep} />
       {!pxPerMm && (
         <p className="note">
           Not calibrated: changes show as add / reduce only, no mm.{" "}
@@ -69,6 +76,7 @@ export function PrepPanel({
           {prep.teeth.map((t) => {
             const w = prepWording(t, pxPerMm);
             const warn = (l: string) => /^(Large incisal|Proximal reduction)/.test(l);
+            const muted = (l: string) => /^Partly hidden behind/.test(l);
             return (
               <li key={t.label}>
                 <span className="mono tooth">
@@ -77,7 +85,7 @@ export function PrepPanel({
                 </span>
                 <span className="lines">
                   {w.clinician.map((l, i) => (
-                    <span key={i} className={warn(l) ? "warn" : undefined}>
+                    <span key={i} className={warn(l) ? "warn" : muted(l) ? "muted" : undefined}>
                       {l}
                     </span>
                   ))}

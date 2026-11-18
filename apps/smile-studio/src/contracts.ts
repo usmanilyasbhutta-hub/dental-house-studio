@@ -31,11 +31,15 @@ export interface ToothPrep {
   /** % of the existing tooth area (inside this tooth's box) that lies outside the plan (needs reduction) */
   reducePct: number;
   category: PrepCategory;
+  /** Round 6 (optional): % of the planned outline hidden behind the opposing teeth (not measurable). */
+  hiddenPct?: number;
 }
 
 export interface PrepResult {
   /** masks at `w × h` (same as the existing-teeth mask): 255 where material is added / reduced */
   add: Mask;
   reduce: Mask;
+  /** Round 6 (optional): 255 where the planned tooth is hidden behind the opposing teeth (excluded from add / reduce) */
+  hidden?: Mask;
   teeth: ToothPrep[];
 }

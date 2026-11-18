@@ -20,7 +20,11 @@ import {
   planWarnings,
   removeClinicMaterial,
   rgbToLab,
+  planShadeGap,
   sampleLab,
+  sampleLabQ,
+  sampleRadius,
+  SAMPLE_WARNING,
   saveClinicMaterials,
   setTooth,
   shadeGap,
@@ -113,6 +117,92 @@ describe("colour", () => {
     expect(sampleLab(white, w, h, 10, 10, 3)).toBeNull();
     // edge of the image is clipped, not an error
     expect(sampleLab(px, w, h, 0, 0, 3)).not.toBeNull();
+  });
+});
+
+describe("shade sample quality (round 6)", () => {
+  // synthetic pixel arrays: a tooth patch next to gum / shadow, never photos
+  const W0 = 40;
+  const H0 = 40;
+  const TOOTH = [222, 206, 172];
+  const GUM = [196, 112, 118]; // a* ≈ 30
+  const SHADOW = [120, 110, 92]; // L* ≈ 47 (the shadow under the upper teeth)
+  let seed = 3;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff - 0.5) * 4;
+  /** rows y < split get `top`, the rest `bottom` */
+  function patch(top: number[], bottom: number[], split: number) {
+    const px = new Uint8ClampedArray(W0 * H0 * 4);
+    for (let y = 0; y < H0; y++)
+      for (let x = 0; x < W0; x++) {
+        const c = y < split ? top : bottom;
+        const n = rnd();
+        px.set([c[0] + n, c[1] + n, c[2] + n, 255], (y * W0 + x) * 4);
+      }
+    return px;
+  }
+
+  it("a clean tooth patch is reliable and matches the tooth colour", () => {
+    const { lab, q } = sampleLabQ(patch(TOOTH, TOOTH, 0), W0, H0, 20, 20, 6);
+    const want = rgbToLab(TOOTH[0], TOOTH[1], TOOTH[2]);
+    expect(Math.abs(lab![0] - want[0])).toBeLessThan(1);
+    expect(q.rejected).toBeLessThan(0.05);
+    expect(q.reliable).toBe(true);
+  });
+
+  it("tooth + gum: gum pixels are rejected, the sample is flagged and its a* stays tooth-like", () => {
+    // the disk's lower half sits on the gum (lower arch: gum below the crown)
+    const { lab, q } = sampleLabQ(patch(TOOTH, GUM, 20), W0, H0, 20, 19, 7);
+    expect(q.gum).toBeGreaterThan(0);
+    expect(q.rejected).toBeGreaterThan(0.3);
+    expect(q.reliable).toBe(false);
+    expect(lab![1]).toBeLessThan(6); // not the gum's a* ≈ 17+ the owner saw
+  });
+
+  it("tooth + shadow: dark pixels are rejected (L* < 45 or 15 below the bright part), flagged", () => {
+    const { lab, q } = sampleLabQ(patch(SHADOW, TOOTH, 21), W0, H0, 20, 20, 7);
+    expect(q.dark).toBeGreaterThan(0);
+    expect(q.reliable).toBe(false);
+    expect(lab![0]).toBeGreaterThan(80); // the tooth's L*, not a shadow-mixed ≈ 65
+  });
+
+  it("a small share of gum at the edge keeps the sample reliable", () => {
+    const { q } = sampleLabQ(patch(TOOTH, GUM, 26), W0, H0, 20, 20, 7);
+    expect(q.rejected).toBeGreaterThan(0);
+    expect(q.rejected).toBeLessThanOrEqual(0.3);
+    expect(q.reliable).toBe(true);
+  });
+
+  it("the existing-teeth mask limits the sample to tooth pixels", () => {
+    const px = patch(TOOTH, GUM, 20);
+    const mask = { w: W0, h: H0, data: new Uint8Array(W0 * H0) };
+    for (let i = 0; i < 20 * W0; i++) mask.data[i] = 255; // tooth = top half
+    const { q } = sampleLabQ(px, W0, H0, 20, 19, 7, mask);
+    expect(q.offMask).toBeGreaterThan(0);
+    expect(q.gum).toBe(0); // gum never reached the colour tests
+    // a half-scale mask maps correctly too
+    const half = { w: 20, h: 20, data: new Uint8Array(400) };
+    for (let i = 0; i < 10 * 20; i++) half.data[i] = 255;
+    expect(sampleLabQ(px, W0, H0, 20, 8, 5, half).q.offMask).toBe(0);
+    // a pin entirely off the teeth (on the gum): still a value to show, flagged unreliable
+    const off = sampleLabQ(px, W0, H0, 20, 32, 5, mask);
+    expect(off.q.rejected).toBe(1);
+    expect(off.q.reliable).toBe(false);
+    expect(off.lab![1]).toBeGreaterThan(15);
+  });
+
+  it("high spread (a stripe of a different tooth colour) is unreliable", () => {
+    const px = patch(TOOTH, [205, 180, 120], 20); // same L band, much yellower half
+    const { q } = sampleLabQ(px, W0, H0, 20, 20, 8);
+    expect(q.sdB).toBeGreaterThan(6);
+    expect(q.reliable).toBe(false);
+  });
+
+  it("radius scales with the central width (narrow lower teeth get a smaller disk), small < medium", () => {
+    expect(sampleRadius(50, "small", 1200)).toBeCloseTo(5, 6);
+    expect(sampleRadius(50, "medium", 1200)).toBeCloseTo(9, 6);
+    expect(sampleRadius(80, "medium", 1200)).toBeGreaterThan(sampleRadius(50, "medium", 1200));
+    expect(sampleRadius(5, "small", 1200)).toBe(2.5);
+    expect(SAMPLE_WARNING).toBe("This spot includes gum or shadow; move the pin onto the middle third of the tooth.");
   });
 });
 
@@ -282,6 +372,24 @@ describe("plan warnings", () => {
     expect(has(plan([tooth(31)], { shade: { samples } }), W.whitening)).toBe(true);
     expect(has(plan([tooth(31)], { shade: { samples, whiteningDone: true } }), W.whitening)).toBe(false);
     expect(has(plan([], { shade: { samples } }), W.whitening)).toBe(false);
+  });
+  it("unreliable shade sample → info, and it is left out of the whitening check", () => {
+    const ref = { role: "reference" as const, pt: { x: 0, y: 0 }, lab: [76, 1, 18] as Lab, q: { rej: 0.05, sdL: 1, sdB: 1, ok: true } };
+    // the match pin sits half on gum: more a*/chroma, rejected share 45 %
+    const bad = { role: "match" as const, pt: { x: 1, y: 1 }, lab: [70, 9, 26] as Lab, q: { rej: 0.45, sdL: 4, sdB: 3, ok: false } };
+    const p = plan([tooth(31)], { shade: { samples: [ref, bad] } });
+    expect(has(p, W.sampleUnreliable)).toBe(true);
+    expect(level(p, W.sampleUnreliable)).toBe("info");
+    expect(has(p, W.whitening)).toBe(false);
+    expect(planShadeGap(p)).not.toBeNull(); // still shown (flagged) …
+    expect(planShadeGap(p, true)).toBeNull(); // … but not trusted
+    // fixed (pin moved onto the tooth): the warning goes and the whitening rule applies again
+    const good = { ...bad, lab: [75.5, 1.5, 26] as Lab, q: { rej: 0.1, sdL: 2, sdB: 2, ok: true } };
+    const p2 = plan([tooth(31)], { shade: { samples: [ref, good] } });
+    expect(has(p2, W.sampleUnreliable)).toBe(false);
+    expect(has(p2, W.whitening)).toBe(true);
+    // older plans without a quality report are trusted as before
+    expect(has(plan([tooth(31)], { shade: { samples: [{ ...ref, q: undefined }, { ...good, q: undefined }] } }), W.sampleUnreliable)).toBe(false);
   });
   it("bruxism without a night guard → caution", () => {
     expect(level(plan([tooth(31)], { flags: { perioStable: true, bruxism: true } }), W.bruxism)).toBe("caution");

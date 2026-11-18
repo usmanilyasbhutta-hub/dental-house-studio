@@ -44,10 +44,11 @@ interface Live {
   design?: Design;
   calib?: Calib;
   samples?: Pt[];
+  fit?: Pt[];
 }
 
-/** Plan step: a shade sample pin. */
-export type SamplePin = { pt: Pt; role: "reference" | "match" };
+/** Plan step: a shade sample pin (r: its sampled disk radius, image px; ok false: includes gum or shadow). */
+export type SamplePin = { pt: Pt; role: "reference" | "match"; r?: number; ok?: boolean };
 
 interface Props {
   scene: Scene;
@@ -80,6 +81,12 @@ interface Props {
   onAddSample?: (p: Pt) => void;
   /** pin positions after a drag (same order as samples) */
   onSamples?: (pts: Pt[]) => void;
+  /** Teeth step, "Fit to teeth": the canine taps so far (0–2; patient's right first). null = not fitting. */
+  fitTaps?: Pt[] | null;
+  /** canine taps after a tap / drag (the editor fits the template from them) */
+  onFitTaps?: (pts: Pt[]) => void;
+  /** overlays on top of the photo (e.g. the "Fit to teeth" hint chip) */
+  children?: React.ReactNode;
 }
 
 const HIT = 40; // css px: nearest handle within this radius wins
@@ -98,13 +105,16 @@ const NAMES: Record<string, string> = {
   brush: "existing-teeth brush",
   calA: "first edge of the existing central",
   calB: "second edge of the existing central",
+  fit0: "tip of the patient's right canine",
+  fit1: "tip of the patient's left canine",
 };
 export const handleName = (id: string) =>
   id.startsWith("lip") ? `lip point ${Number(id.slice(3)) + 1} of 12` : id.startsWith("smp") ? `shade sample ${Number(id.slice(3)) + 1}` : (NAMES[id] ?? id);
 
 /** Handles that can be dragged in the current step, with their image positions. */
-function handlesOf(s: Scene, step: Step, calibrating: boolean, calib?: Calib, samples?: Pt[]): [string, Pt][] {
+function handlesOf(s: Scene, step: Step, calibrating: boolean, calib?: Calib, samples?: Pt[], fit?: Pt[] | null): [string, Pt][] {
   if (step === "plan") return (samples ?? []).map((q, i) => [`smp${i}`, q]);
+  if (step === "design" && fit) return fit.map((q, i) => [`fit${i}`, q]);
   if (step === "design" && calibrating) return calib ? [["calA", calib.a], ["calB", calib.b]] : [];
   if (step === "guides") return [["pupilR", s.guides.pupilR], ["pupilL", s.guides.pupilL], ["midline", s.guides.midline]];
   if (step === "lips") return s.lips.map((q, i) => [`lip${i}`, q]);
@@ -116,7 +126,12 @@ function handlesOf(s: Scene, step: Step, calibrating: boolean, calib?: Calib, sa
 }
 
 /** The new state after moving handle id to image point p. */
-function moveHandle(s: Scene, calib: Calib | undefined, id: string, p: Pt, grab: Pt, samples?: Pt[]): Live {
+function moveHandle(s: Scene, calib: Calib | undefined, id: string, p: Pt, grab: Pt, samples?: Pt[], fit?: Pt[] | null): Live {
+  if (id.startsWith("fit")) {
+    const i = Number(id.slice(3));
+    const cur = fit ?? [];
+    return { fit: i >= cur.length ? [...cur, p] : cur.map((q, j) => (j === i ? p : q)) };
+  }
   if (id.startsWith("smp")) {
     const i = Number(id.slice(3));
     const cur = samples ?? [];
@@ -213,6 +228,7 @@ export function Stage(props: Props) {
     const s: Scene = live.current ? { ...p.scene, ...stripCalib(live.current) } : p.scene;
     const calib = live.current?.calib ?? p.calib;
     const pins = live.current?.samples ?? p.samples?.map((x) => x.pt) ?? [];
+    const fitPts = live.current?.fit ?? p.fitTaps ?? null;
     const dragging = !!gesture.current;
     const dpr = Math.min(window.devicePixelRatio || 1, dragging ? 2 : 3);
     const bw = Math.round(w * dpr);
@@ -233,6 +249,7 @@ export function Stage(props: Props) {
     ctx.drawImage(s.img, 0, 0, s.imgW, s.imgH);
     const q = quality.current;
     const cal = p.step === "design" && p.calibrating;
+    const fitting = p.step === "design" && !!fitPts && !cal;
     const prepOn = !!p.showPrep && !!p.prep && !cal && (p.step === "design" || p.step === "compare");
     const paintOn = p.step === "lips" && !!p.maskTool;
     if (!p.showOriginal && paintOn) {
@@ -252,6 +269,16 @@ export function Stage(props: Props) {
       ctx.strokeStyle = "rgba(201,171,134,0.85)";
       ctx.stroke();
       ctx.restore();
+    } else if (!p.showOriginal && fitting) {
+      // fit to teeth: the patient's own canines must be visible, so the template is only a thin outline once both
+      // taps are in (it follows the pins live)
+      if (fitPts!.length >= 2) {
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        drawTeeth(ctx, s, "outline", q);
+        ctx.restore();
+      }
+      drawFitPins(ctx, fitPts!, v.scale, active.current ?? selRef.current);
     } else if (!p.showOriginal && prepOn) {
       drawPrepMap(ctx, s, p.prep!);
       ctx.save();
@@ -261,7 +288,7 @@ export function Stage(props: Props) {
       if (p.step === "design") drawDesignOverlay(ctx, s, v.scale, active.current ?? selRef.current);
     } else if (!p.showOriginal && p.step === "plan") {
       // the patient's own teeth, untouched: pins sample the photo
-      drawPins(ctx, pins, p.samples ?? [], p.sampleR ?? 6, v.scale, active.current ?? selRef.current);
+      drawPins(ctx, pins, p.samples ?? [], p.sampleR ?? 6, v.scale, active.current ?? selRef.current, gesture.current?.kind === "handle");
     } else if (!p.showOriginal) {
       if (p.step === "lips") {
         ctx.save();
@@ -384,6 +411,7 @@ export function Stage(props: Props) {
     props.maskTool,
     props.samples,
     props.sampleR,
+    props.fitTaps,
     selected,
     focused,
   ]);
@@ -441,7 +469,8 @@ export function Stage(props: Props) {
     if (!size.w) return;
     const f = framed.current;
     const small = f.w > 0 && Math.abs(size.w - f.w) < f.w * 0.25 && Math.abs(size.h - f.h) < f.h * 0.25;
-    if (f.step === step && f.view === compareView && f.arch === arch && small && view.current && (gesture.current || userView.current)) {
+    const keep = gesture.current || userView.current || !!propsRef.current.fitTaps;
+    if (f.step === step && f.view === compareView && f.arch === arch && small && view.current && keep) {
       requestDraw();
     } else if (step === "guides" || (step === "compare" && compareView === "face")) fit();
     else mouth();
@@ -459,12 +488,13 @@ export function Stage(props: Props) {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
 
-  const current = (): { s: Scene; calib?: Calib; pins: Pt[] } => {
+  const current = (): { s: Scene; calib?: Calib; pins: Pt[]; fit: Pt[] | null } => {
     const p = propsRef.current;
     return {
       s: live.current ? { ...p.scene, ...stripCalib(live.current) } : p.scene,
       calib: live.current?.calib ?? p.calib,
       pins: live.current?.samples ?? p.samples?.map((x) => x.pt) ?? [],
+      fit: p.step === "design" && !p.calibrating ? (live.current?.fit ?? p.fitTaps ?? null) : null,
     };
   };
 
@@ -477,6 +507,7 @@ export function Stage(props: Props) {
     if (l.design) p.onDesign(l.design);
     if (l.calib) p.onCalib(l.calib);
     if (l.samples) p.onSamples?.(l.samples);
+    if (l.fit) p.onFitTaps?.(l.fit);
     lastPush.current = performance.now();
   };
 
@@ -517,7 +548,7 @@ export function Stage(props: Props) {
     }
     if (pointers.current.size > 2) return;
     const ip = toImg(p);
-    const { s, calib, pins } = current();
+    const { s, calib, pins, fit: fitPts } = current();
     const pr = propsRef.current;
     if (painting() && !pr.showOriginal) {
       // one finger paints (after a few px, so a second finger can still turn it into a pinch); two fingers zoom / pan
@@ -527,7 +558,16 @@ export function Stage(props: Props) {
       return;
     }
     const cal = pr.step === "design" && pr.calibrating;
-    let id = cal ? nearest(handlesOf(s, pr.step, true, calib), ip, Infinity) : nearest(handlesOf(s, pr.step, false, calib, pins), ip, HIT / view.current.scale);
+    let id = cal
+      ? nearest(handlesOf(s, pr.step, true, calib), ip, Infinity)
+      : nearest(handlesOf(s, pr.step, false, calib, pins, fitPts), ip, HIT / view.current.scale);
+    // fit to teeth: a tap away from the pins places the next canine tip right there (then it drags with the loupe)
+    let newFit = false;
+    if (fitPts && !pr.showOriginal && !id && fitPts.length < 2) {
+      id = `fit${fitPts.length}`;
+      newFit = true;
+      live.current = { fit: [...fitPts, ip] };
+    }
     if (!id && pr.step === "plan") {
       // the pin's head (drawn above the point) is the easiest thing to grab
       const k = view.current.scale;
@@ -552,7 +592,9 @@ export function Stage(props: Props) {
       setSelected(id);
       haptic();
       pr.onGesture(true);
-      if (id !== "move" && !id.startsWith("width") && id !== "length") loupe.current = { img: handlePos(s, calib, id, live.current?.samples ?? pins) ?? ip, finger: p };
+      if (id !== "move" && !id.startsWith("width") && id !== "length")
+        loupe.current = { img: handlePos(s, calib, id, live.current?.samples ?? pins, live.current?.fit ?? fitPts) ?? ip, finger: p };
+      if (newFit) push();
       // calibration: a tap places the nearest pin right there
       if (cal) {
         live.current = moveHandle(s, calib, id, ip, grab);
@@ -587,11 +629,11 @@ export function Stage(props: Props) {
       view.current = { ...g.view, ox: g.view.ox + p.x - g.start.x, oy: g.view.oy + p.y - g.start.y };
       userView.current = true;
     } else if (g.kind === "handle") {
-      const { s, calib, pins } = current();
+      const { s, calib, pins, fit: fitPts } = current();
       const ip = toImg(p);
-      live.current = { ...live.current, ...moveHandle(s, calib, g.id, ip, g.grab, pins) };
+      live.current = { ...live.current, ...moveHandle(s, calib, g.id, ip, g.grab, pins, fitPts) };
       const c2 = current();
-      if (loupe.current) loupe.current = { img: handlePos(c2.s, c2.calib, g.id, c2.pins) ?? ip, finger: p };
+      if (loupe.current) loupe.current = { img: handlePos(c2.s, c2.calib, g.id, c2.pins, c2.fit) ?? ip, finger: p };
       if (performance.now() - lastPush.current > PUSH_MS) push();
     } else if (g.kind === "divider") {
       divider.current = Math.min(1, Math.max(0, p.x / sizeRef.current.w));
@@ -677,8 +719,8 @@ export function Stage(props: Props) {
     const v = view.current;
     if (!v) return;
     const pr = propsRef.current;
-    const { s, calib, pins } = current();
-    const ids = handlesOf(s, pr.step, pr.calibrating, calib, pins).map(([id]) => id);
+    const { s, calib, pins, fit: fitPts } = current();
+    const ids = handlesOf(s, pr.step, pr.calibrating, calib, pins, fitPts).map(([id]) => id);
     if (!ids.length) return;
     const sel = selected && ids.includes(selected) ? selected : ids[0];
     if (e.key === "[" || e.key === "]") {
@@ -691,12 +733,12 @@ export function Stage(props: Props) {
     if (!dir) return;
     e.preventDefault();
     if (sel !== selected) setSelected(sel);
-    const pos = handlePos(s, calib, sel, pins);
+    const pos = handlePos(s, calib, sel, pins, fitPts);
     if (!pos) return;
     const k = (e.shiftKey ? 10 : 1) / v.scale;
     const np = { x: pos.x + dir[0] * k, y: pos.y + dir[1] * k };
     const grab = sel === "move" ? { x: pos.x - s.design.center.x, y: pos.y - s.design.center.y } : { x: 0, y: 0 };
-    live.current = moveHandle(s, calib, sel, np, grab, pins);
+    live.current = moveHandle(s, calib, sel, np, grab, pins, fitPts);
     push();
     live.current = null;
   };
@@ -725,6 +767,8 @@ export function Stage(props: Props) {
             ? props.pickRole
               ? `Shade sampling. Tap a tooth to place the ${props.pickRole === "reference" ? "reference" : "match"} pin; drag a pin to adjust; two fingers zoom.`
               : "Shade sample pins on the photo. Drag a pin to adjust; pinch to zoom. Arrow keys move the selected pin."
+            : props.fitTaps && step === "design"
+            ? `Fit to teeth. ${props.fitTaps.length < 2 ? `Tap the tip of the patient's ${props.fitTaps.length === 0 ? "right canine, on the left of the photo" : "left canine, on the right of the photo"}.` : "Drag a pin to adjust."} Two fingers zoom.`
             : props.maskTool && step === "lips"
             ? `Existing teeth mask. One finger ${props.maskTool.mode === "erase" ? "erases" : "paints"} the patient's own teeth; two fingers zoom and move the photo.`
             : "Smile design photo. Drag the round dots with one finger; pinch to zoom. With a keyboard: arrow keys move the selected dot, [ and ] pick another."
@@ -747,9 +791,23 @@ export function Stage(props: Props) {
         </>
       )}
       {calibrating && step === "design" && <span className="stage-tag">Calibrating · teeth hidden</span>}
+      {props.fitTaps && step === "design" && !calibrating && !showOriginal && (
+        <>
+          <span className="stage-tag fit-tag">
+            {props.fitTaps.length === 0
+              ? "Tap the tip of the patient's right canine"
+              : props.fitTaps.length === 1
+                ? "Now tap the tip of the left canine"
+                : "Drag a pin to adjust the fit"}
+          </span>
+          <span className={props.fitTaps.length === 0 ? "side-tag left on" : "side-tag left"}>Patient's right</span>
+          <span className={props.fitTaps.length === 1 ? "side-tag right on" : "side-tag right"}>Patient's left</span>
+        </>
+      )}
       {step === "plan" && !showOriginal && (
         <span className="stage-tag">{props.pickRole ? `Tap a tooth · ${props.pickRole === "reference" ? "reference" : "to match"}` : "Photo · teeth as they are"}</span>
       )}
+      {props.children}
       <button className="fab fit" onClick={fit} aria-label="Fit whole photo to screen" title="Fit photo">
         <Icon name="fit" size={20} />
       </button>
@@ -758,7 +816,7 @@ export function Stage(props: Props) {
 }
 
 function stripCalib(l: Live): Partial<Scene> {
-  const { calib: _c, samples: _s, ...rest } = l;
+  const { calib: _c, samples: _s, fit: _f, ...rest } = l;
   return rest;
 }
 
@@ -775,7 +833,8 @@ function nearest(cands: [string, Pt][], p: Pt, radius: number) {
   return best;
 }
 
-function handlePos(s: Scene, calib: Calib | undefined, id: string, pins?: Pt[]): Pt | null {
+function handlePos(s: Scene, calib: Calib | undefined, id: string, pins?: Pt[], fit?: Pt[] | null): Pt | null {
+  if (id.startsWith("fit")) return fit?.[Number(id.slice(3))] ?? null;
   if (id.startsWith("smp")) return pins?.[Number(id.slice(3))] ?? null;
   if (id === "calA") return calib?.a ?? null;
   if (id === "calB") return calib?.b ?? null;
@@ -878,7 +937,8 @@ function drawCalib(ctx: CanvasRenderingContext2D, c: Calib | undefined, scale: n
 }
 
 /** Plan step: shade sample pins. The ring is the sampled disk; the head sits above the point so the finger does not hide it. */
-function drawPins(ctx: CanvasRenderingContext2D, pts: Pt[], meta: SamplePin[], r: number, scale: number, activeId: string | null) {
+const AMBER = "#E8B04A";
+function drawPins(ctx: CanvasRenderingContext2D, pts: Pt[], meta: SamplePin[], r0: number, scale: number, activeId: string | null, dragging = false) {
   const u = 1 / scale;
   ctx.save();
   let nR = 0;
@@ -886,19 +946,25 @@ function drawPins(ctx: CanvasRenderingContext2D, pts: Pt[], meta: SamplePin[], r
   pts.forEach((q, i) => {
     const role = meta[i]?.role ?? "match";
     const n = role === "reference" ? ++nR : ++nM;
-    const col = role === "reference" ? C.bronzeLight : C.white;
     const on = activeId === `smp${i}`;
+    // the quality verdict belongs to the last sampled position: hide it while this pin is being dragged
+    const warn = meta[i]?.ok === false && !(dragging && on);
+    const col = warn ? AMBER : role === "reference" ? C.bronzeLight : C.white;
+    // the ring IS the sampled disk (real radius, image px), drawn on a dark under-stroke so it reads on enamel
+    const r = Math.max(meta[i]?.r ?? r0, 1.5 * u);
     ctx.beginPath();
-    ctx.arc(q.x, q.y, Math.max(r, 3 * u), 0, Math.PI * 2);
+    ctx.arc(q.x, q.y, r, 0, Math.PI * 2);
     ctx.lineWidth = 2.5 * u;
     ctx.strokeStyle = C.slateDeep;
     ctx.stroke();
-    ctx.lineWidth = 1.5 * u;
+    ctx.lineWidth = 1.25 * u;
     ctx.strokeStyle = col;
+    if (warn) ctx.setLineDash([3 * u, 2 * u]);
     ctx.stroke();
-    const hy = q.y - Math.max(r, 3 * u) - 30 * u;
+    ctx.setLineDash([]);
+    const hy = q.y - r - 30 * u;
     ctx.beginPath();
-    ctx.moveTo(q.x, q.y - Math.max(r, 3 * u));
+    ctx.moveTo(q.x, q.y - r);
     ctx.lineTo(q.x, hy + 13 * u);
     ctx.lineWidth = 1.5 * u;
     ctx.strokeStyle = col;
@@ -915,6 +981,73 @@ function drawPins(ctx: CanvasRenderingContext2D, pts: Pt[], meta: SamplePin[], r
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(`${role === "reference" ? "R" : "M"}${n}`, q.x, hy + 0.5 * u);
+    if (warn) {
+      // amber "!" badge on the pin head
+      const bx = q.x + 11 * u;
+      const by = hy - 10 * u;
+      ctx.beginPath();
+      ctx.arc(bx, by, 7 * u, 0, Math.PI * 2);
+      ctx.fillStyle = AMBER;
+      ctx.fill();
+      ctx.lineWidth = 1.5 * u;
+      ctx.strokeStyle = C.slateDeep;
+      ctx.stroke();
+      ctx.fillStyle = C.slateDeep;
+      ctx.font = `700 ${10 * u}px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
+      ctx.fillText("!", bx, by + 0.5 * u);
+    }
+  });
+  ctx.restore();
+}
+
+/** Fit to teeth: the two canine-tip pins (head above the point, crosshair at the tip), labelled by the patient's side. */
+function drawFitPins(ctx: CanvasRenderingContext2D, pts: Pt[], scale: number, activeId: string | null) {
+  const u = 1 / scale;
+  ctx.save();
+  if (pts.length === 2) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    ctx.lineTo(pts[1].x, pts[1].y);
+    ctx.setLineDash([6 * u, 5 * u]);
+    ctx.lineWidth = 1.25 * u;
+    ctx.strokeStyle = "rgba(201,171,134,0.9)";
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  pts.forEach((q, i) => {
+    const on = activeId === `fit${i}`;
+    // crosshair with a gap at the exact tip
+    ctx.lineCap = "round";
+    for (const [w, c] of [
+      [3 * u, "rgba(20,24,22,0.7)"],
+      [1.5 * u, C.white],
+    ] as const) {
+      ctx.beginPath();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1]]) {
+        ctx.moveTo(q.x + dx * 3 * u, q.y + dy * 3 * u);
+        ctx.lineTo(q.x + dx * 10 * u, q.y + dy * 10 * u);
+      }
+      ctx.moveTo(q.x, q.y - 3 * u);
+      ctx.lineTo(q.x, q.y - 23 * u);
+      ctx.lineWidth = w;
+      ctx.strokeStyle = c;
+      ctx.stroke();
+    }
+    const hy = q.y - 36 * u;
+    ctx.beginPath();
+    ctx.arc(q.x, hy, 13 * u, 0, Math.PI * 2);
+    ctx.fillStyle = on ? C.bronzeLight : "rgba(28,34,32,0.85)";
+    ctx.fill();
+    ctx.lineWidth = 2.5 * u;
+    ctx.strokeStyle = C.bronzeLight;
+    ctx.stroke();
+    ctx.fillStyle = on ? C.slateDeep : C.bronzeLight;
+    ctx.font = `600 ${11 * u}px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    // patient's right canine is the one on the image left
+    const right = pts.length < 2 ? i === 0 : q.x <= pts[1 - i].x;
+    ctx.fillText(right ? "R3" : "L3", q.x, hy + 0.5 * u);
   });
   ctx.restore();
 }

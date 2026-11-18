@@ -2,7 +2,7 @@
 // Clinician prep sheet and patient illustration sheet. Wording: src/sheetCopy.ts (spec: docs/round3-clinical.md).
 // Rules: no patient name or ID on any page (the clinician sheet prints the case code only when asked), every page
 // carries the simulation label, before/after images share one box size and are never warped.
-import { drawPrepMap, ENAMEL_MM, PREP_DISCLAIMER, prepWording, type Mask, type PrepResult } from "./engineShim";
+import { drawPrepMap, ENAMEL_MM, HIDDEN_LENGTH_PCT, hiddenLegend, PREP_DISCLAIMER, prepWording, type Mask, type PrepResult } from "./engineShim";
 import { TOOTH_NAMES } from "./geometry";
 import { C, drawTeeth, exportCanvas, WATERMARK, type Scene } from "./render";
 import { CLINICIAN, ENAMEL_ROWS, fmtDelta, PATIENT } from "./sheetCopy";
@@ -413,6 +413,24 @@ export async function clinicianSheet(o: ClinicianOpts): Promise<HTMLCanvasElemen
   lx += swatch(ctx(), lx, doc.y, "rgba(40,200,110,0.9)", null, CLINICIAN.legendAdd, `400 18px ${SANS}`) + 28;
   swatch(ctx(), lx, doc.y, "rgba(235,60,50,0.9)", null, CLINICIAN.legendReduce, `400 18px ${SANS}`);
   doc.gap(38);
+  if (prep?.hidden) {
+    // round 6: planned outline hidden behind the opposing teeth (grey hatch in the map)
+    const c = ctx();
+    swatch(c, M, doc.y, "rgb(150,150,150)", null, hiddenLegend(prep.teeth[0]?.label[0] === "L"), `400 18px ${SANS}`);
+    c.save();
+    c.beginPath();
+    c.rect(M + 3, doc.y + 3, 20, 20);
+    c.clip();
+    c.strokeStyle = "rgb(235,235,235)";
+    c.lineWidth = 2;
+    for (let k = -20; k < 26; k += 6) {
+      c.moveTo(M + 3 + k, doc.y + 23);
+      c.lineTo(M + 23 + k, doc.y + 3);
+    }
+    c.stroke();
+    c.restore();
+    doc.gap(38);
+  }
   doc.text("Same crop and scale in all three panels. Outline from the photo; not to scale for depth.", { font: `400 17px ${SANS}`, color: SUB, lh: 24 });
   doc.gap(14);
 
@@ -457,7 +475,8 @@ export async function clinicianSheet(o: ClinicianOpts): Promise<HTMLCanvasElemen
     }
     const cc = ctx();
     const name = `${t.label}`;
-    const vals = [name, fmtDelta(t.lengthPx, pxPerMm), fmtDelta(t.mesialPx, pxPerMm), fmtDelta(t.distalPx, pxPerMm), `${Math.round(t.overlapPct)} %`];
+    const lenHidden = (t.hiddenPct ?? 0) > HIDDEN_LENGTH_PCT;
+    const vals = [name, lenHidden ? "hidden" : fmtDelta(t.lengthPx, pxPerMm), fmtDelta(t.mesialPx, pxPerMm), fmtDelta(t.distalPx, pxPerMm), `${Math.round(t.overlapPct)} %`];
     let x = M + 10;
     cc.textBaseline = "alphabetic";
     vals.forEach((v, i) => {
@@ -605,7 +624,9 @@ function shadeBlock(doc: Doc, plan: CasePlan) {
   const mat = plan.shade.samples.filter((s) => s.role === "match" && s.lab[0] > 0);
   const f1 = (v: number) => v.toFixed(1);
   const line = (name: string, s: typeof ref) =>
-    s.length ? `${name}: ${s.map((x) => `L ${f1(x.lab[0])} a ${f1(x.lab[1])} b ${f1(x.lab[2])} (nearest tab ${nearestTab(x.lab).tab}, approximate)`).join("; ")}` : `${name}: not sampled`;
+    s.length
+      ? `${name}: ${s.map((x) => `L ${f1(x.lab[0])} a ${f1(x.lab[1])} b ${f1(x.lab[2])} (nearest tab ${nearestTab(x.lab).tab}, approximate${x.q && !x.q.ok ? "; sample includes gum or shadow, unreliable" : ""})`).join("; ")}`
+      : `${name}: not sampled`;
   doc.text(`Target tab (dentist's choice): ${plan.shade.targetTab ?? "________"}`, { font: `600 19px ${SANS}`, lh: 27 });
   doc.text(line("Reference", ref), { font: `400 17px ${SANS}`, lh: 24 });
   doc.text(line("To match", mat), { font: `400 17px ${SANS}`, lh: 24 });
