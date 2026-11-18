@@ -2,7 +2,8 @@
 // Smile Studio end-to-end suite (Playwright, preinstalled Chromium; no browser downloads).
 // Run: npm run e2e          (from apps/smile-studio)
 // Env: E2E_PORT (5184, vite dev), E2E_PREVIEW_PORT (5185, built app), E2E_DEVICES ("iPhone 13,Pixel 7,iPad (gen 7) landscape"),
-//      E2E_SKIP_OFFLINE=1, E2E_HEADED=1, E2E_ONLY_BITE=1 (only the round-6 bite suite).
+//      E2E_SKIP_OFFLINE=1, E2E_HEADED=1, E2E_ONLY_BITE=1 (only the round-6 bite suite),
+//      E2E_ONLY_LABS=1 (only the round-7 Labs suites), E2E_LABS_DEVICES ("iPhone 13,iPad (gen 7) landscape").
 // Test images are SYNTHETIC: e2e/make_face.py (face) and e2e/make_bite.py (retracted bite with overbite).
 // The test face is SYNTHETIC (e2e/make_face.py). Never point this at patient photos.
 // Artefacts: e2e/.tmp/ (face.jpg, shots/, exports/, report.json). Gitignored.
@@ -29,6 +30,7 @@ const EXPORTS = path.join(TMP, "exports");
 const PORT = Number(process.env.E2E_PORT || 5184);
 const PPORT = Number(process.env.E2E_PREVIEW_PORT || 5185);
 const DEVICES = (process.env.E2E_DEVICES || "iPhone 13,Pixel 7,iPad (gen 7) landscape").split(",").map((s) => s.trim());
+const LABS_DEVICES = (process.env.E2E_LABS_DEVICES || "iPhone 13,iPad (gen 7) landscape").split(",").map((s) => s.trim());
 const IMG = { w: 1200, h: 1600 };
 const VITE = path.join(APP, "node_modules", ".bin", "vite");
 
@@ -1030,6 +1032,470 @@ async function biteSuite(browser, devName, bite, truth) {
 }
 const cwOf = (c) => c.design.width / (2 * (1 + 1.03 + 0.8));
 
+// ---------- round 7: Labs · Auto-detect (beta). OFF by default; on-device MediaPipe; every result confirmed first ----------
+const LABS_KEY = "smile-studio.labs.autodetect.v1";
+const LABS_FAIL = "Auto-detect isn't available on this phone; you can place the dots by hand.";
+/** Requests that belong to the beta (lazy code, wasm, models). */
+const isLabsReq = (u) => /\/models\/|\/src\/ai\/|@mediapipe|tasks-vision|\/assets\/labs-/.test(u);
+const sameOrigin = (u, origin) => u.startsWith(origin) || u.startsWith("data:") || u.startsWith("blob:");
+/** MediaPipe's runtime prints INFO / GL notes through console.error; they are not app errors. */
+const mpNoise = (t) => /^INFO:|GL Driver Message|XNNPACK|GPU stall|TensorFlow Lite|Failed to load resource/.test(t);
+/** White pixels of a stored ToothMask PNG. */
+const maskOn = (page, tm) =>
+  page.evaluate(async (tm) => {
+    const im = new Image();
+    im.src = tm.png;
+    await im.decode();
+    const cv = document.createElement("canvas");
+    cv.width = tm.w;
+    cv.height = tm.h;
+    const x = cv.getContext("2d");
+    x.drawImage(im, 0, 0);
+    const d = x.getImageData(0, 0, tm.w, tm.h).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 127) n++;
+    return n;
+  }, tm);
+/** All-black (empty) existing-teeth mask PNG at the app's mask size for a w × h photo. */
+const emptyMask = (page, w, h) =>
+  page.evaluate(
+    ({ w, h }) => {
+      const s = Math.min(1, 768 / Math.max(w, h));
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(w * s);
+      cv.height = Math.round(h * s);
+      const x = cv.getContext("2d");
+      x.fillStyle = "#000";
+      x.fillRect(0, 0, cv.width, cv.height);
+      return { w: cv.width, h: cv.height, png: cv.toDataURL("image/png") };
+    },
+    { w, h },
+  );
+/** A fixed 478-landmark set for the stubbed detector: irises, midline column, inner lips around (0.5, 0.72). */
+function stubLandmarks() {
+  const lms = Array.from({ length: 478 }, () => ({ x: 0.5, y: 0.5 }));
+  const up = [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308];
+  const lo = [78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308];
+  for (let j = 0; j < up.length; j++) {
+    const t = j / (up.length - 1);
+    const b = Math.sin(Math.PI * t);
+    lms[up[j]] = { x: 0.37 + 0.26 * t, y: 0.705 - 0.02 * b };
+    lms[lo[j]] = { x: 0.37 + 0.26 * t, y: 0.705 + 0.045 * b };
+  }
+  for (const i of [10, 151, 9, 8, 168, 6, 197, 195, 5, 4, 1, 19, 94, 2, 164, 0, 17, 18, 200, 199, 175, 152]) lms[i] = { x: 0.505, y: lms[i].y };
+  lms[164] = { x: 0.505, y: 0.6 };
+  lms[0] = { x: 0.505, y: 0.66 };
+  lms[468] = { x: 0.39, y: 0.362 };
+  lms[473] = { x: 0.61, y: 0.358 };
+  lms[61] = { x: 0.35, y: 0.7 };
+  lms[291] = { x: 0.65, y: 0.7 };
+  return lms;
+}
+/** Stand-in for src/ai/mediapipe.ts (vite dev serves it as its own module): fixed outputs, or a hang / failure. */
+const STUB_MODULE = `
+export async function faceLandmarks() {
+  if (window.__labsStub === "hang") return new Promise(() => {});
+  if (window.__labsStub === "fail") throw new Error("stub failure");
+  return window.__labsLms || null;
+}
+export async function segmentAt(cv, x, y) {
+  const w = 64, h = 64, d = new Float32Array(w * h);
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (Math.hypot((i + 0.5) / w - x, (j + 0.5) / h - y) < 0.18) d[j * w + i] = 0.95;
+  return { data: d, w, h };
+}`;
+
+async function labsContext(browser, devName, { on = true, stub = null } = {}) {
+  const { defaultBrowserType, ...dev } = devices[devName];
+  const ctx = await browser.newContext({ ...dev });
+  await ctx.addInitScript(SHARE_STUB);
+  if (on) await ctx.addInitScript((k) => localStorage.setItem(k, "1"), LABS_KEY);
+  if (stub) {
+    await ctx.addInitScript(({ mode, lms }) => ((window.__labsStub = mode), (window.__labsLms = lms)), { mode: stub, lms: stubLandmarks() });
+    await ctx.route("**/src/ai/mediapipe.ts*", (r) => r.fulfill({ status: 200, contentType: "application/javascript", body: STUB_MODULE }));
+  }
+  const page = await ctx.newPage();
+  const reqs = [];
+  const errors = [];
+  page.on("request", (r) => reqs.push(r.url()));
+  page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("console", (m) => m.type() === "error" && !mpNoise(m.text()) && errors.push(m.text()));
+  return { ctx, page, reqs, errors, T: await touch(page) };
+}
+const waitAi = (page) => page.waitForFunction(() => !document.querySelector(".toast .spinner"), null, { timeout: 20000 });
+const toastText = (page) => page.locator(".toast").innerText({ timeout: 1500 }).catch(() => "");
+const sameGuides = (a, b) => ["pupilR", "pupilL", "midline"].every((k) => Math.hypot(a[k].x - b[k].x, a[k].y - b[k].y) < 0.05);
+
+async function labsSuite(browser, devName, face, bite, truth) {
+  const dn = `${devName} · labs`;
+  const base = `http://127.0.0.1:${PORT}/`;
+  const shot = (page, n) => page.screenshot({ path: path.join(SHOTS, `${slug(devName)}-labs-${n}.png`) });
+  const allReqs = [];
+  const allErrs = [];
+  console.log(`\n# ${dn}`);
+
+  // (i) flag OFF: identical UI, nothing of the beta is requested
+  await test(dn, "Labs off (default): switch off in Settings, no Labs controls in the editor, no model or Labs code requested", async () => {
+    const L = await labsContext(browser, devName, { on: false });
+    const { page, reqs } = L;
+    try {
+      await page.goto(base);
+      await page.getByRole("heading", { name: /Design the smile/ }).waitFor();
+      assert((await page.evaluate((k) => localStorage.getItem(k), LABS_KEY)) === null, "flag set without the user");
+      await page.getByRole("button", { name: "Settings" }).click();
+      const sw = page.getByRole("switch", { name: /Auto-detect \(beta\)/ });
+      assert((await sw.getAttribute("aria-checked")) === "false", "Labs switch is not off by default");
+      await shot(page, "00-settings-off");
+      await page.getByRole("button", { name: "Done" }).click();
+      await importPhoto(page, face);
+      for (const step of ["Face", "Lips"]) {
+        await gotoStep(page, step);
+        assert((await page.locator(".ai-btn, .ai-confirm, .beta-tag").count()) === 0, `Labs controls visible on ${step} with the flag off`);
+      }
+      await page.getByRole("radio", { name: "Existing teeth" }).click();
+      await page.waitForTimeout(400);
+      const brush = await page.getByRole("radiogroup", { name: "Brush" }).getByRole("radio").allInnerTexts();
+      assert(JSON.stringify(brush) === JSON.stringify(["Paint", "Erase"]), `brush options changed: ${brush}`);
+      assert((await page.locator(".ai-btn, .ai-confirm, .beta-tag").count()) === 0, "Labs controls visible in Existing teeth");
+      await page.getByRole("radio", { name: "Lip line" }).click();
+      await gotoStep(page, "Teeth");
+      await page.waitForTimeout(600);
+      const labsReqs = reqs.filter(isLabsReq);
+      assert(labsReqs.length === 0, `flag off but requested: ${labsReqs.join(" ")}`);
+      assert(L.errors.length === 0, L.errors.slice(0, 3).join("\n"));
+      return `${reqs.length} requests, 0 Labs`;
+    } finally {
+      await L.ctx.close();
+    }
+  });
+
+  await test(dn, "Settings › Labs: the switch turns the beta on and is remembered on this phone", async () => {
+    const L = await labsContext(browser, devName, { on: false });
+    const { page } = L;
+    try {
+      await page.goto(base);
+      await page.getByRole("button", { name: "Settings" }).click();
+      const sw = page.getByRole("switch", { name: /Auto-detect \(beta\)/ });
+      await sw.click();
+      assert((await sw.getAttribute("aria-checked")) === "true", "switch did not turn on");
+      assert((await page.evaluate((k) => localStorage.getItem(k), LABS_KEY)) === "1", "flag not stored");
+      await shot(page, "01-settings-on");
+      await page.getByRole("button", { name: "Done" }).click();
+      await page.reload();
+      await page.getByRole("button", { name: "Settings" }).click();
+      assert((await page.getByRole("switch", { name: /Auto-detect \(beta\)/ }).getAttribute("aria-checked")) === "true", "flag not remembered");
+      await page.getByRole("switch", { name: /Auto-detect \(beta\)/ }).click();
+      assert((await page.evaluate((k) => localStorage.getItem(k), LABS_KEY)) === null, "turning it off did not clear the flag");
+      assert(L.reqs.filter(isLabsReq).length === 0, "the switch alone fetched Labs files");
+    } finally {
+      await L.ctx.close();
+    }
+  });
+
+  // (ii) flag ON, real on-device model on the synthetic cartoon face
+  await test(dn, "Labs on, synthetic face: Auto-detect points shows ghost dots (or the calm fallback); nothing changes until confirmed; one undo step", async () => {
+    const L = await labsContext(browser, devName);
+    const { page } = L;
+    try {
+      await page.goto(base);
+      await importPhoto(page, face);
+      const c0 = await current(page);
+      const h0 = await canvasHash(page);
+      await page.getByRole("button", { name: /Auto-detect points/ }).click();
+      await waitAi(page);
+      await page.waitForTimeout(300);
+      if (!(await page.locator(".ai-confirm").isVisible())) {
+        // graceful fallback: calm toast, case untouched, manual drag still works
+        const t = await toastText(page);
+        assert(/No face found|isn't available/.test(t), `no proposal and no fallback toast ("${t}")`);
+        assert(sameGuides((await current(page)).guides, c0.guides), "guides changed without a proposal");
+        const v = await view(page, "guides", c0);
+        const a = v.scr(c0.guides.pupilR);
+        await L.T.drag(a, { x: a.x, y: a.y + 20 });
+        await page.waitForTimeout(800);
+        assert(!sameGuides((await current(page)).guides, c0.guides), "manual drag did not work after the fallback");
+        return `no face found on the cartoon: "${t}"`;
+      }
+      await page.waitForTimeout(700);
+      assert(sameGuides((await current(page)).guides, c0.guides), "a proposal changed the case before it was confirmed");
+      assert((await canvasHash(page)) !== h0, "ghost dots not drawn");
+      await shot(page, "02-face-ghost");
+      await page.getByRole("button", { name: "Use these points" }).click();
+      await page.waitForTimeout(900);
+      const c1 = await current(page);
+      const W = c1.imgW;
+      const H = c1.imgH;
+      const miss = Math.max(Math.hypot(c1.guides.pupilR.x - 0.38 * W, c1.guides.pupilR.y - 0.36 * H), Math.hypot(c1.guides.pupilL.x - 0.62 * W, c1.guides.pupilL.y - 0.36 * H));
+      assert(!sameGuides(c1.guides, c0.guides), "Use these points did not apply");
+      await shot(page, "03-face-applied");
+      await page.getByRole("button", { name: "Undo" }).click();
+      await page.waitForTimeout(900);
+      assert(sameGuides((await current(page)).guides, c0.guides), "one undo did not restore the dots");
+      await page.getByRole("button", { name: "Redo" }).click();
+      await page.waitForTimeout(600);
+      // lips on the same photo: Cancel keeps the lip line
+      await gotoStep(page, "Lips");
+      const l0 = (await current(page)).lips;
+      await page.getByRole("button", { name: /Auto-detect lip line/ }).click();
+      await waitAi(page);
+      await page.waitForTimeout(300);
+      let lipNote = "no lip proposal";
+      if (await page.locator(".ai-confirm").isVisible()) {
+        await shot(page, "04-lips-ghost");
+        await page.getByRole("button", { name: "Cancel" }).click();
+        await page.waitForTimeout(700);
+        assert(JSON.stringify((await current(page)).lips) === JSON.stringify(l0), "Cancel changed the lip line");
+        await page.getByRole("button", { name: /Auto-detect lip line/ }).click();
+        await waitAi(page);
+        await page.getByRole("button", { name: "Use these points" }).click();
+        await page.waitForTimeout(900);
+        const l1 = (await current(page)).lips;
+        assert(l1.length === 12 && JSON.stringify(l1) !== JSON.stringify(l0), "lip proposal not applied as 12 dots");
+        await page.getByRole("button", { name: "Undo" }).click();
+        await page.waitForTimeout(900);
+        assert(JSON.stringify((await current(page)).lips) === JSON.stringify(l0), "undo did not restore the lip line");
+        lipNote = "lips applied + undone";
+      }
+      allReqs.push(...L.reqs);
+      allErrs.push(...L.errors);
+      return `cartoon face detected; pupils ${miss.toFixed(1)} px from the drawn pupils; ${lipNote}`;
+    } finally {
+      await L.ctx.close();
+    }
+  });
+
+  await test(dn, "Labs on, stubbed detector (fixed landmarks): exact mapping, Try again / Cancel / Use these points, one undo step", async () => {
+    const L = await labsContext(browser, devName, { stub: "ok" });
+    const { page } = L;
+    try {
+      await page.goto(base);
+      await importPhoto(page, face);
+      const c0 = await current(page);
+      const want = await page.evaluate(async ({ lms, w, h }) => (await import("/src/ai/map.ts")).guidesFromLandmarks(lms, w, h, "face").guides, { lms: stubLandmarks(), w: c0.imgW, h: c0.imgH });
+      await page.getByRole("button", { name: /Auto-detect points/ }).click();
+      await page.locator(".ai-confirm").waitFor();
+      await page.getByRole("button", { name: "Try again" }).click();
+      await page.locator(".ai-confirm").waitFor();
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await page.waitForTimeout(700);
+      assert((await page.locator(".ai-confirm").count()) === 0, "Cancel left the proposal open");
+      assert(sameGuides((await current(page)).guides, c0.guides), "Cancel changed the dots");
+      await page.getByRole("button", { name: /Auto-detect points/ }).click();
+      await page.getByRole("button", { name: "Use these points" }).click();
+      await page.waitForTimeout(900);
+      const c1 = await current(page);
+      assert(sameGuides(c1.guides, want), `applied ${JSON.stringify(c1.guides)} vs mapped ${JSON.stringify(want)}`);
+      await page.getByRole("button", { name: "Undo" }).click();
+      await page.waitForTimeout(900);
+      assert(sameGuides((await current(page)).guides, c0.guides), "one undo did not restore the dots");
+      allReqs.push(...L.reqs);
+      allErrs.push(...L.errors);
+      return `pupils ${want.pupilR.x.toFixed(0)},${want.pupilR.y.toFixed(0)} / ${want.pupilL.x.toFixed(0)},${want.pupilL.y.toFixed(0)}`;
+    } finally {
+      await L.ctx.close();
+    }
+  });
+
+  await test(dn, "Labs on, model files unavailable: calm toast, case unchanged, manual flow continues", async () => {
+    const L = await labsContext(browser, devName);
+    const { page } = L;
+    try {
+      await L.ctx.route("**/models/**", (r) => r.abort());
+      await page.goto(base);
+      await importPhoto(page, face);
+      const c0 = await current(page);
+      await page.getByRole("button", { name: /Auto-detect points/ }).click();
+      await page.waitForFunction((t) => document.querySelector(".toast")?.textContent?.includes(t), LABS_FAIL, { timeout: 12000 });
+      await shot(page, "05-fallback-toast");
+      assert(sameGuides((await current(page)).guides, c0.guides), "failure changed the dots");
+      assert((await page.locator(".ai-confirm").count()) === 0, "a proposal is shown after a failure");
+      const v = await view(page, "guides", c0);
+      const a = v.scr(c0.guides.pupilL);
+      await L.T.drag(a, { x: a.x, y: a.y + 20 });
+      await page.waitForTimeout(800);
+      assert(!sameGuides((await current(page)).guides, c0.guides), "manual drag did not work after the failure");
+      assert(await page.getByRole("button", { name: /Auto-detect points/ }).isEnabled(), "Auto-detect stuck busy after the failure");
+    } finally {
+      await L.ctx.close();
+    }
+  });
+
+  await test(dn, "Labs on, detector hangs: gives up after 8 s with the same calm toast", async () => {
+    const L = await labsContext(browser, devName, { stub: "hang" });
+    const { page } = L;
+    try {
+      await page.goto(base);
+      await importPhoto(page, face);
+      const c0 = await current(page);
+      const t0 = Date.now();
+      await page.getByRole("button", { name: /Auto-detect points/ }).click();
+      await page.waitForFunction((t) => document.querySelector(".toast")?.textContent?.includes(t), LABS_FAIL, { timeout: 12000 });
+      const ms = Date.now() - t0;
+      assert(ms >= 7500 && ms < 11000, `timeout after ${ms} ms`);
+      assert(sameGuides((await current(page)).guides, c0.guides), "timeout changed the dots");
+      return `${(ms / 1000).toFixed(1)} s`;
+    } finally {
+      await L.ctx.close();
+    }
+  });
+
+  // (iii) tap-to-outline on the synthetic bite (real MagicTouch model)
+  await test(dn, "Labs on, synthetic bite: Tap a tooth adds mask area after confirm, Erase tooth removes it, undo restores", async () => {
+    const L = await labsContext(browser, devName);
+    const { page } = L;
+    try {
+      await page.goto(base);
+      await importPhoto(page, bite);
+      await page.getByRole("button", { name: "Back to cases" }).click();
+      await page.locator(".card").first().waitFor();
+      await patchLatest(page, {
+        framing: "closeup",
+        guides: { pupilR: { x: 130, y: 440 }, pupilL: { x: 1070, y: 440 }, midline: { x: truth.midX, y: 300 } },
+        lips: truth.lips.map(([x, y]) => ({ x, y })),
+        design: { center: { x: truth.midX, y: truth.upperEdgeY }, width: 560, arch: "upper", count: 6 },
+        toothMask: await emptyMask(page, truth.w, truth.h),
+      });
+      await page.reload();
+      await page.locator(".card-open").first().click();
+      await page.locator(".topbar .title .h").waitFor();
+      await page.waitForFunction(() => document.querySelector(".stage canvas")?.clientWidth > 0);
+      await page.waitForTimeout(900);
+      // a close-up without eyes: face auto-detect falls back calmly
+      await page.getByRole("button", { name: /Auto-detect points/ }).click();
+      await waitAi(page);
+      const ft = await toastText(page);
+      assert(/No face found|isn't available/.test(ft) || (await page.locator(".ai-confirm").isVisible()), `close-up: no fallback toast ("${ft}")`);
+      if (await page.locator(".ai-confirm").isVisible()) await page.getByRole("button", { name: "Cancel" }).click();
+      await gotoStep(page, "Lips");
+      await page.getByRole("radio", { name: "Existing teeth" }).click();
+      await page.waitForTimeout(600);
+      const c0 = await current(page);
+      const a0 = await maskOn(page, c0.toothMask);
+      assert(a0 === 0, `fixture mask not empty (${a0})`);
+      await page.getByRole("radio", { name: "Tap a tooth" }).click();
+      const v = await view(page, "lips", c0);
+      const tap = v.scr({ x: truth.midX - truth.lowerCentralW * 0.6, y: truth.upperEdgeY - 60 });
+      await L.T.tap(tap);
+      await waitAi(page);
+      await page.locator(".ai-confirm").waitFor({ timeout: 5000 });
+      await page.waitForTimeout(600);
+      assert((await maskOn(page, (await current(page)).toothMask)) === 0, "the proposal changed the mask before it was confirmed");
+      await shot(page, "06-tap-proposal");
+      await page.getByRole("button", { name: "Use this outline" }).click();
+      await page.waitForTimeout(900);
+      const c1 = await current(page);
+      const a1 = await maskOn(page, c1.toothMask);
+      assert(a1 > 300, `Tap a tooth added only ${a1} mask px`);
+      await shot(page, "07-tap-applied");
+      // erase the same tooth again
+      await page.getByRole("radio", { name: "Erase tooth" }).click();
+      await L.T.tap(tap);
+      await waitAi(page);
+      await page.locator(".ai-confirm").waitFor({ timeout: 5000 });
+      await page.getByRole("button", { name: "Use this outline" }).click();
+      await page.waitForTimeout(900);
+      const a2 = await maskOn(page, (await current(page)).toothMask);
+      assert(a2 < a1 * 0.5, `Erase tooth left ${a2} of ${a1} px`);
+      await page.getByRole("button", { name: "Undo" }).click();
+      await page.waitForTimeout(900);
+      const a3 = await maskOn(page, (await current(page)).toothMask);
+      assert(a3 === a1, `undo after erase: ${a3} px, expected ${a1}`);
+      await page.getByRole("button", { name: "Undo" }).click();
+      await page.waitForTimeout(900);
+      const a4 = await maskOn(page, (await current(page)).toothMask);
+      assert(a4 === 0, `undo after tap: ${a4} px, expected 0`);
+      // Outline all front teeth: proposal, Cancel leaves the mask as it is
+      await page.getByRole("radio", { name: "Paint" }).click();
+      await page.getByRole("button", { name: /Outline all front teeth/ }).click();
+      await waitAi(page);
+      await page.locator(".ai-confirm").waitFor({ timeout: 8000 });
+      await shot(page, "08-front-teeth-proposal");
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await page.waitForTimeout(700);
+      assert((await maskOn(page, (await current(page)).toothMask)) === 0, "Cancel changed the mask");
+      allReqs.push(...L.reqs);
+      allErrs.push(...L.errors);
+      return `tap +${a1} px, erase → ${a2} px, undo ✓`;
+    } finally {
+      await L.ctx.close();
+    }
+  });
+
+  await test(dn, "Labs on: no request left the app origin, and the guard refuses other hosts", async () => {
+    const origin = `http://127.0.0.1:${PORT}`;
+    const foreign = allReqs.filter((u) => !sameOrigin(u, origin));
+    assert(allReqs.some((u) => /\/models\/face_landmarker\.task/.test(u)), "the model was not served from the app origin");
+    assert(foreign.length === 0, `foreign requests: ${foreign.slice(0, 5).join(" ")}`);
+    const L = await labsContext(browser, devName, { stub: "ok" });
+    try {
+      await L.page.goto(base);
+      await importPhoto(L.page, face);
+      await L.page.getByRole("button", { name: /Auto-detect points/ }).click();
+      await L.page.locator(".ai-confirm").waitFor();
+      const r = await L.page.evaluate(() => fetch("https://odml.pa.googleapis.com/v1/log", { method: "POST" }).then(() => "sent", (e) => String(e.message)));
+      assert(/blocked/.test(r), `guard did not block: ${r}`);
+      assert(!L.reqs.some((u) => /googleapis/.test(u)), "a request reached the network");
+      return `${allReqs.length} requests, all same-origin; guard: ${r}`;
+    } finally {
+      await L.ctx.close();
+    }
+  });
+
+  await test(dn, "no JS errors in console (Labs)", async () => {
+    assert(allErrs.length === 0, allErrs.slice(0, 5).join("\n"));
+  });
+}
+
+// Built app (CSP + service worker) with the beta on: wasm runs under the CSP, nothing leaves the origin,
+// and the beta's files are not in the precache (cached on first use instead).
+async function labsBuiltSuite(browser, face, outDir) {
+  console.log(`\n# Labs on the built app :${PPORT}`);
+  if (process.env.E2E_ONLY_LABS || !fs.existsSync(path.join(outDir, "index.html")))
+    execFileSync(VITE, ["build", "--outDir", outDir, "--emptyOutDir", "--logLevel", "error"], { cwd: APP, stdio: "inherit" });
+  const srv = await startServer(["preview", "--outDir", outDir], PPORT);
+  const origin = `http://127.0.0.1:${PPORT}`;
+  const { defaultBrowserType, ...dev } = devices["Pixel 7"];
+  const ctx = await browser.newContext({ ...dev });
+  const page = await ctx.newPage();
+  const reqs = [];
+  const errs = [];
+  page.on("request", (r) => reqs.push(r.url()));
+  page.on("console", (m) => m.type() === "error" && !mpNoise(m.text()) && errs.push(m.text()));
+  page.on("pageerror", (e) => errs.push(String(e)));
+  await test("Pixel 7 (built) · labs", "built app: Labs files are not precached; flag on → detection runs under the CSP, same origin only, cached on use", async () => {
+    const sw = fs.readFileSync(path.join(outDir, "sw.js"), "utf8");
+    assert(!/models\/|assets\/labs-/.test(sw.slice(sw.indexOf("const SHELL"), sw.indexOf("];", sw.indexOf("const SHELL")))), "Labs files are in the precache list");
+    const csp = fs.readFileSync(path.join(outDir, "index.html"), "utf8").match(/Content-Security-Policy" content="([^"]+)"/)[1];
+    assert(/script-src 'self' 'wasm-unsafe-eval';/.test(csp) && /connect-src 'self';/.test(csp) && !/https?:/.test(csp), `CSP: ${csp}`);
+    await page.goto(origin + "/");
+    await page.getByRole("heading", { name: /Design the smile/ }).waitFor();
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForTimeout(500);
+    assert(reqs.filter(isLabsReq).length === 0, `flag off, built: Labs files requested ${reqs.filter(isLabsReq).join(" ")}`);
+    await page.evaluate((k) => localStorage.setItem(k, "1"), LABS_KEY);
+    await page.reload();
+    await importPhoto(page, face);
+    await page.getByRole("button", { name: /Auto-detect points/ }).click();
+    await waitAi(page);
+    const ok = await page.locator(".ai-confirm").isVisible();
+    const t = ok ? "" : await toastText(page);
+    assert(ok || /No face found/.test(t), `built app: no proposal ("${t}")`);
+    const foreign = reqs.filter((u) => !sameOrigin(u, origin));
+    assert(foreign.length === 0, `foreign requests: ${foreign.join(" ")}`);
+    const cached = await page.evaluate(async () => {
+      const out = {};
+      for (const k of await caches.keys()) out[k] = (await (await caches.open(k)).keys()).map((r) => new URL(r.url).pathname);
+      return out;
+    });
+    const labsCache = Object.keys(cached).find((k) => k.startsWith("smile-studio-labs-"));
+    assert(labsCache && cached[labsCache].some((p) => p.endsWith("face_landmarker.task")), `model not cached on use: ${JSON.stringify(Object.keys(cached))}`);
+    assert(errs.length === 0, errs.slice(0, 3).join("\n"));
+    return `${ok ? "proposal shown" : "no face"}; labs cache ${cached[labsCache].length} files`;
+  });
+  await ctx.close();
+  stopServer(srv);
+  await sleep(300);
+}
+
 // ---------- offline (built app + service worker) ----------
 async function offlineSuite(browser, face) {
   console.log(`\n# offline: built app on vite preview :${PPORT}`);
@@ -1095,13 +1561,19 @@ async function offlineSuite(browser, face) {
   const browser = await chromium.launch({ headless: !process.env.E2E_HEADED });
   try {
     await startServer([], PORT);
+    const only = process.env.E2E_ONLY_LABS;
     for (const d of DEVICES) {
       assert(devices[d], `unknown device ${d}`);
-      if (!process.env.E2E_ONLY_BITE) await deviceSuite(browser, d, face);
-      await biteSuite(browser, d, bite, truth);
+      if (!process.env.E2E_ONLY_BITE && !only) await deviceSuite(browser, d, face);
+      if (!only) await biteSuite(browser, d, bite, truth);
     }
+    // round 7 Labs beta (flag off + on): phone and tablet
+    for (const d of LABS_DEVICES) await labsSuite(browser, d, face, bite, truth);
     stopAll();
-    if (!process.env.E2E_SKIP_OFFLINE) await offlineSuite(browser, face);
+    if (!process.env.E2E_SKIP_OFFLINE) {
+      if (!only) await offlineSuite(browser, face);
+      await labsBuiltSuite(browser, face, path.join(TMP, "dist"));
+    }
   } finally {
     await browser.close();
     stopAll();

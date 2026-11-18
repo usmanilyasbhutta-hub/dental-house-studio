@@ -212,7 +212,7 @@ export function Sheet({ title, children, onClose, className }: { title: ReactNod
   );
 }
 
-export type ToastKind = "info" | "error";
+export type ToastKind = "info" | "error" | "note";
 
 /** Small status capsule (announced by screen readers): under the top bar in the editor, at the bottom on Home. */
 export function useToast() {
@@ -228,7 +228,7 @@ export function useToast() {
     <div className="toast-slot" role="status" aria-live="polite">
       {toast && (
         <div className={`toast ${toast.kind}`}>
-          {toast.kind === "error" ? <Icon name="alert" /> : toast.text.endsWith("…") ? <span className="spinner" aria-hidden="true" /> : <Icon name="check" />}
+          {toast.kind === "error" ? <Icon name="alert" /> : toast.kind === "note" ? <Icon name="info" /> : toast.text.endsWith("…") ? <span className="spinner" aria-hidden="true" /> : <Icon name="check" />}
           <span>{toast.text}</span>
         </div>
       )}
@@ -281,6 +281,15 @@ const PATHS: Record<string, ReactNode> = {
   plan: <path d="M8 4.5h8V7H8zM6 6H4.5v14.5h15V6H18M8 12h8M8 16h5" />,
   target: <path d="M12 4v3M12 17v3M4 12h3M17 12h3M12 15a3 3 0 100-6 3 3 0 000 6z" />,
   search: <path d="M10.5 17a6.5 6.5 0 100-13 6.5 6.5 0 000 13zM15.5 15.5L20 20" />,
+  info: <path d="M12 20.5a8.5 8.5 0 100-17 8.5 8.5 0 000 17zM12 11v5.2M12 7.8v.2" />,
+  sparkle: <path d="M12 3.5l1.9 5.3 5.3 1.9-5.3 1.9L12 17.9l-1.9-5.3-5.3-1.9 5.3-1.9zM18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />,
+  gear: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4L18 18M6 18l1.6-1.6M16.4 7.6L18 6" />
+      <circle cx="12" cy="12" r="6.3" />
+    </>
+  ),
 };
 
 /** SF-Symbols-style line icon (24 grid, 1.6 px stroke). Decorative: the button around it carries the name. */

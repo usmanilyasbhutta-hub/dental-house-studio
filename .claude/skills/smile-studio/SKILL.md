@@ -10,6 +10,12 @@ On-device smile design mockups for consultations. Read `apps/smile-studio/README
 ## Rules
 - **No network for patient data.** Never add uploads, analytics, cloud sync or third-party AI/3D services that see photos.
   Any ML (e.g. face landmarks) must run on-device with the model shipped inside the app.
+- **Labs / ML (round 7):** on-device only, behind the Settings flag `smile-studio.labs.autodetect.v1` (OFF by default).
+  With the flag off no new code path runs and no model is fetched. MediaPipe is reached only via the dynamic import in
+  `src/labs.ts`; only `src/ai/mediapipe.ts` imports it. Models + wasm are bundled from the app's own origin
+  (`npm run models`, pinned SHA-256, licences in `apps/smile-studio/docs/models.md`); never load them from a CDN, never
+  precache them. Results are proposals the user confirms (one undo step); failures/timeouts (8 s) fall back calmly.
+  Keep `src/ai/guard.ts` and the CSP (`connect-src 'self'`); only `'wasm-unsafe-eval'` was added.
 - Every export keeps the permanent `WATERMARK` label (`src/render.ts`) and never prints the case label.
 - No claims in UI copy (banned list: `src/brief/compliance.ts` in the studio). A simulation is "for discussion".
 - Brand tokens mirror `src/brand.ts` (slate/bronze, Oswald / Instrument Serif accent / JetBrains Mono). Change both together.

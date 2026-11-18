@@ -4,7 +4,8 @@ import { archOf, withArch } from "./arch";
 import { computePrep, detectTeeth, maskFromToothMask, toothMaskFromMask, type Mask } from "./engineShim";
 import { centralLength, centralWidth, deg, fitArcToLowerLip, measure, pupilAngle, PROPORTIONS, rad, SHAPE_LABELS, TOOTH_NAMES } from "./geometry";
 import { useHistory } from "./history";
-import { defaultLips, initialLayout, type Arch, type CaseData, type CasePlan, type Design, type Proportion, type Pt, type RenderMode, type ShadeSample, type ToothCount, type ToothShape } from "./model";
+import { defaultLips, initialLayout, type Arch, type CaseData, type CasePlan, type Design, type Guides, type Proportion, type Pt, type RenderMode, type ShadeSample, type ToothCount, type ToothShape } from "./model";
+import { LABS_FAIL, LABS_FAIL_TEETH, labsOn, withAssist } from "./labs";
 import { MaterialsSheet, PlanPanel, type PickRole, type PlanTab } from "./PlanPanel";
 import { fitToTeeth } from "./fit";
 import { defaultPlan, loadClinicMaterials, materialLibrary, sampleLabQ, sampleRadius, saveClinicMaterials, type Lab, type Material } from "./planner";
@@ -84,6 +85,13 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const [fitHint, setFitHint] = useState(false);
   const toast = useToast();
   const showToast = toast.show;
+  // ---------- Labs: Auto-detect (beta), only with the Settings flag on (read once when the editor opens) ----------
+  const [labs] = useState(labsOn);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [ghost, setGhost] = useState<null | { kind: "guides" | "lips"; guides?: Guides; lips?: Pt[]; note: string }>(null);
+  const [tapMode, setTapMode] = useState<null | "add" | "erase">(null);
+  const [toothProp, setToothProp] = useState<null | { merged: Mask; region: Mask; note: string; taps: Pt[] | "front"; mode: "add" | "erase" }>(null);
+  const aiReq = useRef(0);
   const saveTimer = useRef(0);
   const latest = useRef(c);
   latest.current = c;
@@ -271,6 +279,10 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     }
   };
 
+  // Labs: a pending tooth proposal was computed from the mask as it was; any other change to the mask drops it
+  useEffect(() => {
+    if (labs) setToothProp(null);
+  }, [labs, c.toothMask]);
   const onMaskEdited = () => {
     if (!mask) return;
     const tm = toothMaskFromMask(mask);
@@ -287,6 +299,113 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     setC((x) => ({ ...x, toothMask: tm }));
     toast.show("Teeth found inside the lip line. Check the blue area and correct it with the brush.");
   };
+
+  // ---------- Labs actions: every result is a proposal; nothing changes until "Use these points" / "Use this outline" ----------
+  const aiFace = (kind: "guides" | "lips") => {
+    if (!img || aiBusy) return;
+    const id = ++aiReq.current;
+    const x = latest.current;
+    const close = x.framing === "closeup";
+    setAiBusy(true);
+    setGhost(null);
+    toast.show(kind === "guides" ? "Finding the face points on this phone…" : "Finding the lip line on this phone…", "info", 0);
+    withAssist((a) => a.proposeFace(img, x.imgW, x.imgH, x.framing ?? "face"))
+      .then((r) => {
+        if (id !== aiReq.current) return;
+        if (!r || (kind === "guides" && !r.guides) || (kind === "lips" && !r.lips)) {
+          toast.show(close ? "No face found in this close-up. Place the dots by hand." : "No face found in this photo. Place the dots by hand.", "note", 4000);
+          return;
+        }
+        toast.hide();
+        if (kind === "guides")
+          setGhost({
+            kind,
+            guides: r.guides!.guides,
+            note: `Suggested from the ${r.guides!.basis}${close ? " and the upper lip (midline estimate)" : ""}. Check every dot.`,
+          });
+        else
+          setGhost({
+            kind,
+            lips: r.lips!,
+            note: r.opening < Math.max(3, x.imgH * 0.004) ? "The lips look closed here, so this line may be wrong. Check every dot." : "Suggested inner lip line. Check every dot.",
+          });
+      })
+      .catch(() => id === aiReq.current && toast.show(LABS_FAIL, "note", 4500))
+      .finally(() => id === aiReq.current && setAiBusy(false));
+  };
+  const useGhost = () => {
+    const g = ghost;
+    if (!g) return;
+    setGhost(null);
+    flushNext.current = true;
+    tick();
+    setC((x) => (g.kind === "guides" && g.guides ? { ...x, guides: g.guides } : g.lips ? { ...x, lips: g.lips } : x));
+    toast.show(g.kind === "guides" ? "Dots placed. Drag any dot to adjust." : "Lip line placed. Drag any dot to adjust.");
+  };
+  const aiTooth = (taps: Pt[] | "front", mode: "add" | "erase") => {
+    if (!img || aiBusy) return;
+    const id = ++aiReq.current;
+    const x = latest.current;
+    const base = mask;
+    setAiBusy(true);
+    toast.show(taps === "front" ? "Outlining the front teeth on this phone…" : "Outlining the tooth on this phone…", "info", 0);
+    withAssist((a) =>
+      taps === "front"
+        ? a.proposeFrontTeeth(img, x.imgW, x.imgH, x.lips, base, x.design, x.guides)
+        : a.proposeTooth(img, x.imgW, x.imgH, x.lips, base, taps, mode, centralWidth(x.design)),
+    )
+      .then((r) => {
+        if (id !== aiReq.current) return;
+        if (!r.changed) {
+          setToothProp(null);
+          toast.show(mode === "erase" ? "Nothing to erase there. Tap inside the blue area." : "No new tooth area found there. Tap the middle of a tooth, or use the brush.", "note", 3500);
+          return;
+        }
+        toast.hide();
+        setToothProp({
+          merged: r.merged,
+          region: r.region,
+          taps,
+          mode,
+          note:
+            (mode === "erase" ? "Orange area will be removed from the teeth outline." : "Orange area will be added to the teeth outline.") +
+            (r.large ? " It looks larger than one tooth: check it, or try again." : " Check it before you use it."),
+        });
+      })
+      .catch(() => {
+        if (id !== aiReq.current) return;
+        setToothProp(null);
+        setTapMode(null);
+        toast.show(LABS_FAIL_TEETH, "note", 4500);
+      })
+      .finally(() => id === aiReq.current && setAiBusy(false));
+  };
+  const useTooth = () => {
+    const p = toothProp;
+    if (!p) return;
+    setToothProp(null);
+    tick();
+    const tm = toothMaskFromMask(p.merged);
+    encoded.current = tm.png;
+    setMask(p.merged);
+    flushNext.current = true;
+    setC((x) => ({ ...x, toothMask: tm }));
+  };
+  const cancelAi = () => {
+    aiReq.current++;
+    setAiBusy(false);
+    setGhost(null);
+    setToothProp(null);
+    toast.hide();
+  };
+  const aiConfirm = (note: string, useLabel: string, onUse: () => void, onRetry: () => void, onCancel: () => void) => (
+    <AiConfirm note={note} useLabel={useLabel} onUse={onUse} onRetry={onRetry} onCancel={onCancel} />
+  );
+  const aiButton = (label: string, onClick: () => void) => (
+    <button className="btn secondary ai-btn" onClick={onClick} disabled={!img || aiBusy}>
+      <Icon name="sparkle" size={18} /> {label} <span className="beta-tag">Beta</span>
+    </button>
+  );
   const fmt = (px: number) => (ppm ? `${(px / ppm).toFixed(1)} mm` : `${Math.round(px)} px`);
   const pupilTilt = deg(pupilAngle(c.guides));
   const closeup = c.framing === "closeup";
@@ -313,6 +432,13 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     if (s !== "design") {
       setFitTaps(null);
       setFitHint(false);
+    }
+    if (labs) {
+      aiReq.current++;
+      setAiBusy(false);
+      setGhost(null);
+      setToothProp(null);
+      setTapMode(null);
     }
     setStep(s);
   };
@@ -585,6 +711,10 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           onCalib={(calib: Calib) => setC((x) => ({ ...x, calib }))}
           fitTaps={step === "design" && !calibrating ? fitTaps : null}
           onFitTaps={onFitTaps}
+          ghost={labs && ghost && ghost.kind === (step === "guides" ? "guides" : step === "lips" && lipTool === "lips" ? "lips" : "") ? ghost : null}
+          tapTool={labs && step === "lips" && lipTool === "teeth" ? tapMode : null}
+          onTapTool={labs ? (pt) => tapMode && aiTooth([pt], tapMode) : undefined}
+          proposal={labs && step === "lips" && lipTool === "teeth" ? (toothProp?.region ?? null) : null}
           onGesture={(active) => {
             history.gesture(active);
             if (!active) {
@@ -687,6 +817,10 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                 {closeup ? "Mouth-corner line" : "Pupil line"} {pupilTilt.toFixed(1)}° from level
                 {Math.abs(pupilTilt) > 3 && ` · ${tiltWarn}`}
               </p>
+              {labs &&
+                (ghost?.kind === "guides"
+                  ? aiConfirm(ghost.note, "Use these points", useGhost, () => aiFace("guides"), cancelAi)
+                  : aiButton("Auto-detect points", () => aiFace("guides")))}
             </>
           )}
 
@@ -699,7 +833,13 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                   { value: "lips", label: "Lip line" },
                   { value: "teeth", label: "Existing teeth" },
                 ]}
-                onChange={setLipTool}
+                onChange={(v) => {
+                  if (labs) {
+                    cancelAi();
+                    setTapMode(null);
+                  }
+                  setLipTool(v);
+                }}
               />
               {lipTool === "lips" ? (
                 <>
@@ -709,6 +849,10 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                   <button className="btn secondary" onClick={() => setC((x) => ({ ...x, lips: defaultLips(x.design.center, x.design.width) }))}>
                     Reset lip line around the teeth
                   </button>
+                  {labs &&
+                    (ghost?.kind === "lips"
+                      ? aiConfirm(ghost.note, "Use these points", useGhost, () => aiFace("lips"), cancelAi)
+                      : aiButton("Auto-detect lip line", () => aiFace("lips")))}
                 </>
               ) : (
                 <>
@@ -727,15 +871,53 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                       Reset
                     </button>
                   </div>
-                  <Chips
-                    label="Brush"
-                    value={brushMode}
-                    options={[
-                      { value: "paint", label: "Paint" },
-                      { value: "erase", label: "Erase" },
-                    ]}
-                    onChange={setBrushMode}
-                  />
+                  {labs ? (
+                    <Chips
+                      label="Brush"
+                      value={tapMode ? `tap-${tapMode}` : brushMode}
+                      options={[
+                        { value: "paint", label: "Paint" },
+                        { value: "erase", label: "Erase" },
+                        { value: "tap-add", label: "Tap a tooth" },
+                        { value: "tap-erase", label: "Erase tooth" },
+                      ]}
+                      onChange={(v) => {
+                        cancelAi();
+                        if (v === "tap-add" || v === "tap-erase") setTapMode(v === "tap-add" ? "add" : "erase");
+                        else {
+                          setTapMode(null);
+                          setBrushMode(v as MaskTool["mode"]);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <Chips
+                      label="Brush"
+                      value={brushMode}
+                      options={[
+                        { value: "paint", label: "Paint" },
+                        { value: "erase", label: "Erase" },
+                      ]}
+                      onChange={setBrushMode}
+                    />
+                  )}
+                  {labs &&
+                    (toothProp
+                      ? aiConfirm(
+                          toothProp.note,
+                          "Use this outline",
+                          useTooth,
+                          () => {
+                            const p = toothProp;
+                            setToothProp(null);
+                            if (p.taps === "front") aiTooth("front", "add");
+                            else toast.show("Tap the tooth again, a little nearer its middle.", "note", 2500);
+                          },
+                          cancelAi,
+                        )
+                      : tapMode
+                        ? <p className="hint">{aiBusy ? "Outlining…" : tapMode === "erase" ? "Tap a tooth inside the blue area to remove its outline." : "Tap the middle of a tooth to outline it."}</p>
+                        : aiButton("Outline all front teeth", () => aiTooth("front", "add")))}
                   <Slider label="Brush size" value={brushSize} min={6} max={40} step={2} format={(v) => (v < 12 ? "fine" : v < 24 ? "medium" : "large")} onChange={setBrushSize} />
                   <Hint>
                     The <b>blue tint</b> should cover the patient's own teeth only. One finger paints or erases; two fingers zoom
@@ -1236,5 +1418,31 @@ function MmInput({ value, onChange }: { value?: number; onChange: (v: number | u
       />
       {bad && <span className="error small">Enter a width between 4 and 13 mm.</span>}
     </>
+  );
+}
+
+/** Labs: the confirm card under a proposal (scrolled into view so the three choices are always reachable). */
+function AiConfirm({ note, useLabel, onUse, onRetry, onCancel }: { note: string; useLabel: string; onUse: () => void; onRetry: () => void; onCancel: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+  }, [note]);
+  return (
+    <div className="ai-confirm" role="group" aria-label="Auto-detect suggestion" ref={ref}>
+      <p className="ai-note">
+        <span className="beta-tag">Beta</span> {note}
+      </p>
+      <div className="row tight">
+        <button className="btn" onClick={onUse}>
+          {useLabel}
+        </button>
+        <button className="btn secondary" onClick={onRetry}>
+          Try again
+        </button>
+        <button className="btn plain" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }

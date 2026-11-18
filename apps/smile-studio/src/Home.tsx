@@ -4,7 +4,8 @@ import { initialLayout, newId, type CaseData } from "./model";
 import { deleteCase, KEEP_DAYS, listCases, loadPhoto, purgeOld, saveCase, thumbnail, wipeAll } from "./storage";
 import { MaterialsSheet } from "./PlanPanel";
 import { loadClinicMaterials, saveClinicMaterials, type Material } from "./planner";
-import { ago, Icon, Sheet, useToast } from "./ui";
+import { labsOn, setLabs } from "./labs";
+import { ago, Group, Icon, Sheet, Toggle, useToast } from "./ui";
 
 type Source = "rear" | "front" | "gallery";
 type Dialog =
@@ -14,6 +15,7 @@ type Dialog =
   | { kind: "delete"; c: CaseData }
   | { kind: "wipe" }
   | { kind: "materials" }
+  | { kind: "settings" }
   | null;
 
 export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
@@ -23,6 +25,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
   const [showPhotos, setShowPhotos] = useState(false);
   const [name, setName] = useState("");
   const [mats, setMats] = useState<Material[]>(() => loadClinicMaterials());
+  const [labs, setLabsState] = useState(labsOn);
   const toast = useToast();
   const inputs = { rear: useRef<HTMLInputElement>(null), front: useRef<HTMLInputElement>(null), gallery: useRef<HTMLInputElement>(null) };
 
@@ -105,9 +108,14 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
     <div className="home">
       <header className="brandbar">
         <img src="./brand/logo-white.png" alt="Dental House" className="logo" />
-        <button className="icon-btn" onClick={() => setDialog({ kind: "materials" })} aria-label="Clinic materials" title="Clinic materials">
-          <Icon name="sliders" />
-        </button>
+        <span className="bar-actions">
+          <button className="icon-btn" onClick={() => setDialog({ kind: "materials" })} aria-label="Clinic materials" title="Clinic materials">
+            <Icon name="sliders" />
+          </button>
+          <button className="icon-btn" onClick={() => setDialog({ kind: "settings" })} aria-label="Settings" title="Settings">
+            <Icon name="gear" />
+          </button>
+        </span>
       </header>
       <section className="hero">
         <p className="kicker">Smile Studio</p>
@@ -305,6 +313,27 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
           }}
           onClose={() => setDialog(null)}
         />
+      )}
+
+      {dialog?.kind === "settings" && (
+        <Sheet title="Settings" onClose={() => setDialog(null)}>
+          <Group
+            header="Labs"
+            footer="Suggests the face dots, the lip line and tooth outlines. It runs on this phone only: photos are never sent anywhere. The first use loads about 25 MB from this app's own site. Every suggestion is shown first and used only when you confirm it. Accuracy on real photos is still being checked."
+          >
+            <Toggle
+              label="Auto-detect (beta)"
+              checked={labs}
+              onChange={(v) => {
+                setLabs(v);
+                setLabsState(labsOn());
+              }}
+            />
+          </Group>
+          <button className="btn wide" onClick={() => setDialog(null)}>
+            Done
+          </button>
+        </Sheet>
       )}
 
       {dialog?.kind === "wipe" && (

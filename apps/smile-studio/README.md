@@ -85,6 +85,32 @@ a photo can measure (a colour estimate) and checks the recorded plan for conflic
 - Toasts are a short capsule under the top bar (over the photo, never over the controls or the tab bar), 2.2 s.
 - Test images are synthetic: `e2e/make_face.py` and `e2e/make_bite.py` (retracted bite with overbite and recession).
 
+## Labs: Auto-detect (beta, round 7)
+
+Off by default. Turn it on in **Home › Settings (gear) › Labs › Auto-detect (beta)** (stored on this phone in
+localStorage). With it off the app is exactly as before: no Labs controls, no Labs code or model files downloaded.
+
+- **Face (step 01):** *Auto-detect points* runs MediaPipe Face Landmarker on the photo. Full face: dots on the iris
+  centres and the facial midline (median of the midline landmarks, placed at the philtrum). Close-up with a face found:
+  mouth corners + a dental-midline estimate. No face (most close-ups / retractor photos): "No face found…", place the
+  dots by hand.
+- **Lips (step 02):** *Auto-detect lip line* turns the inner-lip landmark loop into the usual 12 dots (same order as
+  `defaultLips`: image-left corner, over the top, clockwise).
+- **Existing teeth:** Brush gains *Tap a tooth* / *Erase tooth* (MediaPipe Interactive Segmenter "MagicTouch", keypoint
+  prompt, on a crop around the tap, clipped to the lip line) and *Outline all front teeth* (taps the template's six front
+  teeth). The orange tint is the proposal.
+- Every result is a **proposal** (hollow ghost dots or an orange tint) with *Use these points* / *Use this outline*,
+  *Try again*, *Cancel*. Nothing changes until you confirm; each confirm is one undo step.
+- Any load or inference failure, or no answer within 8 s: "Auto-detect isn't available on this phone; you can place the
+  dots by hand." The manual flow carries on and the case is untouched.
+- Everything runs on the phone. Models and the wasm runtime are served from the app's own site (`npm run models`, see
+  `docs/models.md` for versions, licences and SHA-256). They are cached on first use and are not in the precache. The
+  CSP adds only `'wasm-unsafe-eval'`. Accuracy on real patient photos has **not** been checked yet: it was tested only on
+  the synthetic images.
+- Code: `src/labs.ts` (flag + lazy loader, in the main bundle), `src/ai/assist.ts` (lazy entry), `src/ai/mediapipe.ts`
+  (the only file that imports MediaPipe), `src/ai/map.ts` (pure mapping + mask merge, `tests/ai.test.ts`),
+  `src/ai/guard.ts` (blocks requests to other hosts).
+
 ## Rules this app keeps (from the studio's golden rules)
 
 - Patient photos stay on the device. Nothing is uploaded, and photos are re-encoded on import,
@@ -128,7 +154,7 @@ Camera access (the **Take photo** button) needs HTTPS or `localhost`. Over plain
 
 ## Ideas for later
 
-- Optional on-device face landmarks (MediaPipe, model bundled with the app) to place pupils, midline and lips automatically.
+- Validate Labs auto-detect on consented clinic photos before taking it out of beta.
 - Per-tooth edits (length, width, rotation of a single tooth) and a gum-line (gingivectomy) preview.
 - Lower arch, and a library of tooth outlines traced by our own dentists.
 - Export the design as a PDF consult sheet with measurements.

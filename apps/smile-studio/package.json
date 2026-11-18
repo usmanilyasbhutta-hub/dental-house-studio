@@ -7,13 +7,16 @@
   "scripts": {
     "dev": "vite",
     "dev:lan": "vite --host",
+    "models": "node scripts/models.mjs",
+    "prebuild": "node scripts/models.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
     "test": "vitest run",
     "check": "tsc --noEmit && vitest run",
-    "e2e": "node e2e/run.cjs"
+    "e2e": "node scripts/models.mjs && node e2e/run.cjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

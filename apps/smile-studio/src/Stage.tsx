@@ -87,6 +87,13 @@ interface Props {
   onFitTaps?: (pts: Pt[]) => void;
   /** overlays on top of the photo (e.g. the "Fit to teeth" hint chip) */
   children?: React.ReactNode;
+  /** Labs (Auto-detect beta, flag on only): proposed dots drawn as hollow "ghost" dots until the user confirms. */
+  ghost?: { guides?: Guides; lips?: Pt[] } | null;
+  /** Labs: Lips › Existing teeth "Tap a tooth" / "Erase tooth": a one-finger tap reports the image point (drag pans). */
+  tapTool?: "add" | "erase" | null;
+  onTapTool?: (p: Pt) => void;
+  /** Labs: the proposed tooth region (same raster as `mask`), tinted until the user confirms. */
+  proposal?: Mask | null;
 }
 
 const HIT = 40; // css px: nearest handle within this radius wins
@@ -186,7 +193,7 @@ export function Stage(props: Props) {
   const pointers = useRef(new Map<number, Pt>());
   const gesture = useRef<
     | { kind: "handle"; id: string; grab: Pt }
-    | { kind: "pan"; start: Pt; view: View }
+    | { kind: "pan"; start: Pt; view: View; tap?: boolean }
     | { kind: "pinch"; d0: number; m0: Pt; view: View }
     | { kind: "divider" }
     | { kind: "paint"; last: Pt; started: boolean }
@@ -194,7 +201,8 @@ export function Stage(props: Props) {
   >(null);
   const maskCv = useRef<HTMLCanvasElement | null>(null);
   const brush = useRef<Pt | null>(null);
-  const painting = () => propsRef.current.step === "lips" && !!propsRef.current.maskTool;
+  const painting = () => propsRef.current.step === "lips" && !!propsRef.current.maskTool && !propsRef.current.tapTool;
+  const propCv = useRef<HTMLCanvasElement | null>(null);
   const rebuildMask = useCallback(() => {
     const m = propsRef.current.mask;
     if (!m) {
@@ -310,6 +318,13 @@ export function Stage(props: Props) {
       else if (p.step === "design") drawDesignOverlay(ctx, s, v.scale, active.current ?? selRef.current);
       else drawOverlay(ctx, s, { step: p.step, scale: v.scale, activeHandle: active.current ?? selRef.current });
     }
+    if (!p.showOriginal && paintOn && p.proposal && propCv.current) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(propCv.current, 0, 0, s.imgW, s.imgH);
+      ctx.restore();
+    }
+    if (!p.showOriginal && p.ghost) drawGhost(ctx, p.ghost, v.scale);
     ctx.restore();
 
     // brush ring under the finger while painting the existing-teeth mask
@@ -412,9 +427,35 @@ export function Stage(props: Props) {
     props.samples,
     props.sampleR,
     props.fitTaps,
+    props.ghost,
+    props.tapTool,
     selected,
     focused,
   ]);
+  // Labs: tooth proposal tint (amber, so it reads apart from the blue existing-teeth tint and from the teeth)
+  useEffect(() => {
+    const m = props.proposal;
+    if (!m) {
+      propCv.current = null;
+    } else {
+      const cv = document.createElement("canvas");
+      cv.width = m.w;
+      cv.height = m.h;
+      const ctx = cv.getContext("2d")!;
+      const im = ctx.createImageData(m.w, m.h);
+      for (let i = 0; i < m.data.length; i++)
+        if (m.data[i]) {
+          const o = i * 4;
+          im.data[o] = 255;
+          im.data[o + 1] = 150;
+          im.data[o + 2] = 40;
+          im.data[o + 3] = 165;
+        }
+      ctx.putImageData(im, 0, 0);
+      propCv.current = cv;
+    }
+    requestDraw();
+  }, [props.proposal, requestDraw]);
   useEffect(() => {
     rebuildMask();
     requestDraw();
@@ -550,6 +591,12 @@ export function Stage(props: Props) {
     const ip = toImg(p);
     const { s, calib, pins, fit: fitPts } = current();
     const pr = propsRef.current;
+    if (pr.tapTool && pr.step === "lips" && !pr.showOriginal) {
+      // Labs tap tool: a tap reports the point on release; a drag pans like an empty area
+      gesture.current = { kind: "pan", start: p, view: view.current, tap: true };
+      requestDraw();
+      return;
+    }
     if (painting() && !pr.showOriginal) {
       // one finger paints (after a few px, so a second finger can still turn it into a pinch); two fingers zoom / pan
       gesture.current = { kind: "paint", last: p, started: false };
@@ -626,6 +673,8 @@ export function Stage(props: Props) {
       view.current = { scale, ox: m.x - ix * scale, oy: m.y - iy * scale };
       userView.current = true;
     } else if (g.kind === "pan") {
+      if (g.tap && Math.hypot(p.x - g.start.x, p.y - g.start.y) < 8) return;
+      g.tap = false;
       view.current = { ...g.view, ox: g.view.ox + p.x - g.start.x, oy: g.view.oy + p.y - g.start.y };
       userView.current = true;
     } else if (g.kind === "handle") {
@@ -681,6 +730,7 @@ export function Stage(props: Props) {
     if (pointers.current.size === 0) {
       if (gesture.current?.kind === "handle") endHandle();
       const g = gesture.current;
+      if (g?.kind === "pan" && g.tap && e.type === "pointerup") propsRef.current.onTapTool?.(toImg(g.start));
       if (g?.kind === "paint") {
         // a tap without a drag leaves one dab
         if (!g.started && e.type === "pointerup") {
@@ -769,6 +819,8 @@ export function Stage(props: Props) {
               : "Shade sample pins on the photo. Drag a pin to adjust; pinch to zoom. Arrow keys move the selected pin."
             : props.fitTaps && step === "design"
             ? `Fit to teeth. ${props.fitTaps.length < 2 ? `Tap the tip of the patient's ${props.fitTaps.length === 0 ? "right canine, on the left of the photo" : "left canine, on the right of the photo"}.` : "Drag a pin to adjust."} Two fingers zoom.`
+            : props.tapTool && step === "lips"
+            ? `Existing teeth mask. Tap a tooth to ${props.tapTool === "erase" ? "remove its outline" : "outline it"} automatically; drag or two fingers move and zoom the photo.`
             : props.maskTool && step === "lips"
             ? `Existing teeth mask. One finger ${props.maskTool.mode === "erase" ? "erases" : "paints"} the patient's own teeth; two fingers zoom and move the photo.`
             : "Smile design photo. Drag the round dots with one finger; pinch to zoom. With a keyboard: arrow keys move the selected dot, [ and ] pick another."
@@ -782,7 +834,9 @@ export function Stage(props: Props) {
         <span className="stage-tag prep-tag">Prep map · 2D outline, not depth</span>
       )}
       {props.maskTool && step === "lips" && !showOriginal && (
-        <span className="stage-tag">Existing teeth · {props.maskTool.mode === "erase" ? "erase" : "paint"}</span>
+        <span className="stage-tag">
+          Existing teeth · {props.tapTool ? (props.tapTool === "erase" ? "tap a tooth to erase" : "tap a tooth") : props.maskTool.mode === "erase" ? "erase" : "paint"}
+        </span>
       )}
       {step === "compare" && !showOriginal && !props.showPrep && (
         <>
@@ -1049,5 +1103,52 @@ function drawFitPins(ctx: CanvasRenderingContext2D, pts: Pt[], scale: number, ac
     const right = pts.length < 2 ? i === 0 : q.x <= pts[1 - i].x;
     ctx.fillText(right ? "R3" : "L3", q.x, hy + 0.5 * u);
   });
+  ctx.restore();
+}
+
+/** Labs: proposed dots as hollow dashed rings (and the proposed lip line), visibly different from the real handles. */
+function drawGhost(ctx: CanvasRenderingContext2D, g: { guides?: Guides; lips?: Pt[] }, scale: number) {
+  const u = 1 / scale;
+  ctx.save();
+  ctx.lineCap = "round";
+  const ring = (p: Pt, r: number) => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(28,34,32,0.35)";
+    ctx.fill();
+    ctx.setLineDash([3 * u, 2.5 * u]);
+    ctx.lineWidth = 2 * u;
+    ctx.strokeStyle = "#F2D9A8";
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1.8 * u, 0, Math.PI * 2);
+    ctx.fillStyle = "#F2D9A8";
+    ctx.fill();
+  };
+  if (g.lips && g.lips.length >= 3) {
+    const curve = smoothClosed(g.lips);
+    ctx.beginPath();
+    curve.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)));
+    ctx.closePath();
+    ctx.setLineDash([6 * u, 4 * u]);
+    ctx.lineWidth = 2 * u;
+    ctx.strokeStyle = "rgba(242,217,168,0.95)";
+    ctx.stroke();
+    ctx.setLineDash([]);
+    g.lips.forEach((p) => ring(p, 8 * u));
+  }
+  if (g.guides) {
+    const { pupilR, pupilL, midline } = g.guides;
+    ctx.setLineDash([4 * u, 4 * u]);
+    ctx.lineWidth = 1.5 * u;
+    ctx.strokeStyle = "rgba(242,217,168,0.8)";
+    ctx.beginPath();
+    ctx.moveTo(pupilR.x, pupilR.y);
+    ctx.lineTo(pupilL.x, pupilL.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    [pupilR, pupilL, midline].forEach((p) => ring(p, 11 * u));
+  }
   ctx.restore();
 }

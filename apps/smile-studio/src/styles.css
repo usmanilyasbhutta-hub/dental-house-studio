@@ -196,6 +196,7 @@ input[type="range"] { flex: 1; min-width: 0; accent-color: var(--bronze-light); 
 /* ---------- home ---------- */
 .home { max-width: 680px; margin: 0 auto; padding: calc(12px + var(--safe-t)) calc(20px + var(--safe-r)) calc(28px + var(--safe-b)) calc(20px + var(--safe-l)); }
 .brandbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 24px; }
+.bar-actions { display: flex; gap: 8px; }
 .logo { height: 40px; width: auto; display: block; }
 .hero h1 { font-family: Oswald, var(--ui); font-weight: 700; text-transform: uppercase; font-size: 2.5rem; line-height: 1.02; margin: 0 0 12px; letter-spacing: 0.01em; }
 .lede { color: var(--label-2); margin: 0 0 8px; font-size: var(--t-body); }
@@ -629,3 +630,17 @@ input[type="range"] { flex: 1; min-width: 0; accent-color: var(--bronze-light); 
 .samples .lab small.warn { display: flex; align-items: flex-start; gap: 4px; color: var(--amber) !important; font-weight: 500; margin-top: 2px; }
 .samples .warn .ico { flex: none; margin-top: 1px; }
 .samples li.bad .tag { box-shadow: 0 0 0 2px var(--amber); }
+
+/* ---------- Labs: Auto-detect (beta), visible only with the Settings flag on ---------- */
+.beta-tag {
+  display: inline-block; padding: 1px 7px; border-radius: 9px; background: var(--tint-fill); color: var(--tint);
+  font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.01em; vertical-align: 1px;
+}
+.ai-btn { width: 100%; display: flex; margin-top: 12px; }
+.ai-btn .beta-tag { margin-left: 4px; background: rgba(201, 171, 134, 0.22); }
+.ai-confirm { margin-top: 12px; padding: 12px; border-radius: var(--r); background: var(--fill); }
+.ai-note { margin: 0 0 10px; font-size: var(--t-sub); color: var(--label); line-height: 1.35; }
+.ai-confirm .row.tight { margin: 0; flex-wrap: wrap; }
+.ai-confirm .btn { min-height: 44px; font-size: var(--t-callout); }
+.ai-confirm .btn.plain { padding: 0 10px; }
+.labs-foot { margin: 6px 4px 0; }
