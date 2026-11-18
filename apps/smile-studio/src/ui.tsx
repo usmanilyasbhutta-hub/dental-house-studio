@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 export function Chips<T extends string | number>({
   label,
@@ -98,6 +99,7 @@ export function Hint({ children }: { children: ReactNode }) {
 export function Sheet({ title, children, onClose }: { title: ReactNode; children: ReactNode; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const downOnBack = useRef(false);
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
@@ -111,13 +113,24 @@ export function Sheet({ title, children, onClose }: { title: ReactNode; children
       prev?.focus?.();
     };
   }, []);
-  return (
-    <div className="sheet-back" onClick={(e) => e.target === e.currentTarget && onClose()}>
+  // portalled to <body>: a sheet opened from inside a scrolling panel still covers the whole screen
+  return createPortal(
+    <div
+      className="sheet-back"
+      // close only when the press also STARTED on the backdrop: the click that ends a long-press which opened this sheet
+      // must not close it again
+      onPointerDown={(e) => (downOnBack.current = e.target === e.currentTarget)}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && downOnBack.current) onClose();
+        downOnBack.current = false;
+      }}
+    >
       <div className="sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} ref={ref}>
         <h2 id={titleId}>{title}</h2>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -43,7 +43,11 @@ interface Live {
   lips?: Pt[];
   design?: Design;
   calib?: Calib;
+  samples?: Pt[];
 }
+
+/** Plan step: a shade sample pin. */
+export type SamplePin = { pt: Pt; role: "reference" | "match" };
 
 interface Props {
   scene: Scene;
@@ -68,6 +72,14 @@ interface Props {
   maskVersion?: number;
   /** a brush stroke changed the mask (called at the end of each stroke) */
   onMaskEdited?: () => void;
+  /** Plan step: shade sample pins, the role a tap drops (null: one finger pans), the sampled disk radius (image px). */
+  samples?: SamplePin[];
+  pickRole?: "reference" | "match" | null;
+  sampleR?: number;
+  /** a pin was dropped (pointer down in pick mode); it is then dragged like any handle */
+  onAddSample?: (p: Pt) => void;
+  /** pin positions after a drag (same order as samples) */
+  onSamples?: (pts: Pt[]) => void;
 }
 
 const HIT = 40; // css px: nearest handle within this radius wins
@@ -87,10 +99,12 @@ const NAMES: Record<string, string> = {
   calA: "first edge of the existing central",
   calB: "second edge of the existing central",
 };
-export const handleName = (id: string) => (id.startsWith("lip") ? `lip point ${Number(id.slice(3)) + 1} of 12` : (NAMES[id] ?? id));
+export const handleName = (id: string) =>
+  id.startsWith("lip") ? `lip point ${Number(id.slice(3)) + 1} of 12` : id.startsWith("smp") ? `shade sample ${Number(id.slice(3)) + 1}` : (NAMES[id] ?? id);
 
 /** Handles that can be dragged in the current step, with their image positions. */
-function handlesOf(s: Scene, step: Step, calibrating: boolean, calib?: Calib): [string, Pt][] {
+function handlesOf(s: Scene, step: Step, calibrating: boolean, calib?: Calib, samples?: Pt[]): [string, Pt][] {
+  if (step === "plan") return (samples ?? []).map((q, i) => [`smp${i}`, q]);
   if (step === "design" && calibrating) return calib ? [["calA", calib.a], ["calB", calib.b]] : [];
   if (step === "guides") return [["pupilR", s.guides.pupilR], ["pupilL", s.guides.pupilL], ["midline", s.guides.midline]];
   if (step === "lips") return s.lips.map((q, i) => [`lip${i}`, q]);
@@ -102,7 +116,13 @@ function handlesOf(s: Scene, step: Step, calibrating: boolean, calib?: Calib): [
 }
 
 /** The new state after moving handle id to image point p. */
-function moveHandle(s: Scene, calib: Calib | undefined, id: string, p: Pt, grab: Pt): Live {
+function moveHandle(s: Scene, calib: Calib | undefined, id: string, p: Pt, grab: Pt, samples?: Pt[]): Live {
+  if (id.startsWith("smp")) {
+    const i = Number(id.slice(3));
+    const cur = samples ?? [];
+    const at = { x: p.x - grab.x, y: p.y - grab.y };
+    return { samples: i >= cur.length ? [...cur, at] : cur.map((q, j) => (j === i ? at : q)) };
+  }
   if (id === "pupilR" || id === "pupilL" || id === "midline") return { guides: { ...s.guides, [id]: p } };
   if (id === "calA" || id === "calB") {
     const c = calib ?? { a: p, b: p };
@@ -192,6 +212,7 @@ export function Stage(props: Props) {
     const p = propsRef.current;
     const s: Scene = live.current ? { ...p.scene, ...stripCalib(live.current) } : p.scene;
     const calib = live.current?.calib ?? p.calib;
+    const pins = live.current?.samples ?? p.samples?.map((x) => x.pt) ?? [];
     const dragging = !!gesture.current;
     const dpr = Math.min(window.devicePixelRatio || 1, dragging ? 2 : 3);
     const bw = Math.round(w * dpr);
@@ -238,6 +259,9 @@ export function Stage(props: Props) {
       drawTeeth(ctx, s, "outline", q);
       ctx.restore();
       if (p.step === "design") drawDesignOverlay(ctx, s, v.scale, active.current ?? selRef.current);
+    } else if (!p.showOriginal && p.step === "plan") {
+      // the patient's own teeth, untouched: pins sample the photo
+      drawPins(ctx, pins, p.samples ?? [], p.sampleR ?? 6, v.scale, active.current ?? selRef.current);
     } else if (!p.showOriginal) {
       if (p.step === "lips") {
         ctx.save();
@@ -342,6 +366,8 @@ export function Stage(props: Props) {
     props.showPrep,
     props.prep,
     props.maskTool,
+    props.samples,
+    props.sampleR,
     selected,
     focused,
   ]);
@@ -417,9 +443,13 @@ export function Stage(props: Props) {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
 
-  const current = (): { s: Scene; calib?: Calib } => {
+  const current = (): { s: Scene; calib?: Calib; pins: Pt[] } => {
     const p = propsRef.current;
-    return { s: live.current ? { ...p.scene, ...stripCalib(live.current) } : p.scene, calib: live.current?.calib ?? p.calib };
+    return {
+      s: live.current ? { ...p.scene, ...stripCalib(live.current) } : p.scene,
+      calib: live.current?.calib ?? p.calib,
+      pins: live.current?.samples ?? p.samples?.map((x) => x.pt) ?? [],
+    };
   };
 
   const push = () => {
@@ -430,6 +460,7 @@ export function Stage(props: Props) {
     if (l.lips) p.onLips(l.lips);
     if (l.design) p.onDesign(l.design);
     if (l.calib) p.onCalib(l.calib);
+    if (l.samples) p.onSamples?.(l.samples);
     lastPush.current = performance.now();
   };
 
@@ -470,7 +501,7 @@ export function Stage(props: Props) {
     }
     if (pointers.current.size > 2) return;
     const ip = toImg(p);
-    const { s, calib } = current();
+    const { s, calib, pins } = current();
     const pr = propsRef.current;
     if (painting() && !pr.showOriginal) {
       // one finger paints (after a few px, so a second finger can still turn it into a pinch); two fingers zoom / pan
@@ -480,16 +511,32 @@ export function Stage(props: Props) {
       return;
     }
     const cal = pr.step === "design" && pr.calibrating;
-    let id = cal ? nearest(handlesOf(s, pr.step, true, calib), ip, Infinity) : nearest(handlesOf(s, pr.step, false, calib), ip, HIT / view.current.scale);
+    let id = cal ? nearest(handlesOf(s, pr.step, true, calib), ip, Infinity) : nearest(handlesOf(s, pr.step, false, calib, pins), ip, HIT / view.current.scale);
+    if (!id && pr.step === "plan") {
+      // the pin's head (drawn above the point) is the easiest thing to grab
+      const k = view.current.scale;
+      const heads: [string, Pt][] = pins.map((q, i) => [`smp${i}`, { x: q.x, y: q.y - Math.max(pr.sampleR ?? 6, 3 / k) - 30 / k }]);
+      id = nearest(heads, ip, 26 / k);
+    }
     if (pr.showOriginal) id = null;
+    let newPin = false;
+    // plan step, pick mode: a tap on the photo drops a new pin there, then it drags like any handle
+    if (!id && pr.step === "plan" && pr.pickRole && !pr.showOriginal) {
+      id = `smp${pins.length}`;
+      newPin = true;
+      pr.onAddSample?.(ip);
+      live.current = { samples: [...pins, ip] };
+    }
     if (id) {
-      const grab = id === "move" ? { x: ip.x - s.design.center.x, y: ip.y - s.design.center.y } : { x: 0, y: 0 };
+      const pinAt = id.startsWith("smp") && !newPin ? pins[Number(id.slice(3))] : null;
+      const grab =
+        id === "move" ? { x: ip.x - s.design.center.x, y: ip.y - s.design.center.y } : pinAt ? { x: ip.x - pinAt.x, y: ip.y - pinAt.y } : { x: 0, y: 0 };
       gesture.current = { kind: "handle", id, grab };
       active.current = id;
       setSelected(id);
       haptic();
       pr.onGesture(true);
-      if (id !== "move" && !id.startsWith("width") && id !== "length") loupe.current = { img: handlePos(s, calib, id) ?? ip, finger: p };
+      if (id !== "move" && !id.startsWith("width") && id !== "length") loupe.current = { img: handlePos(s, calib, id, live.current?.samples ?? pins) ?? ip, finger: p };
       // calibration: a tap places the nearest pin right there
       if (cal) {
         live.current = moveHandle(s, calib, id, ip, grab);
@@ -524,10 +571,11 @@ export function Stage(props: Props) {
       view.current = { ...g.view, ox: g.view.ox + p.x - g.start.x, oy: g.view.oy + p.y - g.start.y };
       userView.current = true;
     } else if (g.kind === "handle") {
-      const { s, calib } = current();
+      const { s, calib, pins } = current();
       const ip = toImg(p);
-      live.current = { ...live.current, ...moveHandle(s, calib, g.id, ip, g.grab) };
-      if (loupe.current) loupe.current = { img: handlePos(current().s, current().calib, g.id) ?? ip, finger: p };
+      live.current = { ...live.current, ...moveHandle(s, calib, g.id, ip, g.grab, pins) };
+      const c2 = current();
+      if (loupe.current) loupe.current = { img: handlePos(c2.s, c2.calib, g.id, c2.pins) ?? ip, finger: p };
       if (performance.now() - lastPush.current > PUSH_MS) push();
     } else if (g.kind === "divider") {
       divider.current = Math.min(1, Math.max(0, p.x / sizeRef.current.w));
@@ -613,8 +661,8 @@ export function Stage(props: Props) {
     const v = view.current;
     if (!v) return;
     const pr = propsRef.current;
-    const { s, calib } = current();
-    const ids = handlesOf(s, pr.step, pr.calibrating, calib).map(([id]) => id);
+    const { s, calib, pins } = current();
+    const ids = handlesOf(s, pr.step, pr.calibrating, calib, pins).map(([id]) => id);
     if (!ids.length) return;
     const sel = selected && ids.includes(selected) ? selected : ids[0];
     if (e.key === "[" || e.key === "]") {
@@ -627,12 +675,12 @@ export function Stage(props: Props) {
     if (!dir) return;
     e.preventDefault();
     if (sel !== selected) setSelected(sel);
-    const pos = handlePos(s, calib, sel);
+    const pos = handlePos(s, calib, sel, pins);
     if (!pos) return;
     const k = (e.shiftKey ? 10 : 1) / v.scale;
     const np = { x: pos.x + dir[0] * k, y: pos.y + dir[1] * k };
     const grab = sel === "move" ? { x: pos.x - s.design.center.x, y: pos.y - s.design.center.y } : { x: 0, y: 0 };
-    live.current = moveHandle(s, calib, sel, np, grab);
+    live.current = moveHandle(s, calib, sel, np, grab, pins);
     push();
     live.current = null;
   };
@@ -657,7 +705,11 @@ export function Stage(props: Props) {
         role="application"
         aria-roledescription="photo editor"
         aria-label={
-          props.maskTool && step === "lips"
+          step === "plan"
+            ? props.pickRole
+              ? `Shade sampling. Tap a tooth to place the ${props.pickRole === "reference" ? "reference" : "match"} pin; drag a pin to adjust; two fingers zoom.`
+              : "Shade sample pins on the photo. Drag a pin to adjust; pinch to zoom. Arrow keys move the selected pin."
+            : props.maskTool && step === "lips"
             ? `Existing teeth mask. One finger ${props.maskTool.mode === "erase" ? "erases" : "paints"} the patient's own teeth; two fingers zoom and move the photo.`
             : "Smile design photo. Drag the round dots with one finger; pinch to zoom. With a keyboard: arrow keys move the selected dot, [ and ] pick another."
         }
@@ -679,6 +731,9 @@ export function Stage(props: Props) {
         </>
       )}
       {calibrating && step === "design" && <span className="stage-tag mono">Calibrating · teeth hidden</span>}
+      {step === "plan" && !showOriginal && (
+        <span className="stage-tag mono">{props.pickRole ? `Tap a tooth · ${props.pickRole === "reference" ? "reference" : "to match"}` : "Photo · teeth as they are"}</span>
+      )}
       <button className="fab fit" onClick={fit} aria-label="Fit whole photo to screen">
         ⤢
       </button>
@@ -687,7 +742,7 @@ export function Stage(props: Props) {
 }
 
 function stripCalib(l: Live): Partial<Scene> {
-  const { calib: _c, ...rest } = l;
+  const { calib: _c, samples: _s, ...rest } = l;
   return rest;
 }
 
@@ -704,7 +759,8 @@ function nearest(cands: [string, Pt][], p: Pt, radius: number) {
   return best;
 }
 
-function handlePos(s: Scene, calib: Calib | undefined, id: string): Pt | null {
+function handlePos(s: Scene, calib: Calib | undefined, id: string, pins?: Pt[]): Pt | null {
+  if (id.startsWith("smp")) return pins?.[Number(id.slice(3))] ?? null;
   if (id === "calA") return calib?.a ?? null;
   if (id === "calB") return calib?.b ?? null;
   if (id === "pupilR" || id === "pupilL" || id === "midline") return s.guides[id];
@@ -796,5 +852,47 @@ function drawCalib(ctx: CanvasRenderingContext2D, c: Calib | undefined, scale: n
     ctx.lineWidth = 1.5 * u;
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+/** Plan step: shade sample pins. The ring is the sampled disk; the head sits above the point so the finger does not hide it. */
+function drawPins(ctx: CanvasRenderingContext2D, pts: Pt[], meta: SamplePin[], r: number, scale: number, activeId: string | null) {
+  const u = 1 / scale;
+  ctx.save();
+  let nR = 0;
+  let nM = 0;
+  pts.forEach((q, i) => {
+    const role = meta[i]?.role ?? "match";
+    const n = role === "reference" ? ++nR : ++nM;
+    const col = role === "reference" ? C.bronzeLight : C.white;
+    const on = activeId === `smp${i}`;
+    ctx.beginPath();
+    ctx.arc(q.x, q.y, Math.max(r, 3 * u), 0, Math.PI * 2);
+    ctx.lineWidth = 2.5 * u;
+    ctx.strokeStyle = C.slateDeep;
+    ctx.stroke();
+    ctx.lineWidth = 1.5 * u;
+    ctx.strokeStyle = col;
+    ctx.stroke();
+    const hy = q.y - Math.max(r, 3 * u) - 30 * u;
+    ctx.beginPath();
+    ctx.moveTo(q.x, q.y - Math.max(r, 3 * u));
+    ctx.lineTo(q.x, hy + 13 * u);
+    ctx.lineWidth = 1.5 * u;
+    ctx.strokeStyle = col;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(q.x, hy, 13 * u, 0, Math.PI * 2);
+    ctx.fillStyle = on ? col : "rgba(28,34,32,0.85)";
+    ctx.fill();
+    ctx.lineWidth = 2.5 * u;
+    ctx.strokeStyle = col;
+    ctx.stroke();
+    ctx.fillStyle = on ? C.slateDeep : col;
+    ctx.font = `600 ${13 * u}px Oswald, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`${role === "reference" ? "R" : "M"}${n}`, q.x, hy + 0.5 * u);
+  });
   ctx.restore();
 }

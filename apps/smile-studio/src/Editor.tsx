@@ -4,12 +4,14 @@ import { archOf, withArch } from "./arch";
 import { computePrep, detectTeeth, maskFromToothMask, toothMaskFromMask, type Mask } from "./engineShim";
 import { centralLength, centralWidth, deg, fitArcToLowerLip, measure, pupilAngle, PROPORTIONS, rad, SHAPE_LABELS, TOOTH_NAMES } from "./geometry";
 import { useHistory } from "./history";
-import { defaultLips, initialLayout, type Arch, type CaseData, type Design, type Proportion, type RenderMode, type ToothCount, type ToothShape } from "./model";
+import { defaultLips, initialLayout, type Arch, type CaseData, type CasePlan, type Design, type Proportion, type Pt, type RenderMode, type ToothCount, type ToothShape } from "./model";
+import { MaterialsSheet, PlanPanel, type PickRole, type PlanTab } from "./PlanPanel";
+import { defaultPlan, loadClinicMaterials, materialLibrary, sampleLab, saveClinicMaterials, type Lab, type Material } from "./planner";
 import { PrepDisclaimer, PrepLegend, PrepPanel } from "./PrepPanel";
 import { exportCanvas, type Step } from "./render";
 import { SHADES } from "./shades";
 import { caseCodeProblem, rootLabel } from "./sheetCopy";
-import { canvasToFile, clinicianSheet, patientSheet, type SheetScene, type SheetView } from "./sheets";
+import { canvasToFile, clinicianSheet, labSheet, patientSheet, type SheetScene, type SheetView } from "./sheets";
 import { Stage, WL_RANGE, type Calib, type MaskTool } from "./Stage";
 import { listCases, saveCase, thumbnail } from "./storage";
 import { Chips, Hint, Sheet, Slider, Toggle, useToast } from "./ui";
@@ -20,12 +22,14 @@ const STEPS: { id: Step; label: string; n: string; goal: string }[] = [
   { id: "design", label: "Teeth", n: "03", goal: "Choose a shape and size that suits this face." },
   { id: "shade", label: "Shade", n: "04", goal: "Pick a shade to discuss. The screen colour is a preview only." },
   { id: "compare", label: "Compare", n: "05", goal: "Show the patient now and the simulation, then share if they agree." },
+  { id: "plan", label: "Plan", n: "06", goal: "Record your plan, check it, then hand it to the lab." },
 ];
+const LAST = STEPS.length - 1;
 
 const COACH_KEY = "smile-studio.coach.v1";
 
-type Snap = Pick<CaseData, "guides" | "lips" | "design" | "calib" | "centralMm" | "toothMask">;
-type SheetKind = "clinician" | "patient";
+type Snap = Pick<CaseData, "guides" | "lips" | "design" | "calib" | "centralMm" | "toothMask" | "plan">;
+type SheetKind = "clinician" | "patient" | "lab";
 
 /** Central width/length descriptor for the slider. */
 export function wlLabel(v: number, arch: Arch = "upper") {
@@ -44,7 +48,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const [img, setImg] = useState<ImageBitmap | null>(null);
   const [imgError, setImgError] = useState(false);
   const [step, setStep] = useState<Step>("guides");
-  const [reached, setReached] = useState(initial.updatedAt - initial.createdAt > 2000 ? 4 : 0);
+  const [reached, setReached] = useState(initial.updatedAt - initial.createdAt > 2000 ? LAST : 0);
   const [mode, setMode] = useState<"mockup" | "outline">("mockup");
   const [showOriginal, setShowOriginal] = useState(false);
   const [calibrating, setCalibrating] = useState(false);
@@ -67,6 +71,12 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const [siblings, setSiblings] = useState<CaseData[]>([]);
   const [extra, setExtra] = useState<string[]>([]);
   const [printPages, setPrintPages] = useState<string[] | null>(null);
+  // round 4: case planner
+  const [planTab, setPlanTab] = useState<PlanTab>("teeth");
+  const [pickRole, setPickRole] = useState<PickRole>(null);
+  const [clinicMats, setClinicMats] = useState<Material[]>(() => loadClinicMaterials());
+  const [matsOpen, setMatsOpen] = useState(false);
+  const pixels = useRef<{ img: ImageBitmap; data: Uint8ClampedArray } | null>(null);
   const toast = useToast();
   const showToast = toast.show;
   const saveTimer = useRef(0);
@@ -134,15 +144,15 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   }, [saveNow]);
 
   const snap: Snap = useMemo(
-    () => ({ guides: c.guides, lips: c.lips, design: c.design, calib: c.calib, centralMm: c.centralMm, toothMask: c.toothMask }),
-    [c.guides, c.lips, c.design, c.calib, c.centralMm, c.toothMask],
+    () => ({ guides: c.guides, lips: c.lips, design: c.design, calib: c.calib, centralMm: c.centralMm, toothMask: c.toothMask, plan: c.plan }),
+    [c.guides, c.lips, c.design, c.calib, c.centralMm, c.toothMask, c.plan],
   );
   const history = useHistory<Snap>(snap, (s) => setC((x) => ({ ...x, ...s })));
 
   // keyboard shortcuts: Ctrl/Cmd+Z undo, Shift+Ctrl/Cmd+Z or Ctrl+Y redo
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey) || (e.target as HTMLElement).tagName === "INPUT") return;
+      if (!(e.ctrlKey || e.metaKey) || /^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement).tagName)) return;
       const k = e.key.toLowerCase();
       if (k === "z" && !e.shiftKey) history.undo();
       else if ((k === "z" && e.shiftKey) || k === "y") history.redo();
@@ -191,6 +201,36 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const lower = arch === "lower";
   const prep = useMemo(() => (prepOn && scene && mask ? computePrep(scene, mask, ppm) : null), [prepOn, scene, mask, ppm]);
 
+  // ---------- plan ----------
+  /** The recorded plan, or the suggestion (design arch's front six) until the dentist changes something. */
+  const plan: CasePlan = useMemo(() => c.plan ?? defaultPlan(arch), [c.plan, arch]);
+  const lib = useMemo(() => materialLibrary(clinicMats), [clinicMats]);
+  const setPlan = (fn: (p: CasePlan) => CasePlan) => setC((x) => ({ ...x, plan: fn(x.plan ?? defaultPlan(archOf(x.design))) }));
+  const sampleR = Math.max(3, Math.round(Math.min(c.imgW, c.imgH) * 0.006));
+  /** Median Lab under a pin, from the full-resolution photo (decoded once). L* = 0 marks "only shine or shadow here". */
+  const labAt = (pt: Pt): Lab => {
+    if (!img) return [0, 0, 0];
+    if (pixels.current?.img !== img) {
+      const cv = document.createElement("canvas");
+      cv.width = c.imgW;
+      cv.height = c.imgH;
+      const ctx = cv.getContext("2d", { willReadFrequently: true })!;
+      ctx.drawImage(img, 0, 0, c.imgW, c.imgH);
+      pixels.current = { img, data: ctx.getImageData(0, 0, c.imgW, c.imgH).data };
+      cv.width = 0;
+    }
+    const lab = sampleLab(pixels.current.data, c.imgW, c.imgH, pt.x, pt.y, sampleR);
+    return lab ? (lab.map((v) => Math.round(v * 100) / 100) as Lab) : [0, 0, 0];
+  };
+  const updateMats = (list: Material[]) => {
+    setClinicMats(list);
+    try {
+      saveClinicMaterials(list);
+    } catch {
+      toast.show("Could not save the materials on this phone.", "error");
+    }
+  };
+
   const onMaskEdited = () => {
     if (!mask) return;
     const tm = toothMaskFromMask(mask);
@@ -229,6 +269,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     const i = STEPS.findIndex((x) => x.id === s);
     setReached((r) => Math.max(r, i));
     if (s !== "design") setCalibrating(false);
+    if (s !== "plan") setPickRole(null);
     setStep(s);
   };
   const idx = STEPS.findIndex((s) => s.id === step);
@@ -294,10 +335,9 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     const em = mask ?? detectTeeth(img, c.imgW, c.imgH, c.lips);
     const base: SheetScene = { ...scene, existing: em };
     const view: SheetView = { scene: base, prep: computePrep(base, em, ppm), pxPerMm: ppm };
-    if (kind === "clinician") {
-      const code = printCode && !caseCodeProblem(c.label) ? c.label : undefined;
-      return clinicianSheet({ view, caseCode: code, date: new Date(), centralMm: c.centralMm });
-    }
+    const code = printCode && !caseCodeProblem(c.label) ? c.label : undefined;
+    if (kind === "clinician") return clinicianSheet({ view, caseCode: code, date: new Date(), centralMm: c.centralMm, plan: c.plan, lib });
+    if (kind === "lab") return labSheet({ view, plan, lib, caseCode: code, date: new Date() });
     const views = [view];
     for (const x of siblings.filter((o) => extra.includes(o.id))) {
       const bmp = await createImageBitmap(x.photo);
@@ -309,7 +349,8 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
     return patientSheet({ views, showDiff });
   };
 
-  const sheetName = (kind: SheetKind) => (kind === "clinician" ? "prep-guide" : "smile-design-sheet");
+  const sheetName = (kind: SheetKind) => (kind === "clinician" ? "prep-guide" : kind === "lab" ? "lab-prescription" : "smile-design-sheet");
+  const sheetTitle = (kind: SheetKind) => (kind === "clinician" ? "Preparation guide" : kind === "lab" ? "Lab prescription" : "Smile design sheet");
 
   const shareSheet = async (kind: SheetKind) => {
     setBusy(true);
@@ -321,7 +362,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
         pages.map((cv, i) => canvasToFile(cv, `${sheetName(kind)}-${date}${pages.length > 1 ? `-p${i + 1}` : ""}.png`)),
       );
       pages.forEach((cv) => (cv.width = 0));
-      await deliver(files, kind === "clinician" ? "Preparation guide" : "Smile design sheet");
+      await deliver(files, sheetTitle(kind));
     } catch {
       toast.show("Could not make the sheet. Try again, or close other apps to free memory.", "error", 6000);
     } finally {
@@ -432,7 +473,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   );
 
   return (
-    <div className={present ? "editor present" : "editor"}>
+    <div className={present ? "editor present" : step === "plan" && planTab !== "shade" ? "editor plan-tall" : "editor"}>
       <header className="topbar">
         <button className="ghost" onClick={close} aria-label="Back to cases">
           ‹ Cases
@@ -447,7 +488,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
         </div>
         <div className="title">
           <span className="mono">
-            {STEPS[idx].n} / 05 ·{" "}
+            {STEPS[idx].n} / {STEPS[LAST].n} ·{" "}
             <span className={save === "error" ? "save err" : "save"}>
               {save === "saved" ? "Saved ✓" : save === "saving" ? "Saving…" : "Not saved"}
             </span>
@@ -473,6 +514,24 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           maskTool={step === "lips" && lipTool === "teeth" ? { mode: brushMode, size: brushSize } : null}
           mask={mask}
           onMaskEdited={onMaskEdited}
+          samples={step === "plan" ? plan.shade.samples : undefined}
+          pickRole={step === "plan" && planTab === "shade" ? pickRole : null}
+          sampleR={sampleR}
+          onAddSample={(pt) => {
+            const role = pickRole;
+            if (!role) return;
+            setPlan((x) => ({ ...x, shade: { ...x.shade, samples: [...x.shade.samples, { role, pt, lab: labAt(pt) }] } }));
+            setPickRole(null);
+          }}
+          onSamples={(pts) =>
+            setPlan((x) => ({
+              ...x,
+              shade: {
+                ...x.shade,
+                samples: pts.map((pt, i) => ({ ...(x.shade.samples[i] ?? { role: "match" as const }), pt, lab: labAt(pt) })),
+              },
+            }))
+          }
           onGuides={(guides) => setC((x) => ({ ...x, guides }))}
           onLips={(lips) => setC((x) => ({ ...x, lips }))}
           onDesign={(design) => setC((x) => ({ ...x, design }))}
@@ -500,7 +559,11 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
 
       <div className="side">
         {readout}
-        <section className="panel" ref={panelRef} aria-label={`${stepLabel(STEPS[idx])} controls`}>
+        <section
+          className={step === "plan" && planTab !== "shade" ? "panel tall" : "panel"}
+          ref={panelRef}
+          aria-label={`${stepLabel(STEPS[idx])} controls`}
+        >
           <p className="goal">
             {calibrating
               ? "Calibrate: measure one existing central so the read-out shows mm."
@@ -775,6 +838,24 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
             </>
           )}
 
+          {step === "plan" && (
+            <PlanPanel
+              plan={plan}
+              recorded={!!c.plan}
+              arch={arch}
+              lib={lib}
+              setPlan={setPlan}
+              tab={planTab}
+              setTab={setPlanTab}
+              pickRole={pickRole}
+              setPickRole={setPickRole}
+              onMaterials={() => setMatsOpen(true)}
+              onLabSheet={() => openSheet("lab")}
+              onPrepSheet={() => openSheet("clinician")}
+              busy={busy}
+            />
+          )}
+
           {step === "compare" && (
             <>
               <Chips
@@ -845,7 +926,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
 
         <nav className="steps" aria-label="Design steps">
           {STEPS.map((s, i) => {
-            const done = i <= reached && i !== idx && (i < reached || reached === 4);
+            const done = i <= reached && i !== idx && (i < reached || reached === LAST);
             return (
               <button key={s.id} className={s.id === step ? "step on" : "step"} onClick={() => goTo(s.id)} aria-current={s.id === step ? "step" : undefined}>
                 <span className="mono">{done ? "✓" : s.n}</span>
@@ -861,7 +942,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
         <Sheet
           title={
             <>
-              Five steps to a <em>smile</em> mockup
+              Six steps to a <em>smile</em> plan
             </>
           }
           onClose={() => {
@@ -875,6 +956,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
             <li><b>Teeth</b> · upper or lower, shape, proportion and size; prep map</li>
             <li><b>Shade</b> · a colour to discuss</li>
             <li><b>Compare</b> · now and simulation, then share or print a sheet</li>
+            <li><b>Plan</b> · your treatment plan, shade gap, checks and the lab prescription</li>
           </ol>
           <p className="hint">One finger drags a dot or moves the photo. Two fingers zoom. ↶ undoes any change.</p>
           <button
@@ -891,15 +973,23 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
 
       {sheetDlg && !shareAsk && (
         <Sheet
-          title={sheetDlg === "clinician" ? <>Prep <em>sheet</em></> : <>Patient <em>sheet</em></>}
+          title={sheetDlg === "clinician" ? <>Prep <em>sheet</em></> : sheetDlg === "lab" ? <>Lab <em>prescription</em></> : <>Patient <em>sheet</em></>}
           onClose={() => setSheetDlg(null)}
         >
-          {sheetDlg === "clinician" ? (
+          {sheetDlg === "clinician" || sheetDlg === "lab" ? (
             <>
-              <p className="hint">
-                For the clinician and the lab: today, design and prep map, per-tooth outline changes
-                {ppm ? " in mm" : " (calibrate for mm)"}, enamel reference values and the planning disclaimer.
-              </p>
+              {sheetDlg === "lab" ? (
+                <p className="hint">
+                  For the lab: teeth, material, prep level with the mm you entered, coverage, margins, target shade with the photo-estimate
+                  note, mock-up reference and blank return instructions. Clinic name and phone; no patient name or ID.
+                </p>
+              ) : (
+                <p className="hint">
+                  For the clinician and the lab: today, design and prep map, per-tooth outline changes
+                  {ppm ? " in mm" : " (calibrate for mm)"}, enamel reference values and the planning disclaimer
+                  {c.plan ? ", plus your plan, shade gap, warnings and checklist" : ""}.
+                </p>
+              )}
               <Toggle
                 label="Print the case code"
                 note={caseCodeProblem(c.label) ?? `“${c.label}” · the clinic's own code, never the patient's name`}
@@ -970,6 +1060,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
           </div>
         </Sheet>
       )}
+      {matsOpen && <MaterialsSheet clinic={clinicMats} onChange={updateMats} onClose={() => setMatsOpen(false)} />}
       {toast.node}
     </div>
   );

@@ -8,7 +8,7 @@ It is a web app (PWA): open it in the phone browser, then **Add to Home Screen**
 like an installed app, offline too. **Photos never leave the phone.** There is no server, no
 upload and no analytics. Cases live in the browser's on-device storage (IndexedDB).
 
-## How it works (5 steps)
+## How it works (6 steps)
 
 | Step | What you do | Why |
 |---|---|---|
@@ -18,6 +18,7 @@ upload and no analytics. Cases live in the browser's on-device storage (IndexedD
 | 03 Teeth | Pick shape, proportion and count; drag to move / widen / lengthen | Builds the 6–10 tooth design along a smile arc, levelled to the pupils |
 | 04 Shade | Pick a shade tab, set blend | Screen preview only; the real shade is taken in the chair |
 | 05 Compare | Slide between now / simulation; optional mm calibration; share | Exports carry a permanent "Smile simulation · for discussion only" label |
+| 06 Plan | Record the treatment plan: shade gap, teeth chart, flags + checklist, warnings, lab prescription | The app records the dentist's decisions and checks them; it never chooses a material, prep or depth |
 
 "Hold: before" (top right) shows the untouched photo while pressed.
 
@@ -40,6 +41,29 @@ templates or artwork):
 - **Before/after slider**, **mm calibration** from a known central width, **PNG export**
   (single or side by side, same box, no crop or warp) via the phone's share sheet.
 - Pinch-zoom / pan, 44 px+ touch targets, safe-area aware, tablet layout ≥ 900 px.
+
+## Case planner (step 06 Plan)
+
+For cases such as lower veneers matched to existing upper ceramic: the dentist records the plan, the app measures what
+a photo can measure (a colour estimate) and checks the recorded plan for conflicts. Four tabs:
+
+- **Shade**: *Pick reference* (e.g. an upper crown) and *Pick tooth to match*, then tap the photo. Pins are draggable (with
+  the loupe). Each pin is the median CIELAB of a small disk with highlights (L* > 93) and dark pixels rejected. Shows both Lab
+  values, ΔE00 (CIEDE2000) against the Paravina 2015 thresholds (perceptibility 0.8, acceptability 1.8; PMID 25740131),
+  the dominant component (value / chroma / hue) with neutral wording, the nearest tab (approximate), target tab and
+  whitening toggles. Every result says "Photo estimate: confirm with a shade guide".
+- **Teeth**: arch-shaped FDI chart (upper and lower; front six and premolars, molars on request). Tap = in / out of the plan;
+  long-press (or the list under the chart) opens the tooth sheet: visible (smile / speech), material (library), prep level,
+  coverage options for the tooth type, margin, prep mm **entered from the mock-up** (never computed), notes, with the
+  planning disclaimer. *Apply to selected* edits all planned teeth at once. The design arch's front six are suggested.
+- **Checks**: deep bite, bruxism, recession; checklist (perio stable, hygiene, whitening + 2 weeks, shade guide, wax-up,
+  mock-up approved, phonetics/occlusion, consent, night guard).
+- **Review**: summary ("33–43, 6 teeth · …"), warnings (stop / caution / info with tooth tags; rules in `src/planner.ts`,
+  sources in the copy), and the hand-off sheets: **Lab prescription** (A4: teeth, material, prep + mm entered, coverage,
+  margins, shade target + photo-estimate note, lower-shade note, mock-up reference, blank return lines, clinic name/phone)
+  and the **Prep sheet**, which now carries a Plan section. No patient name or ID; the case code only with the opt-in toggle.
+- **Clinic materials** (Plan step and Home): add a name + category, delete; kept on this phone (localStorage) and merged with
+  the built-in library.
 
 ## Rules this app keeps (from the studio's golden rules)
 
@@ -72,7 +96,11 @@ Camera access (the **Take photo** button) needs HTTPS or `localhost`. Over plain
 | `src/render.ts` | Canvas drawing of teeth, guides, handles; export image |
 | `src/shades.ts` | Shade tabs (approximate screen colours) |
 | `src/Stage.tsx` | Interactive canvas: drag handles, pan, pinch-zoom, compare divider |
-| `src/Editor.tsx` | The 5-step editor and controls |
+| `src/Editor.tsx` | The 6-step editor and controls |
+| `src/planner.ts` | Case planner logic: CIELAB sampling, ΔE76/ΔE00, shade gap, tabs, materials library, FDI helpers, plan warnings, summary (unit-tested) |
+| `src/PlanPanel.tsx` | Step 06 UI: shade card, FDI chart + tooth sheet + bulk edit, flags/checklist, warnings, clinic materials editor |
+| `src/sheets.ts` | A4 sheets: clinician prep guide (+ plan section), patient sheet, lab prescription |
+| `src/clinic.ts` | Clinic facts printed on sheets (mirrors `clinic` in the studio's `src/brand.ts`) |
 | `src/Home.tsx` | Start screen: take/choose photo, saved cases |
 | `src/storage.ts` | IndexedDB cases, photo import (EXIF orientation, resize, metadata strip) |
 | `public/sw.js` | Offline cache for the app shell |

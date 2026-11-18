@@ -6,6 +6,25 @@ import { drawPrepMap, ENAMEL_MM, PREP_DISCLAIMER, prepWording, type Mask, type P
 import { TOOTH_NAMES } from "./geometry";
 import { C, drawTeeth, exportCanvas, WATERMARK, type Scene } from "./render";
 import { CLINICIAN, ENAMEL_ROWS, fmtDelta, PATIENT } from "./sheetCopy";
+import { CLINIC } from "./clinic";
+import type { CasePlan } from "./model";
+import {
+  archOfFdi,
+  CHECKLIST,
+  coverageLabel,
+  getTooth,
+  MARGIN_LABEL,
+  materialOf,
+  MATERIALS,
+  nearestTab,
+  PHOTO_NOTE,
+  planShadeGap,
+  planSummary,
+  planWarnings,
+  PREP_LABEL,
+  VISIBLE_LABEL,
+  type Material,
+} from "./planner";
 
 export const A4 = { w: 1240, h: 1754 };
 const M = 72; // page margin
@@ -330,6 +349,9 @@ export interface ClinicianOpts {
   caseCode?: string;
   date: Date;
   centralMm?: number;
+  /** the dentist's recorded plan (round 4): adds a Plan section */
+  plan?: CasePlan;
+  lib?: Material[];
 }
 
 export async function clinicianSheet(o: ClinicianOpts): Promise<HTMLCanvasElement[]> {
@@ -506,6 +528,250 @@ export async function clinicianSheet(o: ClinicianOpts): Promise<HTMLCanvasElemen
   doc.label("Lab and shade note");
   doc.text(CLINICIAN.labNote, { font: `400 18px ${SANS}`, lh: 25 });
   doc.text(CLINICIAN.shadeNote, { font: `400 18px ${SANS}`, lh: 25, color: SUB });
+  if (o.plan) {
+    doc.gap(24);
+    planSection(doc, o.plan, o.lib ?? MATERIALS);
+  }
+  return doc.finish();
+}
+
+// ---------- plan (round 4): shared by the prep sheet and the lab prescription ----------
+
+interface Col {
+  t: string;
+  w: number;
+}
+
+/** A table whose cells wrap; the header repeats on each new page. */
+function table(doc: Doc, cols: Col[], rows: string[][], o: { size?: number; first?: (c: CanvasRenderingContext2D, x: number, y: number, v: string) => void } = {}) {
+  const size = o.size ?? 17;
+  const lh = size + 6;
+  const fullW = cols.reduce((t, c) => t + c.w, 0);
+  const head = () => {
+    doc.need(40 + lh);
+    const c = doc.ctx;
+    c.fillStyle = "#E4E7E5";
+    c.fillRect(M, doc.y, fullW, 32);
+    let x = M + 8;
+    c.font = `500 13px ${MONO}`;
+    c.fillStyle = INK;
+    c.textBaseline = "middle";
+    for (const col of cols) {
+      c.fillText(col.t.toUpperCase(), x, doc.y + 16);
+      x += col.w;
+    }
+    doc.gap(36);
+  };
+  head();
+  for (const r of rows) {
+    const c = doc.ctx;
+    c.font = `400 ${size}px ${SANS}`;
+    const cells = r.map((v, i) => wrap(c, v, cols[i].w - 14));
+    const rh = Math.max(...cells.map((l) => l.length)) * lh + 12;
+    if (doc.y + rh > doc.bottom) {
+      doc.newPage();
+      head();
+    }
+    const cc = doc.ctx;
+    let x = M + 8;
+    cc.textBaseline = "alphabetic";
+    cells.forEach((lines, i) => {
+      cc.font = i === 0 ? `600 ${size + 1}px ${SANS}` : `400 ${size}px ${SANS}`;
+      cc.fillStyle = INK;
+      lines.forEach((l, k) => cc.fillText(l, x, doc.y + lh * 0.8 + 4 + k * lh));
+      x += cols[i].w;
+    });
+    doc.gap(rh);
+    cc.fillStyle = "#D5DAD8";
+    cc.fillRect(M, doc.y - 2, fullW, 1);
+  }
+}
+
+const LEVEL_INK = { stop: "#8C3B2E", caution: "#7A5A12", info: SUB } as const;
+
+function planRows(plan: CasePlan, lib: Material[], lab: boolean): string[][] {
+  return planSummary(plan, lib).teeth.map((fdi) => {
+    const t = getTooth(plan, fdi);
+    const mm = [t.prepMm?.facial !== undefined ? `F ${t.prepMm.facial} mm` : "", t.prepMm?.incisal !== undefined ? `I/O ${t.prepMm.incisal} mm` : ""].filter(Boolean).join(", ");
+    const prep = `${PREP_LABEL[t.prep]}${mm ? ` (${mm}, from mock-up)` : ""}`;
+    const row = [String(fdi), materialOf(t.material, lib)?.name ?? "not chosen", prep, coverageLabel(t.coverage, archOfFdi(fdi)), MARGIN_LABEL[t.margin]];
+    return lab ? [...row, t.notes ?? ""] : [...row, VISIBLE_LABEL[t.visible], t.notes ?? ""];
+  });
+}
+
+function shadeBlock(doc: Doc, plan: CasePlan) {
+  const gap = planShadeGap(plan);
+  const ref = plan.shade.samples.filter((s) => s.role === "reference" && s.lab[0] > 0);
+  const mat = plan.shade.samples.filter((s) => s.role === "match" && s.lab[0] > 0);
+  const f1 = (v: number) => v.toFixed(1);
+  const line = (name: string, s: typeof ref) =>
+    s.length ? `${name}: ${s.map((x) => `L ${f1(x.lab[0])} a ${f1(x.lab[1])} b ${f1(x.lab[2])} (nearest tab ${nearestTab(x.lab).tab}, approximate)`).join("; ")}` : `${name}: not sampled`;
+  doc.text(`Target tab (dentist's choice): ${plan.shade.targetTab ?? "________"}`, { font: `600 19px ${SANS}`, lh: 27 });
+  doc.text(line("Reference", ref), { font: `400 17px ${SANS}`, lh: 24 });
+  doc.text(line("To match", mat), { font: `400 17px ${SANS}`, lh: 24 });
+  if (gap)
+    doc.text(`ΔE00 ${gap.dE00.toFixed(1)} · ΔL ${f1(gap.dL)} · ΔC ${f1(gap.dC)} · ΔH ${f1(gap.dH)} · mostly ${gap.dominant}. ${gap.text}`, { font: `400 17px ${SANS}`, lh: 24 });
+  else doc.text(PHOTO_NOTE, { font: `400 17px ${SANS}`, lh: 24, color: SUB });
+  const w = [plan.shade.whiteningFirst ? "whitening planned first" : "", plan.shade.whiteningDone ? "whitening done" : ""].filter(Boolean).join(", ");
+  if (w) doc.text(`Whitening: ${w}.`, { font: `400 17px ${SANS}`, lh: 24 });
+}
+
+function planSection(doc: Doc, plan: CasePlan, lib: Material[]) {
+  doc.need(200);
+  doc.label("Plan · recorded by the treating dentist");
+  doc.text(planSummary(plan, lib).text, { font: `600 20px ${SANS}`, lh: 28 });
+  doc.gap(8);
+  const inner = A4.w - 2 * M;
+  table(
+    doc,
+    [
+      { t: "Tooth", w: 80 },
+      { t: "Material", w: 200 },
+      { t: "Prep", w: 200 },
+      { t: "Coverage", w: 170 },
+      { t: "Margin", w: 140 },
+      { t: "Visible", w: 110 },
+      { t: "Notes", w: inner - 900 },
+    ],
+    planRows(plan, lib, false),
+  );
+  doc.text("Prep mm are entered by the dentist from the mock-up / silicone index; the app does not measure depth.", { font: `400 15px ${SANS}`, color: SUB, lh: 21 });
+  doc.gap(14);
+  doc.label("Shade gap · photo estimate");
+  shadeBlock(doc, plan);
+  doc.gap(14);
+  const flags = [plan.flags.deepBite && "deep bite", plan.flags.bruxism && "bruxism", plan.flags.recession && "recession", plan.flags.perioStable && "perio stable"].filter(Boolean);
+  doc.label("Case flags");
+  doc.text(flags.length ? flags.join(" · ") : "None recorded", { font: `400 18px ${SANS}`, lh: 25 });
+  doc.gap(14);
+  doc.label("Checks on the recorded plan (not an approval)");
+  const ws = planWarnings(plan, lib);
+  if (!ws.length) doc.text("No conflicts found in what is recorded.", { font: `400 18px ${SANS}`, lh: 25 });
+  for (const w of ws) {
+    doc.text(`${w.level.toUpperCase()}${w.teeth?.length ? ` · ${w.teeth.join(", ")}` : ""}: ${w.text}`, { font: `400 17px ${SANS}`, lh: 24, color: LEVEL_INK[w.level] });
+    doc.gap(4);
+  }
+  doc.gap(12);
+  doc.label("Checklist");
+  for (const c of CHECKLIST) {
+    const on = c.id === "perio" ? plan.flags.perioStable === true : !!plan.checklist[c.id];
+    doc.text(`${on ? "[x]" : "[  ]"}  ${c.label}`, { font: `400 18px ${SANS}`, lh: 26, color: on ? INK : SUB });
+  }
+}
+
+// ---------- lab prescription ----------
+
+export interface LabOpts {
+  view: SheetView;
+  plan: CasePlan;
+  lib?: Material[];
+  /** printed only when the clinician chose to and it passed the ID check */
+  caseCode?: string;
+  date: Date;
+}
+
+export const LAB_FOOTER =
+  "Plan recorded by the treating dentist. Photo values are estimates; prep depths were entered from the mock-up, not measured by the app. " +
+  PREP_DISCLAIMER;
+
+export async function labSheet(o: LabOpts): Promise<HTMLCanvasElement[]> {
+  await fonts();
+  const lib = o.lib ?? MATERIALS;
+  const { plan } = o;
+  const s = o.view.scene;
+  const doc = new Doc("Smile Studio · lab prescription", footerBlock(LAB_FOOTER, true), await logo());
+  const ctx = () => doc.ctx;
+  doc.label(`${CLINIC.name}, ${CLINIC.city} · ${CLINIC.phone} (phone / WhatsApp)`);
+  doc.headline("Lab prescription", "prescription");
+  doc.gap(4);
+  const summary = planSummary(plan, lib);
+  const meta: [string, string][] = [
+    ["Case code", o.caseCode?.trim() || "________________"],
+    ["Date", o.date.toISOString().slice(0, 10)],
+    ["Teeth", summary.teethText],
+    ["Dentist", "________________"],
+    ["Lab", "________________"],
+    ["Return by", "________________"],
+  ];
+  const colW = (A4.w - 2 * M) / 3;
+  doc.need(140);
+  meta.forEach(([k, v], i) => {
+    const x = M + (i % 3) * colW;
+    const y = doc.y + Math.floor(i / 3) * 66;
+    const c = ctx();
+    c.font = `500 15px ${MONO}`;
+    c.fillStyle = BRONZE_TEXT;
+    c.textBaseline = "alphabetic";
+    c.fillText(spaced(k.toUpperCase()), x, y + 18);
+    c.font = `600 22px ${SANS}`;
+    c.fillStyle = INK;
+    c.fillText(v, x, y + 48, colW - 16);
+  });
+  doc.gap(140);
+
+  doc.label("Teeth and preparation");
+  const inner = A4.w - 2 * M;
+  if (!summary.teeth.length) doc.text("No teeth in the plan.", { color: SUB });
+  else
+    table(
+      doc,
+      [
+        { t: "Tooth", w: 80 },
+        { t: "Material", w: 220 },
+        { t: "Prep (mm entered)", w: 230 },
+        { t: "Coverage", w: 190 },
+        { t: "Margin", w: 150 },
+        { t: "Notes", w: inner - 870 },
+      ],
+      planRows(plan, lib, true),
+      { size: 18 },
+    );
+  doc.text("Prep mm: entered by the dentist from the mock-up / silicone index. F = facial, I/O = incisal / occlusal.", { font: `400 15px ${SANS}`, color: SUB, lh: 21 });
+  doc.gap(16);
+
+  doc.label("Shade");
+  shadeBlock(doc, plan);
+  if (summary.teeth.some((f) => archOfFdi(f) === "lower")) doc.text(CLINICIAN.labNote, { font: `600 18px ${SANS}`, lh: 25 });
+  doc.gap(16);
+
+  const flags = [plan.flags.deepBite && "deep bite", plan.flags.bruxism && "bruxism (night guard planned: " + (plan.checklist.nightGuard ? "yes" : "no") + ")", plan.flags.recession && "recession"].filter(Boolean);
+  if (flags.length) {
+    doc.label("Occlusion and case notes");
+    doc.text(flags.join(" · "), { font: `400 18px ${SANS}`, lh: 25 });
+    doc.gap(12);
+  }
+
+  doc.label("Mock-up / wax-up reference");
+  doc.text(
+    `Wax-up: ${plan.checklist.waxup ? "done" : "not yet"} · Mock-up approved by the patient: ${plan.checklist.mockup ? "yes" : "not yet"} · Phonetics/occlusion checked on the mock-up: ${plan.checklist.function ? "yes" : "not yet"}`,
+    { font: `400 18px ${SANS}`, lh: 25 },
+  );
+  doc.text("Reference (model / scan / index no.): ________________________________", { font: `400 18px ${SANS}`, lh: 34 });
+  doc.gap(10);
+
+  // small design reference: today and the simulated design, same crop and box (no warp)
+  const gapX = 16;
+  const pw = (A4.w - 2 * M - gapX) / 2;
+  const ph = Math.round(pw * 0.42);
+  if (doc.y + ph + 60 <= doc.bottom) {
+    const crop = mouthCrop(s, pw / ph);
+    caption(ctx(), "Today (photo)", M, doc.y, pw);
+    caption(ctx(), "Design idea (simulated, not to scale)", M + pw + gapX, doc.y, pw);
+    panel(ctx(), s.img, crop, { x: M, y: doc.y + 34, w: pw, h: ph });
+    const d = designImage(s);
+    panel(ctx(), d, crop, { x: M + pw + gapX, y: doc.y + 34, w: pw, h: ph });
+    d.width = 0;
+    doc.gap(34 + ph + 16);
+  }
+
+  doc.label("Return instructions");
+  for (let i = 0; i < 3; i++) {
+    doc.need(40);
+    const c = ctx();
+    c.fillStyle = "#AEB5B2";
+    c.fillRect(M, doc.y + 32, A4.w - 2 * M, 1.5);
+    doc.gap(40);
+  }
   return doc.finish();
 }
 
