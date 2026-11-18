@@ -14,6 +14,11 @@ On-device smile design mockups for consultations. Read `apps/smile-studio/README
 - No claims in UI copy (banned list: `src/brief/compliance.ts` in the studio). A simulation is "for discussion".
 - Brand tokens mirror `src/brand.ts` (slate/bronze, Oswald / Instrument Serif accent / JetBrains Mono). Change both together.
 - Geometry stays pure in `src/geometry.ts` with unit tests in `tests/geometry.test.ts`.
+- Case planner (step 06): the app **records** the dentist's plan, **measures** only what a photo can (colour estimate, labelled
+  "Photo estimate: confirm with a shade guide") and **checks** for conflicts. Never auto-assign a material, prep level or
+  depth; prep mm are typed in by the dentist from the mock-up. Planner logic stays pure in `src/planner.ts` with every
+  warning rule unit-tested in `tests/planner.test.ts` (with its source in the copy). Clinic facts on sheets come from
+  `src/clinic.ts` (mirror of the studio's `src/brand.ts`).
 
 ## Workflow
 1. `cd apps/smile-studio && npm install` (once).

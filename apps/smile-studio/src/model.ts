@@ -84,6 +84,46 @@ export interface CaseData {
   thumb?: string;
   /** Clinician-corrected mask of the existing teeth; when missing it is detected automatically from the photo. */
   toothMask?: ToothMask;
+  /** Round 4: the dentist's case plan (teeth, materials, prep, shade gap, flags, checklist). Recorded, never decided by the app. */
+  plan?: CasePlan;
+}
+
+// ---------- case plan (round 4) ----------
+
+export type Visibility = "smile" | "speech" | "no" | "unknown";
+export type PrepLevel = "none" | "additive" | "minimal" | "conventional" | "crown";
+export type Coverage = "facial" | "incisal-butt" | "incisal-overlap" | "cusp-short" | "cusp-full" | "onlay";
+export type Margin = "supragingival" | "equigingival" | "subgingival" | "on-root";
+
+export interface ToothPlan {
+  /** FDI number, 11–48 */
+  fdi: number;
+  include: boolean;
+  visible: Visibility;
+  /** id from the material library ("" = not chosen yet) */
+  material: string;
+  prep: PrepLevel;
+  coverage: Coverage;
+  margin: Margin;
+  /** Entered by the dentist from the mock-up / silicone index. Never computed by the app. */
+  prepMm?: { facial?: number; incisal?: number };
+  notes?: string;
+}
+
+export type SampleRole = "reference" | "match";
+export interface ShadeSample {
+  role: SampleRole;
+  pt: Pt;
+  /** CIELAB (D65) median of a small disk around pt, from the photo */
+  lab: [number, number, number];
+  label?: string;
+}
+
+export interface CasePlan {
+  teeth: ToothPlan[];
+  shade: { samples: ShadeSample[]; targetTab?: string; whiteningFirst?: boolean; whiteningDone?: boolean };
+  flags: { deepBite?: boolean; bruxism?: boolean; recession?: boolean; perioStable?: boolean };
+  checklist: Record<string, boolean>;
 }
 
 export const DEFAULT_DESIGN: Omit<Design, "center" | "width"> = {

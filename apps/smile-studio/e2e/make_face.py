@@ -20,6 +20,7 @@ d.polygon([(X(0.5), Y(0.42)), (X(0.46), Y(0.58)), (X(0.54), Y(0.58))], fill=(190
 d.ellipse([X(0.33), Y(0.66), X(0.67), Y(0.80)], fill=(170, 70, 75))            # lips
 d.ellipse([X(0.36), Y(0.685), X(0.64), Y(0.775)], fill=(45, 15, 18))           # mouth opening
 d.rectangle([X(0.38), Y(0.69), X(0.62), Y(0.725)], fill=(225, 215, 190))       # existing teeth
+d.rectangle([X(0.40), Y(0.738), X(0.60), Y(0.762)], fill=(214, 196, 150))       # lower teeth (a little more yellow)
 for i in range(1, 6):
     x = X(0.38 + 0.04 * i)
     d.line([(x, Y(0.69)), (x, Y(0.725))], fill=(150, 140, 120), width=3)

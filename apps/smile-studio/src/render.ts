@@ -18,7 +18,7 @@ export const C = {
   white: "#F7F8F6",
 };
 
-export type Step = "guides" | "lips" | "design" | "shade" | "compare";
+export type Step = "guides" | "lips" | "design" | "shade" | "compare" | "plan";
 
 export interface Scene {
   img: CanvasImageSource;

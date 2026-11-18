@@ -156,6 +156,15 @@ async function touch(page) {
       for (let i = 1; i <= steps; i++) await send("touchMove", [{ x: a.x + ((b.x - a.x) * i) / steps, y: a.y + ((b.y - a.y) * i) / steps }]);
       await send("touchEnd", []);
     },
+    async hold(a, ms = 650) {
+      await send("touchStart", [a]);
+      await new Promise((r) => setTimeout(r, ms));
+      await send("touchEnd", []);
+    },
+    async tap(a) {
+      await send("touchStart", [a]);
+      await send("touchEnd", []);
+    },
     async pinch(c, d0, d1, steps = 8, firstAt) {
       const A = firstAt || { x: c.x - d0 / 2, y: c.y };
       const B = { x: 2 * c.x - A.x, y: 2 * c.y - A.y };
@@ -280,6 +289,7 @@ async function deviceSuite(browser, devName, face) {
       ["Teeth", "03", /Follow lower lip/i],
       ["Shade", "04", /Blend with photo/i],
       ["Compare", "05", /Share side by side/i],
+      ["Plan", "06", /Show molars/i],
     ];
     const vp = page.viewportSize();
     for (const [label, n, re] of expect) {
@@ -484,6 +494,124 @@ async function deviceSuite(browser, devName, face) {
       out.push(`${kind} ${files.length}p`);
     }
     return out.join(", ");
+  });
+
+  // ---------- round 4: case planner ----------
+  await test(devName, "Plan: shade pins (reference + match) give a ΔE00 gap with the photo-estimate note", async () => {
+    await gotoStep(page, "Plan");
+    await page.getByRole("tab", { name: /Shade/ }).click();
+    await page.waitForTimeout(200);
+    const c = await current(page);
+    const v = await view(page, "plan", c);
+    const n0 = (c.plan?.shade.samples || []).length;
+    await page.getByRole("button", { name: "Pick reference" }).click();
+    await T.tap(v.scr({ x: IMG.w * 0.43, y: IMG.h * 0.707 }));
+    await page.waitForTimeout(150);
+    assert((await page.getByRole("button", { name: "Pick reference" }).getAttribute("aria-pressed")) === "false", "pick mode did not end after one pin");
+    await page.getByRole("button", { name: "Pick tooth to match" }).click();
+    await T.tap(v.scr({ x: IMG.w * 0.47, y: IMG.h * 0.75 }));
+    await page.waitForTimeout(300);
+    const txt = await page.locator(".panel").innerText();
+    assert(/ΔE00/.test(txt), "no ΔE00 read-out");
+    assert(/Photo estimate: confirm with a shade guide/.test(txt), "photo-estimate note missing");
+    assert(/Mostly yellowness\/chroma/.test(txt), `expected a chroma-dominant gap for the yellower lower teeth: ${txt.slice(0, 400)}`);
+    assert(/approximate/.test(txt), "nearest tab not labelled approximate");
+    await shot("08-plan-shade");
+    // dragging a pin moves it (and re-samples)
+    const c1 = await current(page);
+    const s1 = c1.plan.shade.samples;
+    assert(s1.length === n0 + 2, `expected ${n0 + 2} samples, saved ${s1.length}`);
+    const last = s1[s1.length - 1];
+    const head = v.scr(last.pt);
+    await T.drag(head, { x: head.x + 12, y: head.y });
+    await page.waitForTimeout(700);
+    const moved = (await current(page)).plan.shade.samples.slice(-1)[0];
+    assert(moved.pt.x > last.pt.x + 2, `pin did not move (${last.pt.x.toFixed(1)} -> ${moved.pt.x.toFixed(1)})`);
+    return txt.match(/ΔE00\s*[\d.]+/)?.[0] ?? "";
+  });
+
+  await test(devName, "Plan: tap includes a tooth, long-press opens its sheet; crown on 41 raises a caution; undo/redo", async () => {
+    await page.getByRole("tab", { name: /Teeth/ }).click();
+    await page.waitForTimeout(150);
+    const t41 = page.locator(".odonto .tooth", { hasText: /^41/ });
+    const t44 = page.locator(".odonto .tooth", { hasText: /^44/ });
+    const was = await t44.getAttribute("aria-pressed");
+    await t44.click();
+    assert((await t44.getAttribute("aria-pressed")) !== was, "tap did not toggle tooth 44");
+    await t44.click();
+    if ((await t41.getAttribute("aria-pressed")) !== "true") await t41.click();
+    await t41.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(150);
+    const box = await t41.boundingBox();
+    assert(box.height >= 44 && box.width >= 40, `tooth target ${Math.round(box.width)}x${Math.round(box.height)}`);
+    await T.hold({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    const dlg = page.getByRole("dialog");
+    await dlg.waitFor({ timeout: 3000 });
+    assert(/tooth 41/i.test(await dlg.locator("h2").innerText()), "sheet is not for tooth 41");
+    await dlg.getByRole("radio", { name: "Zirconia crown" }).click();
+    await page.waitForTimeout(450);
+    await dlg.getByRole("radio", { name: "Crown prep" }).click();
+    await page.waitForTimeout(200);
+    assert(/Planning aid only/.test(await dlg.innerText()), "prep disclaimer missing in the tooth sheet");
+    assert(/Crown on a lower incisor/.test(await dlg.innerText()), "crown caution not shown in the tooth sheet");
+    await shot("09-plan-tooth-sheet");
+    await dlg.getByRole("button", { name: "Done" }).click();
+    await page.waitForTimeout(500);
+    const saved = (await current(page)).plan.teeth.find((t) => t.fdi === 41);
+    assert(saved && saved.include && saved.prep === "crown" && saved.material === "zirconia-crown", `41 not saved: ${JSON.stringify(saved)}`);
+    await shot("10-plan-teeth");
+    await page.getByRole("tab", { name: /Review/ }).click();
+    const rv = page.locator(".panel .warnings");
+    await rv.waitFor();
+    const li = rv.locator("li", { hasText: "Crown on a lower incisor" });
+    assert((await li.count()) === 1, "crown warning missing in Review");
+    assert(/caution/.test(await li.getAttribute("class")), "crown warning is not a caution");
+    assert(/41/.test(await li.innerText()), "crown warning has no 41 tag");
+    await shot("11-plan-review");
+    // undo reverts the last plan edit, redo brings it back
+    await page.getByRole("button", { name: "Undo" }).click();
+    await page.waitForTimeout(500);
+    const u = (await current(page)).plan.teeth.find((t) => t.fdi === 41);
+    assert(u.prep !== "crown", `undo did not revert the prep (${u.prep})`);
+    await page.getByRole("button", { name: "Redo" }).click();
+    await page.waitForTimeout(500);
+    const r = (await current(page)).plan.teeth.find((t) => t.fdi === 41);
+    assert(r.prep === "crown", `redo did not restore the prep (${r.prep})`);
+  });
+
+  await test(devName, "Plan: lab prescription shares an A4 PNG and prints", async () => {
+    await page.getByRole("tab", { name: /Review/ }).click();
+    await page.evaluate(() => (window.__shared = []));
+    await page.getByRole("button", { name: "Lab prescription" }).click();
+    const dlg = page.getByRole("dialog");
+    await dlg.waitFor();
+    await shot("12-lab-dialog");
+    await dlg.getByRole("button", { name: "Share PNG" }).click();
+    await agreeIfAsked(page);
+    await page.waitForFunction(() => window.__shared.length > 0, null, { timeout: 20000 });
+    const files = await sharedInfo(page);
+    for (const f of files) {
+      fs.writeFileSync(path.join(EXPORTS, `${slug(devName)}-${f.name}`), Buffer.from(f.png, "base64"));
+      assert(/^lab-prescription-.*\.png$/.test(f.name) && f.type === "image/png", `not a lab png: ${f.name}`);
+      assert(f.w === 1240 && f.h === 1754, `lab page ${f.w}x${f.h}`);
+    }
+    if (!(await dlg.isVisible().catch(() => false))) await page.getByRole("button", { name: "Lab prescription" }).click();
+    await page.evaluate(() => (window.__printed = []));
+    await dlg.getByRole("button", { name: "Print / PDF" }).click();
+    await page.waitForFunction(() => window.__printed.length > 0, null, { timeout: 20000 });
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(200);
+    // the prep sheet now carries the plan (one more page than before)
+    await page.evaluate(() => (window.__shared = []));
+    await page.getByRole("button", { name: "Prep sheet + plan" }).click();
+    await dlg.getByRole("button", { name: "Share PNG" }).click();
+    await page.waitForFunction(() => window.__shared.length > 0, null, { timeout: 20000 });
+    const prep = await sharedInfo(page);
+    prep.forEach((f) => fs.writeFileSync(path.join(EXPORTS, `${slug(devName)}-plan-${f.name}`), Buffer.from(f.png, "base64")));
+    assert(prep.every((f) => f.w === 1240 && f.h === 1754), "prep sheet with plan: not A4");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(200);
+    return `lab ${files.length}p, prep+plan ${prep.length}p`;
   });
 
   await test(devName, "pinch-zoom and wheel zoom never move handles", async () => {

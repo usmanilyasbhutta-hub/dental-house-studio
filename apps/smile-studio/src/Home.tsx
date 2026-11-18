@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { archOf, withArch } from "./arch";
 import { initialLayout, newId, type CaseData } from "./model";
 import { deleteCase, KEEP_DAYS, listCases, loadPhoto, purgeOld, saveCase, thumbnail, wipeAll } from "./storage";
+import { MaterialsSheet } from "./PlanPanel";
+import { loadClinicMaterials, saveClinicMaterials, type Material } from "./planner";
 import { ago, Sheet, useToast } from "./ui";
 
 type Source = "rear" | "front" | "gallery";
@@ -11,6 +13,7 @@ type Dialog =
   | { kind: "rename"; c: CaseData }
   | { kind: "delete"; c: CaseData }
   | { kind: "wipe" }
+  | { kind: "materials" }
   | null;
 
 export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
@@ -19,6 +22,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
   const [dialog, setDialog] = useState<Dialog>(null);
   const [showPhotos, setShowPhotos] = useState(false);
   const [name, setName] = useState("");
+  const [mats, setMats] = useState<Material[]>(() => loadClinicMaterials());
   const toast = useToast();
   const inputs = { rear: useRef<HTMLInputElement>(null), front: useRef<HTMLInputElement>(null), gallery: useRef<HTMLInputElement>(null) };
 
@@ -101,6 +105,9 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
     <div className="home">
       <header className="brandbar">
         <img src="./brand/logo-white.png" alt="Dental House" className="logo" />
+        <button className="ghost settings" onClick={() => setDialog({ kind: "materials" })}>
+          Clinic materials
+        </button>
       </header>
       <section className="hero">
         <p className="mono kicker">Smile studio</p>
@@ -279,6 +286,21 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
             </button>
           </div>
         </Sheet>
+      )}
+
+      {dialog?.kind === "materials" && (
+        <MaterialsSheet
+          clinic={mats}
+          onChange={(l) => {
+            setMats(l);
+            try {
+              saveClinicMaterials(l);
+            } catch {
+              toast.show("Could not save the materials on this phone.", "error");
+            }
+          }}
+          onClose={() => setDialog(null)}
+        />
       )}
 
       {dialog?.kind === "wipe" && (
