@@ -2,8 +2,8 @@
 // Clinician prep sheet and patient illustration sheet. Wording: src/sheetCopy.ts (spec: docs/round3-clinical.md).
 // Rules: no patient name or ID on any page (the clinician sheet prints the case code only when asked), every page
 // carries the simulation label, before/after images share one box size and are never warped.
-import { drawPrepMap, ENAMEL_MM, HIDDEN_LENGTH_PCT, hiddenLegend, PREP_DISCLAIMER, prepWording, type Mask, type PrepResult } from "./engineShim";
-import { TOOTH_NAMES } from "./geometry";
+import { contours, drawPrepMap, ENAMEL_MM, HIDDEN_LENGTH_PCT, hiddenLegend, PREP_DISCLAIMER, prepWording, type Mask, type PrepResult } from "./engineShim";
+import { centralWidth, designAngle, plannedOutlines, TOOTH_NAMES } from "./geometry";
 import { C, drawTeeth, exportCanvas, WATERMARK, type Scene } from "./render";
 import { CLINICIAN, ENAMEL_ROWS, fmtDelta, PATIENT } from "./sheetCopy";
 import { CLINIC } from "./clinic";
@@ -279,7 +279,8 @@ function prepImage(s: SheetScene, prep: PrepResult) {
   cv.height = s.imgH;
   const ctx = cv.getContext("2d")!;
   ctx.drawImage(s.img, 0, 0, s.imgW, s.imgH);
-  drawPrepMap(ctx, s, prep);
+  // lines sized to the teeth, not to screen pixels, so they survive the crop + scale onto the page
+  drawPrepMap(ctx, s, prep, { lineUnit: exportUnit(s), labels: true });
   ctx.save();
   ctx.globalAlpha = 0.7;
   drawTeeth(ctx, s, "outline");
@@ -287,36 +288,60 @@ function prepImage(s: SheetScene, prep: PrepResult) {
   return cv;
 }
 
+/** Line unit for exported overlays: a fraction of the planned central width (visible at any page scale). */
+function exportUnit(s: Scene) {
+  return Math.max(1.5, centralWidth(s.design) / 38);
+}
+
 /** Patient diff view: added areas shaded (bronze), areas where the design is smaller outlined (white on a dark halo). */
 function diffImage(s: Scene, prep: PrepResult) {
-  const { w, h } = prep.add;
-  const m = document.createElement("canvas");
-  m.width = w;
-  m.height = h;
-  const mc = m.getContext("2d")!;
-  const im = mc.createImageData(w, h);
-  const red = prep.reduce.data;
-  const at = (x: number, y: number) => (x < 0 || y < 0 || x >= w || y >= h ? 0 : red[y * w + x]);
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      const o = i * 4;
-      if (prep.add.data[i]) {
-        im.data[o] = 201; im.data[o + 1] = 150; im.data[o + 2] = 90; im.data[o + 3] = 175;
-      }
-      if (red[i] && (!at(x - 1, y) || !at(x + 1, y) || !at(x, y - 1) || !at(x, y + 1))) {
-        im.data[o] = im.data[o + 1] = im.data[o + 2] = 255;
-        im.data[o + 3] = 255;
-      }
-    }
-  mc.putImageData(im, 0, 0);
+  const u = exportUnit(s);
+  const k = s.imgW / prep.add.w;
   const cv = document.createElement("canvas");
   cv.width = s.imgW;
   cv.height = s.imgH;
   const ctx = cv.getContext("2d")!;
   ctx.drawImage(s.img, 0, 0, s.imgW, s.imgH);
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(m, 0, 0, s.imgW, s.imgH);
+  ctx.lineJoin = "round";
+  const poly = (polys: Float32Array[]) => {
+    ctx.beginPath();
+    for (const l of polys) {
+      ctx.moveTo(l[0], l[1]);
+      for (let i = 2; i < l.length; i += 2) ctx.lineTo(l[i], l[i + 1]);
+      ctx.closePath();
+    }
+  };
+  // planned outline, thin, so the patient sees the whole design shape
+  ctx.beginPath();
+  for (const o of plannedOutlines(s.design, designAngle(s.design, s.guides))) {
+    o.pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+  }
+  ctx.strokeStyle = "rgba(20,24,22,0.55)";
+  ctx.lineWidth = 2.4 * u;
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(255,255,255,0.85)";
+  ctx.lineWidth = 1 * u;
+  ctx.stroke();
+  const add = contours(prep.add, k);
+  if (add.length) {
+    poly(add);
+    ctx.fillStyle = "rgba(201,150,90,0.72)";
+    ctx.fill("evenodd");
+    ctx.strokeStyle = "rgb(150,100,50)";
+    ctx.lineWidth = 1.6 * u;
+    ctx.stroke();
+  }
+  const red = contours(prep.reduce, k);
+  if (red.length) {
+    poly(red);
+    ctx.strokeStyle = "rgba(20,24,22,0.8)";
+    ctx.lineWidth = 3.6 * u;
+    ctx.stroke();
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.8 * u;
+    ctx.stroke();
+  }
   return cv;
 }
 
@@ -409,6 +434,15 @@ export async function clinicianSheet(o: ClinicianOpts): Promise<HTMLCanvasElemen
     }
   });
   doc.gap(capH + ph + 12);
+  if (prep) {
+    // the prep map again, full width, so add / reduce areas and the FDI numbers are readable on paper
+    const bw = A4.w - 2 * M;
+    const bh = Math.round(bw * 0.46);
+    doc.need(bh + capH + 20);
+    caption(ctx(), "Prep map · enlarged (FDI numbers)", M, doc.y, bw);
+    panel(ctx(), srcs[2], mouthCrop(s, bw / bh), { x: M, y: doc.y + capH, w: bw, h: bh });
+    doc.gap(capH + bh + 12);
+  }
   let lx = M;
   lx += swatch(ctx(), lx, doc.y, "rgba(40,200,110,0.9)", null, CLINICIAN.legendAdd, `400 18px ${SANS}`) + 28;
   swatch(ctx(), lx, doc.y, "rgba(235,60,50,0.9)", null, CLINICIAN.legendReduce, `400 18px ${SANS}`);
@@ -435,6 +469,7 @@ export async function clinicianSheet(o: ClinicianOpts): Promise<HTMLCanvasElemen
   doc.gap(14);
 
   // per-tooth table
+  doc.need(240); // keep the table header with its first rows
   doc.label(`Per tooth · ${archName(s).toLowerCase()} arch${pxPerMm ? " · mm" : " · calibrate for mm"}`);
   const cols = [
     { t: "Tooth", w: 92 },

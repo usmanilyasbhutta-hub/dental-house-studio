@@ -386,7 +386,34 @@ const contourCache = new WeakMap<PrepResult, Float32Array[]>();
  * tooth lies outside the design, thin white planned outline, dashed existing outline. Line widths stay constant on
  * screen and have a dark under-stroke so they read on light teeth and dark mouths alike.
  */
-export function drawPrepMap(ctx: CanvasRenderingContext2D, scene: EngineScene, prep: PrepResult) {
+/** FDI number for a tooth (e.g. lower right canine → 43). */
+export function fdiOf(arch: "upper" | "lower", kind: number, side: -1 | 1) {
+  const q = arch === "lower" ? (side === -1 ? 4 : 3) : side === -1 ? 1 : 2;
+  return q * 10 + kind + 1;
+}
+
+export interface PrepMapOptions {
+  /**
+   * Line unit in image px. Omit on screen (lines stay a constant screen width). Exports pass a size relative to the
+   * teeth (e.g. central width / 40) so the outlines stay visible after the image is cropped and scaled onto a page.
+   */
+  lineUnit?: number;
+  /** Draw FDI numbers on the planned teeth (exports). */
+  labels?: boolean;
+}
+
+const regionCache = new WeakMap<PrepResult, { add: Float32Array[]; reduce: Float32Array[] }>();
+
+function strokePolys(ctx: CanvasRenderingContext2D, polys: Float32Array[]) {
+  ctx.beginPath();
+  for (const l of polys) {
+    ctx.moveTo(l[0], l[1]);
+    for (let i = 2; i < l.length; i += 2) ctx.lineTo(l[i], l[i + 1]);
+    ctx.closePath();
+  }
+}
+
+export function drawPrepMap(ctx: CanvasRenderingContext2D, scene: EngineScene, prep: PrepResult, opts: PrepMapOptions = {}) {
   let cv = mapCache.get(prep);
   if (!cv) {
     cv = document.createElement("canvas");
@@ -421,10 +448,30 @@ export function drawPrepMap(ctx: CanvasRenderingContext2D, scene: EngineScene, p
     mapCache.set(prep, cv);
   }
   const m = ctx.getTransform();
-  const u = 1 / Math.max(1e-6, Math.hypot(m.a, m.b)); // one screen px in image px
+  const u = opts.lineUnit ?? 1 / Math.max(1e-6, Math.hypot(m.a, m.b)); // one screen px in image px
   ctx.save();
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(cv, 0, 0, scene.imgW, scene.imgH);
+  // solid outlines around every added (green) and reduced (red) area, so even thin strips stay visible
+  let regions = regionCache.get(prep);
+  if (!regions) {
+    const k = scene.imgW / prep.add.w;
+    regions = { add: contours(prep.add, k), reduce: contours(prep.reduce, k) };
+    regionCache.set(prep, regions);
+  }
+  ctx.lineJoin = "round";
+  for (const [polys, colour] of [
+    [regions.add, "rgb(30,190,100)"],
+    [regions.reduce, "rgb(235,64,52)"],
+  ] as const) {
+    if (!polys.length) continue;
+    strokePolys(ctx, polys);
+    ctx.fillStyle = colour === "rgb(30,190,100)" ? "rgba(30,190,100,0.28)" : "rgba(235,64,52,0.3)";
+    ctx.fill("evenodd");
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = 2 * u;
+    ctx.stroke();
+  }
   // existing outline, dashed
   let lines = contourCache.get(prep);
   const ex = extras.get(prep);
@@ -466,6 +513,30 @@ export function drawPrepMap(ctx: CanvasRenderingContext2D, scene: EngineScene, p
   ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 1.5 * u;
   ctx.stroke();
+  if (opts.labels) {
+    const arch = scene.design.arch === "lower" ? "lower" : "upper";
+    const base = Math.max(10, centralWidth(scene.design) * 0.32);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const o of outs) {
+      // narrow (back) teeth get smaller numbers so neighbours never overlap
+      const xs = o.pts.map((p) => p.x);
+      const fs = Math.max(8, Math.min(base, (Math.max(...xs) - Math.min(...xs)) * 0.5));
+      ctx.font = `600 ${fs}px -apple-system, "Segoe UI", Roboto, sans-serif`;
+      // label just outside the incisal edge, away from the gum
+      const cx = o.pts.reduce((a, p) => a + p.x, 0) / o.pts.length;
+      const ys = o.pts.map((p) => p.y);
+      const y = arch === "lower" ? Math.min(...ys) - fs * 0.75 : Math.max(...ys) + fs * 0.75;
+      const t = String(fdiOf(arch, o.box.kind, o.box.side));
+      const w = ctx.measureText(t).width + fs * 0.5;
+      ctx.fillStyle = "rgba(20,24,22,0.78)";
+      ctx.beginPath();
+      ctx.roundRect(cx - w / 2, y - fs * 0.62, w, fs * 1.24, fs * 0.3);
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(t, cx, y + fs * 0.04);
+    }
+  }
   ctx.restore();
 }
 
