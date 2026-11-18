@@ -1,6 +1,6 @@
 // Step 06 Plan: shade gap, FDI chart with per-tooth plan, case flags + checklist, warnings and lab hand-off.
 // The app records the dentist's decisions and checks them for conflicts; it never picks a material, prep or depth.
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { PREP_DISCLAIMER } from "./engineShim";
 import type { Arch, CasePlan, Coverage, Margin, PrepLevel, ToothPlan, Visibility } from "./model";
 import {
@@ -32,7 +32,7 @@ import {
   type PlanWarning,
 } from "./planner";
 import { SHADES } from "./shades";
-import { Chips, haptic, Hint, Sheet, Toggle } from "./ui";
+import { Chips, Group, haptic, Hint, Icon, Sheet, tick, Toggle } from "./ui";
 
 export type PlanTab = "shade" | "teeth" | "checks" | "review";
 export type PickRole = "reference" | "match" | null;
@@ -113,8 +113,29 @@ function ShadeCard({ plan, setPlan, pickRole, setPickRole }: Props) {
   const setShade = (patch: Partial<CasePlan["shade"]>) => setPlan((x) => ({ ...x, shade: { ...x.shade, ...patch } }));
   let nR = 0;
   let nM = 0;
+  const gapRef = useRef<HTMLDivElement>(null);
+  const dE = gap ? gap.dE00.toFixed(1) : "";
+  // small phones: the gap card is under the photo; bring it into view whenever a new gap is measured
+  useEffect(() => {
+    if (dE) gapRef.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+  }, [dE]);
+  const gapCard = gap && (
+    <div className={`gap ${gap.band}`} aria-live="polite" ref={gapRef}>
+      <p className="gap-num">
+        <span className="gap-k">ΔE00</span> {gap.dE00.toFixed(1)}
+        <span className="band">
+          {gap.band === "below" ? "below perceptibility 0.8" : gap.band === "perceptible" ? "perceptible · under 1.8" : "beyond acceptability 1.8"}
+        </span>
+      </p>
+      <p className="gap-d">
+        ΔL {signed(gap.dL)} · ΔC {signed(gap.dC)} · ΔH {signed(gap.dH)} · mostly {gap.dominant}
+      </p>
+      <p className="gap-text">{gap.text}</p>
+    </div>
+  );
   return (
     <>
+      {gapCard}
       <div className="row tight pick">
         {(["reference", "match"] as const).map((r) => (
           <button
@@ -128,40 +149,25 @@ function ShadeCard({ plan, setPlan, pickRole, setPickRole }: Props) {
           </button>
         ))}
       </div>
-      {gap ? (
-        <div className={`gap ${gap.band}`} aria-live="polite">
-          <p className="gap-num">
-            <span className="mono">ΔE00</span> {gap.dE00.toFixed(1)}
-            <span className="mono band">
-              {gap.band === "below" ? "below perceptibility 0.8" : gap.band === "perceptible" ? "perceptible · under 1.8" : "beyond acceptability 1.8"}
-            </span>
-          </p>
-          <p className="mono small">
-            ΔL {signed(gap.dL)} · ΔC {signed(gap.dC)} · ΔH {signed(gap.dH)} · mostly {gap.dominant}
-          </p>
-          <p className="gap-text">{gap.text}</p>
-        </div>
-      ) : (
-        samples.length > 0 && <p className="mono small">Place one reference and one tooth to match to see the gap.</p>
-      )}
+      {!gap && samples.length > 0 && <p className="footnote">Place one reference and one tooth to match to see the gap.</p>}
       {samples.length > 0 && (
-        <ul className="samples" aria-label="Shade samples">
+        <ul className="samples group" aria-label="Shade samples">
           {samples.map((s, i) => {
             const tag = s.role === "reference" ? `R${++nR}` : `M${++nM}`;
             const ok = s.lab[0] > 0;
             return (
               <li key={i}>
-                <span className={`mono tag ${s.role}`}>{tag}</span>
+                <span className={`tag ${s.role}`}>{tag}</span>
                 <span className="lab">
                   {s.role === "reference" ? "Reference" : "To match"}
-                  <small className="mono">{ok ? `${fmtLab(s.lab)} · near ${nearestTab(s.lab).label}` : "Only shine or shadow here: move the pin onto the tooth"}</small>
+                  <small>{ok ? `${fmtLab(s.lab)} · near ${nearestTab(s.lab).label}` : "Only shine or shadow here: move the pin onto the tooth"}</small>
                 </span>
                 <button
                   className="icon"
                   aria-label={`Remove ${s.role === "reference" ? "reference" : "match"} pin ${tag}`}
                   onClick={() => setShade({ samples: samples.filter((_, j) => j !== i) })}
                 >
-                  ×
+                  <Icon name="close" size={18} />
                 </button>
               </li>
             );
@@ -179,9 +185,12 @@ function ShadeCard({ plan, setPlan, pickRole, setPickRole }: Props) {
         value={plan.shade.targetTab ?? ""}
         options={[{ value: "", label: "Not set" }, ...SHADES.map((s) => ({ value: s.id, label: s.id }))]}
         onChange={(v) => setShade({ targetTab: v || undefined })}
+        scroll
       />
-      <Toggle label="Whitening first" note="Planned before the restorations" checked={!!plan.shade.whiteningFirst} onChange={(v) => setShade({ whiteningFirst: v })} />
-      <Toggle label="Whitening done" note="Re-take the shade 2 weeks after" checked={!!plan.shade.whiteningDone} onChange={(v) => setShade({ whiteningDone: v })} />
+      <Group>
+        <Toggle label="Whitening first" note="Planned before the restorations" checked={!!plan.shade.whiteningFirst} onChange={(v) => setShade({ whiteningFirst: v })} />
+        <Toggle label="Whitening done" note="Re-take the shade 2 weeks after" checked={!!plan.shade.whiteningDone} onChange={(v) => setShade({ whiteningDone: v })} />
+      </Group>
       <p className="note">Nearest tabs are approximate. Phone photos shift colour: confirm with a shade guide in the chair.</p>
     </>
   );
@@ -236,13 +245,13 @@ function TeethCard({ plan, recorded, arch, lib, setPlan, warnings, onMaterials }
       {!recorded && (
         <p className="note">Suggested start: the front six of the {arch} arch from the design. Change it to your plan; nothing is decided for you.</p>
       )}
-      <div className="odonto" style={{ gridTemplateRows: `repeat(${cells.length ? Math.max(...cells.map((c) => c.row)) : 1}, 48px)` }}>
+      <div className="odonto" style={{ gridTemplateRows: `repeat(${cells.length ? Math.max(...cells.map((c) => c.row)) : 1}, var(--tooth-h, 48px))` }}>
         {upperLabelRow >= 1 && (
-          <span className="arch-label mono" style={{ gridRow: upperLabelRow, gridColumn: "2 / 8" }}>
+          <span className="arch-label" style={{ gridRow: upperLabelRow, gridColumn: "2 / 8" }}>
             Upper
           </span>
         )}
-        <span className="arch-label mono" style={{ gridRow: lowerLabelRow, gridColumn: "2 / 8" }}>
+        <span className="arch-label" style={{ gridRow: lowerLabelRow, gridColumn: "2 / 8" }}>
           Lower
         </span>
         <span className="bite" style={{ gridRow: lowerFrontRow, gridColumn: "1 / 9" }} aria-hidden="true" />
@@ -265,7 +274,7 @@ function TeethCard({ plan, recorded, arch, lib, setPlan, warnings, onMaterials }
         <button className="link" onClick={() => setShowMolars((v) => !v)} aria-expanded={showMolars}>
           {showMolars ? "Hide molars" : "Show molars"}
         </button>
-        <span className="mono small legend-inline">
+        <span className="footnote legend-inline">
           <i className="key inc" aria-hidden="true" /> in plan <i className="key vis" aria-hidden="true" /> visible
         </span>
       </div>
@@ -274,14 +283,14 @@ function TeethCard({ plan, recorded, arch, lib, setPlan, warnings, onMaterials }
       </Hint>
       {included.length > 0 && (
         <>
-          <ul className="planned" aria-label="Planned teeth">
+          <ul className="planned group" aria-label="Planned teeth">
             {included.map((fdi) => {
               const t = getTooth(plan, fdi);
               const lv = levelOf(fdi);
               return (
                 <li key={fdi}>
                   <button className="planned-row" onClick={() => setOpen(fdi)} aria-label={`Tooth ${fdi}, ${toothName(fdi)}: edit plan`}>
-                    <span className="mono fdi">{fdi}</span>
+                    <span className="fdi">{fdi}</span>
                     <span className="what">
                       {materialOf(t.material, lib)?.name ?? "Material not chosen"}
                       <small>
@@ -291,7 +300,7 @@ function TeethCard({ plan, recorded, arch, lib, setPlan, warnings, onMaterials }
                       </small>
                     </span>
                     {lv && <span className={`lv ${lv}`} aria-label={LEVEL_WORD[lv]} />}
-                    <span aria-hidden="true">›</span>
+                    <span className="chev" aria-hidden="true"><Icon name="forward" size={18} /></span>
                   </button>
                 </li>
               );
@@ -399,16 +408,61 @@ function MmField({ label, value, onChange }: { label: string; value?: number; on
   );
 }
 
+const CATEGORY_ORDER: Material["category"][] = ["none", "whitening", "composite", "ceramic-veneer", "crown", "other"];
+
+/**
+ * Material choice as an inset grouped list: the clinic's own materials first, then the built-ins by category.
+ * A filter field appears when the list is long (more than 8). Still a radiogroup; the choice stays the dentist's.
+ */
 function MaterialPicker({ value, lib, onChange, allowKeep }: { value: string; lib: Material[]; onChange: (id: string) => void; allowKeep?: boolean }) {
   const m = materialOf(value, lib);
+  const [q, setQ] = useState("");
+  const needle = q.trim().toLowerCase();
+  const hit = (x: Material) => !needle || x.name.toLowerCase().includes(needle) || CATEGORY_LABEL[x.category].toLowerCase().includes(needle) || x.id === value;
+  const clinic = lib.filter((x) => x.clinic && hit(x));
+  const sections: { head: string; items: Material[] }[] = [
+    ...(clinic.length ? [{ head: "Clinic materials", items: clinic }] : []),
+    ...CATEGORY_ORDER.map((cat) => ({ head: cat === "none" ? "" : CATEGORY_LABEL[cat], items: lib.filter((x) => !x.clinic && x.category === cat && hit(x)) })).filter((g) => g.items.length),
+  ];
+  const row = (id: string, label: ReactNode, sub?: string) => (
+    <button
+      key={id}
+      role="radio"
+      aria-checked={value === id}
+      className={value === id ? "list-row pick on" : "list-row pick"}
+      onClick={() => {
+        if (id !== value) tick();
+        onChange(id);
+      }}
+    >
+      <span className="row-text">
+        {label}
+        {sub && <small>{sub}</small>}
+      </span>
+      <span className="check" aria-hidden="true">
+        {value === id && <Icon name="check" size={20} />}
+      </span>
+    </button>
+  );
   return (
-    <>
-      <Chips
-        label="Material (your choice)"
-        value={value}
-        options={[...(allowKeep ? [{ value: "\u0000", label: "Keep" }] : []), ...lib.map((x) => ({ value: x.id, label: x.name }))]}
-        onChange={onChange}
-      />
+    <div className="field">
+      <span className="field-label">Material (your choice)</span>
+      {lib.length > 8 && (
+        <label className="search">
+          <Icon name="search" size={18} />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter materials" aria-label="Filter materials" autoComplete="off" />
+        </label>
+      )}
+      <div role="radiogroup" aria-label="Material (your choice)" className="mat-pick">
+        {allowKeep && !needle && <div className="group">{row("\u0000", "Keep")}</div>}
+        {sections.map((g) => (
+          <div key={g.head || "none"} className="group-wrap">
+            {g.head && <p className="group-head">{g.head}</p>}
+            <div className="group">{g.items.map((x) => row(x.id, x.name))}</div>
+          </div>
+        ))}
+        {!sections.length && <p className="footnote">No material matches “{q.trim()}”.</p>}
+      </div>
       {m && (m.pros || m.cons) && value !== "\u0000" && (
         <p className="procon">
           {m.pros && (
@@ -423,7 +477,7 @@ function MaterialPicker({ value, lib, onChange, allowKeep }: { value: string; li
           )}
         </p>
       )}
-    </>
+    </div>
   );
 }
 
@@ -457,9 +511,11 @@ function ToothSheet({
       }
       onClose={onClose}
     >
-      <p className="mono small sub">{toothName(fdi)}</p>
+      <p className="sub">{toothName(fdi)}</p>
       {mine.length > 0 && <WarningList warnings={mine} compact />}
-      <Toggle label="In the plan" checked={t.include} onChange={(include) => set({ include })} />
+      <Group>
+        <Toggle label="In the plan" checked={t.include} onChange={(include) => set({ include })} />
+      </Group>
       <Chips<Visibility>
         label="Visible"
         value={t.visible}
@@ -468,7 +524,7 @@ function ToothSheet({
       />
       <MaterialPicker value={t.material} lib={lib} onChange={(material) => set({ material })} />
       <button className="link small-gap" onClick={onMaterials}>
-        Clinic materials…
+        Edit clinic materials…
       </button>
       <Chips<PrepLevel>
         label="Prep level"
@@ -541,7 +597,7 @@ function BulkSheet({ teeth, lib, setPlan, onClose }: { teeth: number[]; lib: Mat
       }
       onClose={onClose}
     >
-      <p className="mono small sub">{teeth.join(" · ")}</p>
+      <p className="sub">{teeth.join(" · ")}</p>
       <MaterialPicker value={material} lib={lib} onChange={setMaterial} allowKeep />
       <Chips<PrepLevel | typeof KEEP>
         label="Prep level"
@@ -587,11 +643,12 @@ function ChecksCard({ plan, setPlan }: Props) {
     }));
   return (
     <>
-      <p className="field-label">Case flags</p>
-      <Toggle label="Deep bite" checked={!!plan.flags.deepBite} onChange={flag("deepBite")} />
-      <Toggle label="Bruxism / parafunction" checked={!!plan.flags.bruxism} onChange={flag("bruxism")} />
-      <Toggle label="Gingival recession" checked={!!plan.flags.recession} onChange={flag("recession")} />
-      <p className="field-label">Checklist</p>
+      <Group header="Case flags">
+        <Toggle label="Deep bite" checked={!!plan.flags.deepBite} onChange={flag("deepBite")} />
+        <Toggle label="Bruxism / parafunction" checked={!!plan.flags.bruxism} onChange={flag("bruxism")} />
+        <Toggle label="Gingival recession" checked={!!plan.flags.recession} onChange={flag("recession")} />
+      </Group>
+      <Group header="Checklist">
       {CHECKLIST.map((c) => (
         <Toggle
           key={c.id}
@@ -601,6 +658,7 @@ function ChecksCard({ plan, setPlan }: Props) {
           onChange={check(c.id)}
         />
       ))}
+      </Group>
     </>
   );
 }
@@ -608,16 +666,16 @@ function ChecksCard({ plan, setPlan }: Props) {
 // ---------- review ----------
 
 export function WarningList({ warnings, compact }: { warnings: PlanWarning[]; compact?: boolean }) {
-  if (!warnings.length) return <p className="mono small">No conflicts found in what is recorded. This is a check, not an approval.</p>;
+  if (!warnings.length) return <p className="footnote ok-line">No conflicts found in what is recorded. This is a check, not an approval.</p>;
   return (
     <ul className={compact ? "warnings compact" : "warnings"} aria-label="Plan warnings">
       {warnings.map((w, i) => (
         <li key={i} className={w.level}>
-          <span className="mono lvl">{LEVEL_WORD[w.level]}</span>
+          <span className="lvl">{LEVEL_WORD[w.level]}</span>
           {w.teeth && w.teeth.length > 0 && !compact && (
             <span className="tags">
               {w.teeth.map((t) => (
-                <span key={t} className="mono ttag">
+                <span key={t} className="ttag">
                   {t}
                 </span>
               ))}
@@ -652,8 +710,8 @@ function ReviewCard({ plan, lib, warnings, onLabSheet, onPrepSheet, onMaterials,
             Prep sheet + plan
           </button>
         </div>
-        <button className="btn secondary wide" onClick={onMaterials}>
-          Clinic materials
+        <button className="link small-gap" onClick={onMaterials}>
+          Clinic materials…
         </button>
       </div>
     </>
@@ -701,32 +759,32 @@ export function MaterialsEditor({ clinic, onChange }: { clinic: Material[]; onCh
         </button>
         {msg && <p className="error small" role="alert">{msg}</p>}
       </form>
-      <p className="field-label">Clinic materials</p>
+      <p className="group-head">Clinic materials</p>
       {clinic.length ? (
-        <ul className="mats">
+        <ul className="mats group">
           {clinic.map((m) => (
             <li key={m.id}>
               <span>
                 {m.name}
-                <small className="mono">{CATEGORY_LABEL[m.category]}</small>
+                <small>{CATEGORY_LABEL[m.category]}</small>
               </span>
-              <button className="btn danger slim" onClick={() => onChange(removeClinicMaterial(clinic, m.id))} aria-label={`Delete ${m.name}`}>
+              <button className="ghost danger slim" onClick={() => onChange(removeClinicMaterial(clinic, m.id))} aria-label={`Delete ${m.name}`}>
                 Delete
               </button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mono small">None yet.</p>
+        <p className="group empty-row">None yet. Add your own above; they appear first in every tooth's material list.</p>
       )}
       <details className="fine">
         <summary>Built-in materials ({MATERIALS.length})</summary>
-        <ul className="mats builtin">
+        <ul className="mats builtin group">
           {MATERIALS.map((m) => (
             <li key={m.id}>
               <span>
                 {m.name}
-                <small className="mono">{CATEGORY_LABEL[m.category]}</small>
+                <small className="cat">{CATEGORY_LABEL[m.category]}</small>
                 {m.pros && <small>For: {m.pros}</small>}
                 {m.cons && <small>Against: {m.cons}</small>}
               </span>
@@ -749,7 +807,7 @@ export function MaterialsSheet({ clinic, onChange, onClose }: { clinic: Material
       onClose={onClose}
     >
       <MaterialsEditor clinic={clinic} onChange={onChange} />
-      <button className="btn secondary wide" onClick={onClose}>
+      <button className="btn wide" onClick={onClose}>
         Done
       </button>
     </Sheet>

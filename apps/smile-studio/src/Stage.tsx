@@ -6,7 +6,7 @@ import { drawPrepMap, paintMask, type Mask, type PrepResult } from "./engineShim
 import { centralLength, centralWidth, designAngle, pupilAngle, smoothClosed, toImage, toLocal } from "./geometry";
 import type { Design, Guides, Pt } from "./model";
 import { C, drawOverlay, drawTeeth, type Scene, type Step } from "./render";
-import { haptic } from "./ui";
+import { haptic, Icon } from "./ui";
 
 
 interface View {
@@ -301,20 +301,32 @@ export function Stage(props: Props) {
       // knob sits below the mouth so it never covers the teeth
       const mouthBottom = v.oy + (s.design.center.y + s.design.width * 0.32) * v.scale;
       const ky = Math.min(h - 30, Math.max(30, mouthBottom + 44));
+      // iOS-like divider: hairline with a soft shadow, white knob with two chevrons
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.35)";
+      ctx.shadowBlur = 6;
       ctx.fillStyle = C.white;
       ctx.fillRect(x - 1, 0, 2, h);
       ctx.beginPath();
-      ctx.arc(x, ky, 22, 0, Math.PI * 2);
-      ctx.fillStyle = C.bronze;
+      ctx.arc(x, ky, 20, 0, Math.PI * 2);
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 2;
       ctx.fill();
-      ctx.strokeStyle = C.white;
+      ctx.restore();
+      ctx.save();
+      ctx.strokeStyle = C.slateDeep;
       ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(x - 4, ky - 6);
+      ctx.lineTo(x - 10, ky);
+      ctx.lineTo(x - 4, ky + 6);
+      ctx.moveTo(x + 4, ky - 6);
+      ctx.lineTo(x + 10, ky);
+      ctx.lineTo(x + 4, ky + 6);
       ctx.stroke();
-      ctx.fillStyle = C.white;
-      ctx.font = "600 14px Oswald, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("‹ ›", x, ky + 1);
+      ctx.restore();
     }
 
     // loupe: the finger hides the point being placed, so show it magnified in the opposite top corner
@@ -333,11 +345,15 @@ export function Stage(props: Props) {
       ctx.scale(k, k);
       ctx.drawImage(s.img, 0, 0, s.imgW, s.imgH);
       ctx.restore();
-      ctx.strokeStyle = C.bronzeLight;
-      ctx.lineWidth = 3;
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.45)";
+      ctx.shadowBlur = 14;
+      ctx.strokeStyle = C.white;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(cx, cy, LOUPE_R, 0, Math.PI * 2);
       ctx.stroke();
+      ctx.restore();
       // crosshair with a gap at the exact point
       ctx.strokeStyle = C.white;
       ctx.lineWidth = 1.5;
@@ -717,25 +733,25 @@ export function Stage(props: Props) {
       <span className="sr-only" aria-live="polite">
         {selName && `Selected: ${selName}`}
       </span>
-      {showOriginal && <span className="stage-tag mono">Before · original photo</span>}
+      {showOriginal && <span className="stage-tag">Before · original photo</span>}
       {props.showPrep && props.prep && !showOriginal && (step === "compare" || (step === "design" && !calibrating)) && (
-        <span className="stage-tag mono prep-tag">Prep map · 2D outline, not depth</span>
+        <span className="stage-tag prep-tag">Prep map · 2D outline, not depth</span>
       )}
       {props.maskTool && step === "lips" && !showOriginal && (
-        <span className="stage-tag mono">Existing teeth · {props.maskTool.mode === "erase" ? "erase" : "paint"}</span>
+        <span className="stage-tag">Existing teeth · {props.maskTool.mode === "erase" ? "erase" : "paint"}</span>
       )}
       {step === "compare" && !showOriginal && !props.showPrep && (
         <>
-          <span className="stage-tag mono">Now</span>
-          <span className="stage-tag right mono">Simulation</span>
+          <span className="stage-tag">Now</span>
+          <span className="stage-tag right">Simulation</span>
         </>
       )}
-      {calibrating && step === "design" && <span className="stage-tag mono">Calibrating · teeth hidden</span>}
+      {calibrating && step === "design" && <span className="stage-tag">Calibrating · teeth hidden</span>}
       {step === "plan" && !showOriginal && (
-        <span className="stage-tag mono">{props.pickRole ? `Tap a tooth · ${props.pickRole === "reference" ? "reference" : "to match"}` : "Photo · teeth as they are"}</span>
+        <span className="stage-tag">{props.pickRole ? `Tap a tooth · ${props.pickRole === "reference" ? "reference" : "to match"}` : "Photo · teeth as they are"}</span>
       )}
-      <button className="fab fit" onClick={fit} aria-label="Fit whole photo to screen">
-        ⤢
+      <button className="fab fit" onClick={fit} aria-label="Fit whole photo to screen" title="Fit photo">
+        <Icon name="fit" size={20} />
       </button>
     </div>
   );
@@ -770,11 +786,17 @@ function handlePos(s: Scene, calib: Calib | undefined, id: string, pins?: Pt[]):
 }
 
 function dot(ctx: CanvasRenderingContext2D, p: Pt, r: number, active: boolean, color: string) {
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.4)";
+  ctx.shadowBlur = r * 0.6;
   ctx.beginPath();
   ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-  ctx.fillStyle = active ? color : "rgba(28,34,32,0.55)";
+  ctx.fillStyle = active ? color : "rgba(28,34,32,0.45)";
   ctx.fill();
-  ctx.lineWidth = r * 0.28;
+  ctx.restore();
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+  ctx.lineWidth = r * 0.24;
   ctx.strokeStyle = color;
   ctx.stroke();
 }
@@ -889,7 +911,7 @@ function drawPins(ctx: CanvasRenderingContext2D, pts: Pt[], meta: SamplePin[], r
     ctx.strokeStyle = col;
     ctx.stroke();
     ctx.fillStyle = on ? C.slateDeep : col;
-    ctx.font = `600 ${13 * u}px Oswald, sans-serif`;
+    ctx.font = `600 ${12 * u}px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(`${role === "reference" ? "R" : "M"}${n}`, q.x, hy + 0.5 * u);

@@ -14,15 +14,15 @@ import { caseCodeProblem, rootLabel } from "./sheetCopy";
 import { canvasToFile, clinicianSheet, labSheet, patientSheet, type SheetScene, type SheetView } from "./sheets";
 import { Stage, WL_RANGE, type Calib, type MaskTool } from "./Stage";
 import { listCases, saveCase, thumbnail } from "./storage";
-import { Chips, Hint, Sheet, Slider, Toggle, useToast } from "./ui";
+import { Chips, Hint, Icon, Sheet, Slider, tick, Toggle, useToast } from "./ui";
 
-const STEPS: { id: Step; label: string; n: string; goal: string }[] = [
-  { id: "guides", label: "Face", n: "01", goal: "Set the face level: both pupils and the facial midline." },
-  { id: "lips", label: "Lips", n: "02", goal: "Trace the inside of the lips so the new teeth sit behind them." },
-  { id: "design", label: "Teeth", n: "03", goal: "Choose a shape and size that suits this face." },
-  { id: "shade", label: "Shade", n: "04", goal: "Pick a shade to discuss. The screen colour is a preview only." },
-  { id: "compare", label: "Compare", n: "05", goal: "Show the patient now and the simulation, then share if they agree." },
-  { id: "plan", label: "Plan", n: "06", goal: "Record your plan, check it, then hand it to the lab." },
+const STEPS: { id: Step; label: string; n: string; goal: string; icon: string }[] = [
+  { id: "guides", label: "Face", n: "01", icon: "face", goal: "Set the face level: both pupils and the facial midline." },
+  { id: "lips", label: "Lips", n: "02", icon: "lips", goal: "Trace the inside of the lips so the new teeth sit behind them." },
+  { id: "design", label: "Teeth", n: "03", icon: "tooth", goal: "Choose a shape and size that suits this face." },
+  { id: "shade", label: "Shade", n: "04", icon: "drop", goal: "Pick a shade to discuss. The screen colour is a preview only." },
+  { id: "compare", label: "Compare", n: "05", icon: "compare", goal: "Show the patient now and the simulation, then share if they agree." },
+  { id: "plan", label: "Plan", n: "06", icon: "plan", goal: "Record your plan, check it, then hand it to the lab." },
 ];
 const LAST = STEPS.length - 1;
 
@@ -85,10 +85,14 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const dirty = useRef(false);
   const flushNext = useRef(false);
   const panelRef = useRef<HTMLElement>(null);
-  // each step / mode starts at the top of its panel (goal line first)
+  /** Phone portrait: the controls sheet's detent (null = the step's natural height). */
+  const [detent, setDetent] = useState<null | "small" | "large">(null);
+  const grab = useRef<{ y: number; moved: boolean } | null>(null);
+  // each step / mode starts at the top of its panel (goal line first), at its natural height
   useEffect(() => {
     panelRef.current?.scrollTo?.({ top: 0 });
   }, [step, calibrating]);
+  useEffect(() => setDetent(null), [step]);
 
   useEffect(() => {
     let alive = true;
@@ -444,8 +448,9 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   if (imgError) {
     return (
       <div className="editor">
-        <div className="empty-error">
-          <p className="mono kicker">Photo</p>
+        <div className="empty-error" role="alert">
+          <span className="state-icon"><Icon name="alert" size={30} /></span>
+          <h2>Photo could not be opened</h2>
           <p>This photo could not be opened on this phone. Delete the design and take the photo again.</p>
           <button className="btn" onClick={onClose}>Back to designs</button>
         </div>
@@ -454,7 +459,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   }
 
   const readout = (step === "design" || step === "shade") && !calibrating && (
-    <div className="readout mono" aria-live="polite">
+    <div className="readout" aria-live="polite">
       <span>W/L {m.wlPct}%</span>
       <span>
         Central {fmt(m.centralW)} × {fmt(m.centralL)}
@@ -464,7 +469,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
       </span>
       <span className={midLevel}>Midline {midOn ? "on" : fmt(Math.abs(m.midlineDev))}</span>
       {!ppm && (
-        <button className="link mono" onClick={startCalibrate}>
+        <button className="link" onClick={startCalibrate}>
           Calibrate for mm
         </button>
       )}
@@ -475,27 +480,28 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   return (
     <div className={present ? "editor present" : step === "plan" && planTab !== "shade" ? "editor plan-tall" : "editor"}>
       <header className="topbar">
-        <button className="ghost" onClick={close} aria-label="Back to cases">
-          ‹ Cases
+        <button className="nav-back" onClick={close} aria-label="Back to cases">
+          <Icon name="back" />
+          <span>Cases</span>
         </button>
         <div className="hist">
-          <button className="icon" onClick={history.undo} disabled={!history.canUndo} aria-label="Undo">
-            ↶
+          <button className="icon" onClick={history.undo} disabled={!history.canUndo} aria-label="Undo" title="Undo">
+            <Icon name="undo" />
           </button>
-          <button className="icon" onClick={history.redo} disabled={!history.canRedo} aria-label="Redo">
-            ↷
+          <button className="icon" onClick={history.redo} disabled={!history.canRedo} aria-label="Redo" title="Redo">
+            <Icon name="redo" />
           </button>
         </div>
         <div className="title">
-          <span className="mono">
-            {STEPS[idx].n} / {STEPS[LAST].n} ·{" "}
+          <h1 className="h">{stepLabel(STEPS[idx])}</h1>
+          <span className="sub">
+            Step {idx + 1} of {STEPS.length} ·{" "}
             <span className={save === "error" ? "save err" : "save"}>
-              {save === "saved" ? "Saved ✓" : save === "saving" ? "Saving…" : "Not saved"}
+              {save === "saved" ? "Saved" : save === "saving" ? "Saving…" : "Not saved"}
             </span>
           </span>
-          <h1 className="h">{stepLabel(STEPS[idx])}</h1>
         </div>
-        <button className={showOriginal ? "ghost pressed" : "ghost"} aria-pressed={showOriginal} onClick={() => setShowOriginal((v) => !v)}>
+        <button className={showOriginal ? "pill pressed" : "pill"} aria-pressed={showOriginal} onClick={() => setShowOriginal((v) => !v)}>
           Before
         </button>
       </header>
@@ -552,12 +558,38 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
       )}
 
       {present && (
-        <button className="btn exit-present" onClick={() => setPresent(false)}>
-          Exit
+        <button className="pill exit-present" onClick={() => setPresent(false)}>
+          <Icon name="close" size={18} /> Exit
         </button>
       )}
 
-      <div className="side">
+      <div className={detent ? `side d-${detent}` : "side"}>
+        <button
+          className="grabber"
+          aria-label={detent === "large" ? "Show more photo" : "Show more controls"}
+          onPointerDown={(e) => {
+            grab.current = { y: e.clientY, moved: false };
+            e.currentTarget.setPointerCapture?.(e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            const g = grab.current;
+            if (!g || g.moved) return;
+            const dy = e.clientY - g.y;
+            if (Math.abs(dy) < 28) return;
+            g.moved = true;
+            tick();
+            // up: more controls; down: more photo
+            setDetent((d) => (dy < 0 ? (d === "small" ? null : "large") : d === "large" ? null : "small"));
+          }}
+          onPointerUp={() => {
+            const g = grab.current;
+            grab.current = null;
+            if (g && !g.moved) setDetent((d) => (d === "large" ? null : "large"));
+          }}
+          onPointerCancel={() => (grab.current = null)}
+        >
+          <span className="grabber-bar" aria-hidden="true" />
+        </button>
         {readout}
         <section
           className={step === "plan" && planTab !== "shade" ? "panel tall" : "panel"}
@@ -910,12 +942,12 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
         </section>
 
         <div className="stepper">
-          <button className="btn secondary" onClick={() => goTo(STEPS[idx - 1].id)} disabled={idx === 0}>
-            ‹ Back
+          <button className="btn plain" onClick={() => goTo(STEPS[idx - 1].id)} disabled={idx === 0}>
+            <Icon name="back" size={20} /> Back
           </button>
           {idx < STEPS.length - 1 ? (
             <button className="btn" onClick={() => goTo(STEPS[idx + 1].id)}>
-              Next: {STEPS[idx + 1].label} ›
+              Next: {STEPS[idx + 1].label} <Icon name="forward" size={20} />
             </button>
           ) : (
             <button className="btn" onClick={close}>
@@ -923,23 +955,32 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
             </button>
           )}
         </div>
-
-        <nav className="steps" aria-label="Design steps">
-          {STEPS.map((s, i) => {
-            const done = i <= reached && i !== idx && (i < reached || reached === LAST);
-            return (
-              <button key={s.id} className={s.id === step ? "step on" : "step"} onClick={() => goTo(s.id)} aria-current={s.id === step ? "step" : undefined}>
-                <span className="mono">{done ? "✓" : s.n}</span>
-                {stepLabel(s)}
-                {done && <span className="sr-only"> (done)</span>}
-              </button>
-            );
-          })}
-        </nav>
       </div>
+
+      <nav className="steps" aria-label="Design steps">
+        {STEPS.map((s, i) => {
+          const done = i <= reached && i !== idx && (i < reached || reached === LAST);
+          return (
+            <button key={s.id} className={s.id === step ? "step on" : "step"} onClick={() => goTo(s.id)} aria-current={s.id === step ? "step" : undefined}>
+              <span className="step-ico">
+                <Icon name={s.icon} size={24} />
+                {done && (
+                  <i className="done" aria-hidden="true">
+                    <Icon name="check" size={10} />
+                  </i>
+                )}
+              </span>
+              <span className="step-label">{stepLabel(s)}</span>
+              <span className="step-n" aria-hidden="true">{s.n}</span>
+              {done && <span className="sr-only"> (done)</span>}
+            </button>
+          );
+        })}
+      </nav>
 
       {coach && (
         <Sheet
+          className="coach-sheet"
           title={
             <>
               Six steps to a <em>smile</em> plan
@@ -1040,7 +1081,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
         )}
 
       {shareAsk && (
-        <Sheet title={`Share ${shareAsk.what}?`} onClose={() => setShareAsk(null)}>
+        <Sheet className="alert" title={`Share ${shareAsk.what}?`} onClose={() => setShareAsk(null)}>
           <p>Patient agreed to share {shareAsk.what}? It will leave the app (WhatsApp, gallery, print, cloud backup).</p>
           <div className="row">
             <button

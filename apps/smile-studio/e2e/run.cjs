@@ -295,7 +295,7 @@ async function deviceSuite(browser, devName, face) {
     for (const [label, n, re] of expect) {
       await gotoStep(page, label);
       assert((await page.locator(".topbar .title .h").textContent()) === label, `title not ${label}`);
-      assert((await page.locator(".topbar .title .mono").textContent()).startsWith(n), `counter not ${n}`);
+      assert((await page.locator(".topbar .title .sub").textContent()).startsWith(`Step ${Number(n)} of 6`), `counter not step ${Number(n)} of 6`);
       assert(re.test(await page.locator(".panel").innerText()), `${label} panel missing ${re}`);
       const cur = page.locator('.steps [aria-current]');
       assert((await cur.count()) === 1 && (await cur.innerText()).toLowerCase().includes(label.toLowerCase()), `aria-current not on ${label}`);

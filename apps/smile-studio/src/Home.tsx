@@ -4,7 +4,7 @@ import { initialLayout, newId, type CaseData } from "./model";
 import { deleteCase, KEEP_DAYS, listCases, loadPhoto, purgeOld, saveCase, thumbnail, wipeAll } from "./storage";
 import { MaterialsSheet } from "./PlanPanel";
 import { loadClinicMaterials, saveClinicMaterials, type Material } from "./planner";
-import { ago, Sheet, useToast } from "./ui";
+import { ago, Icon, Sheet, useToast } from "./ui";
 
 type Source = "rear" | "front" | "gallery";
 type Dialog =
@@ -90,8 +90,8 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
   // returning users see their designs first; the photo tips lead only while the list is empty
   const tips = (
     <section className="tips">
-      <p className="mono kicker">For a good photo</p>
-      <ol>
+      <p className="group-head">For a good photo</p>
+      <ol className="group tips-list">
         <li>Face straight to the camera, eyes visible, natural full smile.</li>
         <li>Phone at mouth height, about 1 m away, zoom 2×. Even light, no flash glare.</li>
         <li>Ask the patient before taking or sharing any photo.</li>
@@ -105,22 +105,22 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
     <div className="home">
       <header className="brandbar">
         <img src="./brand/logo-white.png" alt="Dental House" className="logo" />
-        <button className="ghost settings" onClick={() => setDialog({ kind: "materials" })}>
-          Clinic materials
+        <button className="icon-btn" onClick={() => setDialog({ kind: "materials" })} aria-label="Clinic materials" title="Clinic materials">
+          <Icon name="sliders" />
         </button>
       </header>
       <section className="hero">
-        <p className="mono kicker">Smile studio</p>
+        <p className="kicker">Smile Studio</p>
         <h1>
           Design the smile <em>together</em>
         </h1>
         <p className="lede">Take a smiling photo, set the face lines, and try tooth shapes, proportions and shades in the chair.</p>
         <div className="row">
           <button className="btn" onClick={() => ask("rear")} disabled={importing}>
-            Take photo
+            <Icon name="camera" /> Take photo
           </button>
           <button className="btn secondary" onClick={() => ask("gallery")} disabled={importing}>
-            Choose photo
+            <Icon name="photo" /> Choose photo
           </button>
         </div>
         <button className="ghost small-link" onClick={() => ask("front")} disabled={importing}>
@@ -140,7 +140,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
 
       <section className="cases">
         <div className="cases-head">
-          <p className="mono kicker">On this phone</p>
+          <h2 className="section-title">On this phone</h2>
           {!!cases?.length && (
             <button className="ghost" aria-pressed={showPhotos} onClick={() => setShowPhotos((v) => !v)}>
               {showPhotos ? "Hide photos" : "Show photos"}
@@ -148,9 +148,11 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
           )}
         </div>
         {cases === null ? (
-          <p className="muted" role="status">
-            Loading…
-          </p>
+          <ul className="grid" role="status" aria-label="Loading designs">
+            {[0, 1].map((i) => (
+              <li key={i} className="card-skel" aria-hidden="true" />
+            ))}
+          </ul>
         ) : cases.length === 0 ? (
           <div className="empty">
             <img src="./brand/mark-white.png" alt="" className="empty-mark" />
@@ -164,10 +166,10 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
                 <button className="card-open" onClick={() => onOpen(c)} aria-label={`Open ${c.label}, edited ${ago(c.updatedAt)}`}>
                   {c.thumb ? <img src={c.thumb} alt="" className={showPhotos ? "" : "veiled"} /> : <div className="noimg" />}
                   <span className="card-label">{c.label}</span>
-                  <span className="card-time mono">{ago(c.updatedAt)}</span>
+                  <span className="card-time">{ago(c.updatedAt)}</span>
                 </button>
                 <button className="card-more" aria-label={`More for ${c.label}`} onClick={() => setDialog({ kind: "menu", c })}>
-                  ⋯
+                  <Icon name="more" />
                 </button>
               </li>
             ))}
@@ -175,16 +177,16 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
         )}
         <p className="small muted">Designs are cleared from this phone after {KEEP_DAYS} days.</p>
         {!!cases?.length && (
-          <button className="ghost danger" onClick={() => setDialog({ kind: "wipe" })}>
+          <button className="ghost danger wipe" onClick={() => setDialog({ kind: "wipe" })}>
             Delete all designs from this phone
           </button>
         )}
       </section>
       {!!cases?.length && tips}
-      <footer className="foot mono">Private: nothing leaves this device unless you share it · Simulations are for discussion, not a promised result</footer>
+      <footer className="foot">Private: nothing leaves this device unless you share it · Simulations are for discussion, not a promised result</footer>
 
       {dialog?.kind === "consent" && (
-        <Sheet title="Before the photo" onClose={() => setDialog(null)}>
+        <Sheet className="alert" title="Before the photo" onClose={() => setDialog(null)}>
           <p>Patient agreed to a photo for in-chair discussion?</p>
           <div className="row">
             <button
@@ -206,9 +208,9 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
 
       {dialog?.kind === "menu" && (
         <Sheet title={dialog.c.label} onClose={() => setDialog(null)}>
-          <div className="menu">
+          <div className="group menu">
             <button
-              className="btn secondary"
+              className="list-row"
               onClick={() => {
                 setName(dialog.c.label);
                 setDialog({ kind: "rename", c: dialog.c });
@@ -217,7 +219,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
               Rename
             </button>
             <button
-              className="btn secondary"
+              className="list-row"
               onClick={() => {
                 setDialog(null);
                 void duplicate(dialog.c);
@@ -227,7 +229,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
             </button>
             {archOf(dialog.c.design) === "upper" && (
               <button
-                className="btn secondary"
+                className="list-row"
                 onClick={() => {
                   setDialog(null);
                   void planLower(dialog.c);
@@ -236,7 +238,9 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
                 Plan lower teeth (copy)
               </button>
             )}
-            <button className="btn danger" onClick={() => setDialog({ kind: "delete", c: dialog.c })}>
+          </div>
+          <div className="group menu">
+            <button className="list-row destructive" onClick={() => setDialog({ kind: "delete", c: dialog.c })}>
               Delete
             </button>
           </div>
@@ -267,7 +271,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
       )}
 
       {dialog?.kind === "delete" && (
-        <Sheet title="Delete this design?" onClose={() => setDialog(null)}>
+        <Sheet className="alert" title="Delete this design?" onClose={() => setDialog(null)}>
           <p>The design and its photo are removed from this phone. This cannot be undone.</p>
           <div className="row">
             <button
@@ -304,7 +308,7 @@ export function Home({ onOpen }: { onOpen: (c: CaseData) => void }) {
       )}
 
       {dialog?.kind === "wipe" && (
-        <Sheet title="Delete all designs?" onClose={() => setDialog(null)}>
+        <Sheet className="alert" title="Delete all designs?" onClose={() => setDialog(null)}>
           <p>Every photo and design in Smile Studio is removed from this phone. This cannot be undone.</p>
           <div className="row">
             <button

@@ -72,7 +72,7 @@ a photo can measure (a colour estimate) and checks the recorded plan for conflic
 - Exports never include the case label, and always carry the simulation label.
 - The case label is for the clinic's own use: use initials or a code, not a patient's name or file ID.
 - No claims in the UI ("guaranteed", "perfect", "painless"…). A simulation is a discussion aid, not a promise.
-- Brand: slate/bronze, Oswald + Instrument Serif accent + JetBrains Mono, white logo on dark.
+- Brand: slate/bronze palette as semantic tokens, white logo on dark. UI follows Apple HIG (round 5, taste T14): system font, sentence case, segmented controls, switches, grouped inset lists, bottom sheets with grabber, tab bar on phones / step sidebar on iPad and landscape. Oswald + Instrument Serif accent only for brand moments (Home hero, onboarding title, exported sheets).
 
 ## Run it
 
