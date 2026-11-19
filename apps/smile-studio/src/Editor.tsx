@@ -1017,6 +1017,15 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                 <Icon name="target" size={20} /> Fit to teeth
               </button>
               <Chips
+                label="Change"
+                value={c.design.change ?? "shape"}
+                options={[
+                  { value: "shape", label: "Shape + shade" },
+                  { value: "shade", label: "Shade only" },
+                ]}
+                onChange={(change: "shape" | "shade") => setDesign({ change })}
+              />
+              <Chips
                 label="Teeth look"
                 value={mode === "outline" ? "outline" : (c.design.render ?? "photo")}
                 options={[
@@ -1143,6 +1152,14 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
 
           {step === "shade" && (
             <>
+              <button
+                className={c.design.shade === "match" ? "btn match-btn on" : "btn secondary match-btn"}
+                aria-pressed={c.design.shade === "match"}
+                onClick={() => setDesign({ shade: "match" })}
+              >
+                {lower ? "Match the upper teeth" : "Match the lower teeth"}
+              </button>
+              <p className="note">Takes the colour of the opposing teeth in this photo (e.g. existing restorations).</p>
               <div className="field">
                 <span className="field-label">Shade (screen preview only)</span>
                 <div className="swatches" role="radiogroup" aria-label="Shade">

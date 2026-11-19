@@ -644,3 +644,7 @@ input[type="range"] { flex: 1; min-width: 0; accent-color: var(--bronze-light); 
 .ai-confirm .btn { min-height: 44px; font-size: var(--t-callout); }
 .ai-confirm .btn.plain { padding: 0 10px; }
 .labs-foot { margin: 6px 4px 0; }
+
+/* round 8: "Match the upper / lower teeth" shade */
+.match-btn { width: 100%; margin-bottom: 6px; }
+.match-btn.on { outline: 2px solid var(--bronze-light); outline-offset: 2px; }

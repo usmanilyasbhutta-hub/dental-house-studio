@@ -62,6 +62,8 @@ export interface Design {
    * line between the arches (e.g. ceramic uppers over natural lowers). The design is never painted beyond it.
    */
   opposing?: Pt[];
+  /** "shape" (default): new outlines + shade. "shade": keep the patient's own tooth shapes, change only the colour. */
+  change?: "shape" | "shade";
 }
 
 export interface CaseData {

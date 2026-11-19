@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Mask, ToothPrep } from "../src/contracts";
 import { centralLength, designHandles, plannedOutlines, PROPORTIONS_LOWER, toImage, toLocal, toothBoxes, toothLabel } from "../src/geometry";
 import { DEFAULT_DESIGN, type Design, type Pt } from "../src/model";
-import { analyse, lipGrid, makeFrame, planInGrid, pushPull, resampleLab, resampleMask, shadeTarget, synthesise } from "../src/photoTeeth";
+import { analyse, keepShapes, lipGrid, makeFrame, planInGrid, pushPull, resampleLab, resampleMask, shadeTarget, synthesise } from "../src/photoTeeth";
 import { computePrep, contours, ENAMEL_MM, fmtMm, HIDDEN_LEGEND, HIDDEN_NOTE, PREP_DISCLAIMER, prepWording, setPrepPhotoReader } from "../src/prep";
 import { hexToLab, labToRgb, rgbToLab, shadeLab } from "../src/shades";
 import { detectTeethRGBA, lipCoverage, maskVersion, newMask, paintMask, rasterPolygon } from "../src/teethMask";
@@ -532,5 +532,32 @@ describe("opposing-teeth edge set by the dentist (round 8)", () => {
     let n = 0;
     for (let x = 0; x < an.hidden.length; x++) if (an.pEnd[x] === an.pEnd[x]) { n++; if (an.hidden[x]) hid++; }
     expect(hid / n).toBeGreaterThan(0.5);
+  });
+});
+
+describe("shade only: the patient's own tooth shapes are kept (round 8)", () => {
+  it("nothing is added or reduced, and only existing tooth pixels are recoloured", () => {
+    const inside = lipCoverage(lips, W, H, 1);
+    // existing teeth narrower and shorter than the plan
+    const m = newMask(W, H);
+    for (let y = 100; y < 135; y++) for (let x = 120; x < 280; x++) if (inside[y * W + x] >= 0.5 && (x - 120) % 40 > 3) m.data[y * W + x] = 255;
+    const f = makeFrame({ lips, design: upper, guides, imgW: W, imgH: H }, 1);
+    const plan = planInGrid(f, upper);
+    const E = resampleMask(f, m, W, H);
+    const lg = lipGrid(f, lips);
+    const an = analyse(f, plan, E, lg);
+    keepShapes(f, plan, an, E, lg);
+    let added = 0;
+    let reduced = 0;
+    let outside = 0;
+    for (let j = 0; j < an.T.length; j++) {
+      if (an.add[j] > 0) added++;
+      if (an.reduce[j] > 0) reduced++;
+      if (an.T[j] > 0 && E[j] < 0.5) outside++;
+    }
+    expect(added).toBe(0);
+    expect(reduced).toBe(0);
+    expect(outside).toBe(0);
+    expect(an.T.some((v) => v > 0)).toBe(true);
   });
 });

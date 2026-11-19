@@ -1716,7 +1716,7 @@ const outs: Record<string, Out> = {};
 
 function designKey(d: Design, extra: string) {
   const opp = (d.opposing ?? []).map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(";");
-  return [d.center.x, d.center.y, d.width, d.wl, d.arc, d.tilt, d.lateralStep, d.count, d.proportion, d.shape, d.shade, d.arch ?? "upper", opp, extra].join("|");
+  return [d.center.x, d.center.y, d.width, d.wl, d.arc, d.tilt, d.lateralStep, d.count, d.proportion, d.shape, d.shade, d.arch ?? "upper", opp, d.change ?? "shape", extra].join("|");
 }
 
 /** Builds (or reuses) the photo-teeth layer for a scene. `slot` separates the screen and export caches. */
@@ -1730,7 +1730,10 @@ export function buildPhotoLayer(s: EngineScene, q: "fast" | "full", slot = "scre
   const f = g.f;
   const plan = planInGrid(f, s.design);
   const an = analyse(f, plan, g.E, g.lip, g.Lg);
-  const target = shadeTarget(s.design.shade, isLower(s.design), g.cast ?? photoCast(g.Lg, g.E, g.lip));
+  if (s.design.change === "shade") keepShapes(f, plan, an, g.E, g.lip);
+  const target =
+    (s.design.shade === MATCH_OPPOSING ? matchOpposing(f, plan, an, g.E, g.lip, g.Lg) : null) ??
+    shadeTarget(s.design.shade === MATCH_OPPOSING ? "A1" : s.design.shade, isLower(s.design), g.cast ?? photoCast(g.Lg, g.E, g.lip));
   const px = synthesise(f, g.Lg, g.E, g.lip, an, target, { grain: q === "full" });
   if (!o.cv) {
     o.cv = document.createElement("canvas");
@@ -1811,4 +1814,63 @@ export function autoOpposing(s: EngineScene): Pt[] | null {
     out.push({ x: q.x, y: q.y });
   }
   return out;
+}
+
+
+/** Shade id meaning "the colour of the opposing teeth in this photo" (e.g. lower teeth matched to upper restorations). */
+export const MATCH_OPPOSING = "match";
+
+/**
+ * Shade only: the patient's own visible teeth keep their shape; the planned area becomes exactly the existing tooth
+ * pixels (inside the lips, up to the visible / opposing edge), mapped onto themselves. Nothing is added or reduced.
+ */
+export function keepShapes(f: Frame, plan: Plan, an: Analysis, E: Float32Array, lip: Float32Array) {
+  const { gw, gh } = f;
+  an.T.fill(0);
+  an.add.fill(0);
+  an.reduce.fill(0);
+  for (let x = plan.x0; x < plan.x1; x++) {
+    an.X[x] = x + 0.5;
+    const c = an.eC[x];
+    const e = an.eI[x];
+    if (c !== c || e !== e) {
+      an.pEnd[x] = NaN;
+      continue;
+    }
+    an.cDst[x] = c;
+    an.pEnd[x] = e;
+    for (let y = Math.max(0, Math.floor(c)); y < Math.min(gh, Math.ceil(e)); y++) {
+      const j = y * gw + x;
+      if (E[j] >= 0.5 && lip[j] > 0.5) an.T[j] = 1;
+    }
+  }
+}
+
+/**
+ * Target shade taken from the OPPOSING teeth in this photo (median Lab of existing-tooth pixels beyond the opposing
+ * edge, within the planned columns). Already in the photo's own light, so no cast correction. null if too few pixels.
+ */
+export function matchOpposing(f: Frame, plan: Plan, an: Analysis, E: Float32Array, lip: Float32Array, Lg: Float32Array): ShadeTarget | null {
+  const { gw, gh } = f;
+  const Ls: number[] = [];
+  const as: number[] = [];
+  const bs: number[] = [];
+  for (let x = plan.x0; x < plan.x1; x++) {
+    // where the opposing arch starts in this column: the dentist's line, the hidden junction, or the planned edge
+    const start = plan.opp && plan.opp[x] === plan.opp[x] ? plan.opp[x] : an.hidden[x] && an.eI[x] === an.eI[x] ? an.eI[x] : plan.pBot[x];
+    if (start !== start) continue;
+    for (let y = Math.ceil(start + 2); y < Math.min(gh, start + plan.L * 0.9); y++) {
+      const j = y * gw + x;
+      if (E[j] < 0.5 || lip[j] <= 0.5) continue;
+      const L = Lg[j * 3];
+      if (L > 93 || L < 45) continue; // shine / shadow
+      Ls.push(L);
+      as.push(Lg[j * 3 + 1]);
+      bs.push(Lg[j * 3 + 2]);
+    }
+  }
+  if (Ls.length < 30) return null;
+  const med = (v: number[]) => (v.sort((p, q) => p - q), v[v.length >> 1]);
+  const body: [number, number, number] = [med(Ls), med(as), med(bs)];
+  return { body, cervical: [body[0] - 3, body[1] + 0.5, body[2] + 3] };
 }
