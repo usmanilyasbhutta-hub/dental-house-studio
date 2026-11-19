@@ -1058,7 +1058,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                   }}
                 />
               )}
-              <Toggle label="Prep map" note="Design vs existing teeth: green added, red reduced" checked={prepOn} onChange={setPrepOn} />
+              <Toggle label="Prep map · what to change" note="Per tooth: amber = shade change (ΔE), green = add, red = reduce" checked={prepOn} onChange={setPrepOn} />
               {prepOn && (
                 <PrepPanel
                   prep={prep}
@@ -1227,7 +1227,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
                 ]}
                 onChange={setCompareView}
               />
-              <Toggle label="Prep map" note="Instead of the slider: green added, red reduced" checked={prepOn} onChange={setPrepOn} />
+              <Toggle label="Prep map · what to change" note="Instead of the slider. Per tooth: amber = shade change (ΔE), green = add, red = reduce" checked={prepOn} onChange={setPrepOn} />
               {prepOn ? (
                 <>
                   <PrepDisclaimer />

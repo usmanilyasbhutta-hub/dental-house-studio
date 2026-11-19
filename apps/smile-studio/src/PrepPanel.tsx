@@ -28,6 +28,9 @@ export function PrepLegend({ prep }: { prep?: PrepResult | null }) {
       <span>
         <i className="sw reduce" aria-hidden="true" /> Red · {CLINICIAN.legendReduce.replace(/^Reduced: /, "reduced: ")}
       </span>
+      <span>
+        <i className="sw shade" aria-hidden="true" /> Amber chip · shade change (ΔE00 ≥ 1.8, photo estimate)
+      </span>
       {prep?.hidden && (
         <span className="legend-hidden">
           <i className="sw hidden" aria-hidden="true" /> Grey hatch · {hiddenLegend(lower)}

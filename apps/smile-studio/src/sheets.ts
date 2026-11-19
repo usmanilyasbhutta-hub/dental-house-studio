@@ -445,7 +445,8 @@ export async function clinicianSheet(o: ClinicianOpts): Promise<HTMLCanvasElemen
   }
   let lx = M;
   lx += swatch(ctx(), lx, doc.y, "rgba(40,200,110,0.9)", null, CLINICIAN.legendAdd, `400 18px ${SANS}`) + 28;
-  swatch(ctx(), lx, doc.y, "rgba(235,60,50,0.9)", null, CLINICIAN.legendReduce, `400 18px ${SANS}`);
+  lx += swatch(ctx(), lx, doc.y, "rgba(235,60,50,0.9)", null, CLINICIAN.legendReduce, `400 18px ${SANS}`) + 28;
+  swatch(ctx(), lx, doc.y, "rgba(176,120,30,0.92)", null, "Amber chip: shade change (ΔE00)", `400 18px ${SANS}`);
   doc.gap(38);
   if (prep?.hidden) {
     // round 6: planned outline hidden behind the opposing teeth (grey hatch in the map)

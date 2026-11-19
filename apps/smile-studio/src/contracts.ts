@@ -31,6 +31,11 @@ export interface ToothPrep {
   /** % of the existing tooth area (inside this tooth's box) that lies outside the plan (needs reduction) */
   reducePct: number;
   category: PrepCategory;
+  /**
+   * Shade change for this tooth (photo estimate, needs the photo): today's median Lab of the visible tooth vs the
+   * design's target, CIEDE2000 and signed lightness / chroma / yellowness differences (target − today).
+   */
+  shade?: { now: [number, number, number]; target: [number, number, number]; dE: number; dL: number; dC: number; db: number };
   /** Round 6 (optional): % of the planned outline hidden behind the opposing teeth (not measurable). */
   hiddenPct?: number;
 }

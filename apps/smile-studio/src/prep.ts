@@ -3,7 +3,9 @@
 // that spec exactly; the reference text there is printed by the UI, never computed per tooth.
 import type { Mask, PrepResult, ToothPrep } from "./contracts";
 import { centralWidth, designAngle, plannedOutlines, toothLabel, toothSpoken } from "./geometry";
-import { analyse, imageToGrid, lipGrid, makeFrame, planInGrid, resampleLab, resampleMask, type EngineScene, type Frame } from "./photoTeeth";
+import { analyse, imageToGrid, keepShapes, lipGrid, makeFrame, matchOpposing, MATCH_OPPOSING, photoCast, planInGrid, resampleLab, resampleMask, shadeTarget, type EngineScene, type Frame } from "./photoTeeth";
+import { deltaE00Parts } from "./planner";
+import { isLower } from "./geometry";
 
 export type { PrepResult, ToothPrep };
 
@@ -154,6 +156,14 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
   if (px) Lg = resampleLab(f, px.data, px.rx, px.ry, px.rw, px.rh);
   const plan = planInGrid(f, scene.design);
   const an = analyse(f, plan, E, lip, Lg);
+  // shade only: the outline is the patient's own, so nothing is added or reduced (only the colour changes)
+  const shadeOnly = scene.design.change === "shade";
+  if (shadeOnly) keepShapes(f, plan, an, E, lip);
+  // the design's target colour, as the renderer uses it (in the photo's light)
+  const target = Lg
+    ? ((scene.design.shade === MATCH_OPPOSING ? matchOpposing(f, plan, an, E, lip, Lg) : null) ??
+      shadeTarget(scene.design.shade === MATCH_OPPOSING ? "A1" : scene.design.shade, isLower(scene.design), photoCast(Lg, E, lip)))
+    : null;
   const { gw, gh } = f;
   const d = scene.design;
   const thrPx = pxPerMm ? PREP_THRESHOLDS.suppressMm * pxPerMm : centralWidth(d) * 0.04;
@@ -233,20 +243,56 @@ export function computePrep(scene: EngineScene, existing: Mask, pxPerMm?: number
     const visT = tArea - hidT;
     const addPct = visT > 0 ? (100 * addA) / visT : 0;
     const reducePct = eArea ? (100 * redA) / eArea : 0;
-    const add = addPct >= 3 || lengthPx > thrPx || mesialPx > thrPx || distalPx > thrPx;
-    const red = reducePct >= 3 || lengthPx < -thrPx || mesialPx < -thrPx || distalPx < -thrPx;
+    const add = !shadeOnly && (addPct >= 3 || lengthPx > thrPx || mesialPx > thrPx || distalPx > thrPx);
+    const red = !shadeOnly && (reducePct >= 3 || lengthPx < -thrPx || mesialPx < -thrPx || distalPx < -thrPx);
+    // today's colour of this tooth: median of its visible enamel (no shine, no shadow)
+    let shade: ToothPrep["shade"];
+    if (Lg && target) {
+      const Ls: number[] = [];
+      const as: number[] = [];
+      const bs: number[] = [];
+      for (let x = t.c0; x < t.c1; x++) {
+        const c = an.eC[x];
+        const e = an.eI[x];
+        if (c !== c || e !== e) continue;
+        for (let y = Math.max(0, Math.ceil(c)); y < Math.min(gh, Math.floor(e)); y++) {
+          const j = y * gw + x;
+          if (E[j] < 0.5 || lip[j] <= 0.5) continue;
+          const L = Lg[j * 3];
+          if (L > 93 || L < 45) continue;
+          Ls.push(L);
+          as.push(Lg[j * 3 + 1]);
+          bs.push(Lg[j * 3 + 2]);
+        }
+      }
+      if (Ls.length >= 20) {
+        const med = (v: number[]) => (v.sort((p, q) => p - q), v[v.length >> 1]);
+        const now: [number, number, number] = [med(Ls), med(as), med(bs)];
+        const tgt = target.body;
+        const r1 = (v: number) => Math.round(v * 10) / 10;
+        shade = {
+          now: now.map(r1) as [number, number, number],
+          target: tgt.map(r1) as [number, number, number],
+          dE: r1(deltaE00Parts(now, tgt).dE),
+          dL: r1(tgt[0] - now[0]),
+          dC: r1(Math.hypot(tgt[1], tgt[2]) - Math.hypot(now[1], now[2])),
+          db: r1(tgt[2] - now[2]),
+        };
+      }
+    }
     teeth.push({
       kind: t.box.kind,
       side,
       label: toothLabel(d, t.box.kind, side),
-      lengthPx: unknown ? 0 : lengthPx,
-      mesialPx: unknown ? 0 : mesialPx,
-      distalPx: unknown ? 0 : distalPx,
+      lengthPx: unknown || shadeOnly ? 0 : lengthPx,
+      mesialPx: unknown || shadeOnly ? 0 : mesialPx,
+      distalPx: unknown || shadeOnly ? 0 : distalPx,
       overlapPct: unknown ? 0 : overlapPct,
       addPct: unknown ? 100 : addPct,
       reducePct: unknown ? 0 : reducePct,
       category: unknown ? "unknown" : add && red ? "mixed" : add ? "additive" : red ? "reduction" : "unchanged",
       ...(hiddenPct >= 0.5 ? { hiddenPct: Math.round(hiddenPct * 10) / 10 } : {}),
+      ...(shade ? { shade } : {}),
     });
   }
   // order: patient's right distal → left distal (as seen on the photo, left to right)
@@ -350,6 +396,8 @@ export function prepWording(t: ToothPrep, pxPerMm?: number): { clinician: string
     if (!where.length) where.push("incisal");
     clinician.push(`Outline reduction: tooth is outside the plan at the ${joinList(where)}.`);
   } else clinician.push("Outline unchanged in this view.");
+  const sh = shadeLine(t);
+  if (sh) clinician.push(sh);
   if (pxPerMm) {
     if (!hiddenLen && -t.lengthPx / pxPerMm > PREP_THRESHOLDS.incisalWarnMm) clinician.push("Large incisal change: check occlusion, length and pulp before planning.");
     if (-t.mesialPx / pxPerMm > PREP_THRESHOLDS.proximalWarnMm || -t.distalPx / pxPerMm > PREP_THRESHOLDS.proximalWarnMm)
@@ -369,7 +417,14 @@ export function prepWording(t: ToothPrep, pxPerMm?: number): { clinician: string
     if (!hiddenLen && Math.abs(t.lengthPx) >= thr * 2) parts.push(`a little ${t.lengthPx > 0 ? "longer" : "shorter"}`);
     if (Math.abs(widthPx) >= thr * 2) parts.push(`a little ${widthPx > 0 ? "wider" : "narrower"}`);
   }
-  const patient = parts.length ? `${name}: design is ${parts.join(" and ")}.` : `${name}: design keeps about the same outline.`;
+  let patient = parts.length ? `${name}: design is ${parts.join(" and ")}.` : `${name}: design keeps about the same outline.`;
+  if (t.shade && t.shade.dE >= SHADE_ACCEPT) {
+    const c: string[] = [];
+    if (t.shade.dL >= 1.5) c.push("lighter");
+    else if (t.shade.dL <= -1.5) c.push("a little deeper");
+    if (t.shade.db <= -1.5) c.push("less yellow");
+    patient += ` Colour: ${c.length ? c.join(" and ") : "adjusted"} in the design.`;
+  }
   return { clinician, patient };
 }
 
@@ -529,13 +584,31 @@ export function drawPrepMap(ctx: CanvasRenderingContext2D, scene: EngineScene, p
       const ys = o.pts.map((p) => p.y);
       const y = arch === "lower" ? Math.min(...ys) - fs * 0.75 : Math.max(...ys) + fs * 0.75;
       const t = String(fdiOf(arch, o.box.kind, o.box.side));
-      const w = ctx.measureText(t).width + fs * 0.5;
-      ctx.fillStyle = "rgba(20,24,22,0.78)";
+      // what this tooth needs: chip colour + a short tag (ΔE for shade, add / reduce for outline)
+      const tp = prep.teeth.find((q) => q.kind === o.box.kind && q.side === o.box.side);
+      const tag = tp ? changeTag(tp) : { text: "", kind: "none" as const };
+      const bg = { shade: "rgba(176,120,30,0.92)", add: "rgba(24,140,80,0.92)", reduce: "rgba(200,52,44,0.92)", mixed: "rgba(120,70,150,0.92)", none: "rgba(20,24,22,0.78)" }[tag.kind];
+      const two = !!tag.text;
+      const fs2 = fs * 0.62;
+      ctx.font = `600 ${fs}px -apple-system, "Segoe UI", Roboto, sans-serif`;
+      let w = ctx.measureText(t).width + fs * 0.5;
+      if (two) {
+        ctx.font = `600 ${fs2}px -apple-system, "Segoe UI", Roboto, sans-serif`;
+        w = Math.max(w, ctx.measureText(tag.text).width + fs * 0.4);
+      }
+      const hh = two ? fs * 1.95 : fs * 1.24;
+      const yy = arch === "lower" ? y - (two ? fs * 0.35 : 0) : y + (two ? fs * 0.35 : 0);
+      ctx.fillStyle = bg;
       ctx.beginPath();
-      ctx.roundRect(cx - w / 2, y - fs * 0.62, w, fs * 1.24, fs * 0.3);
+      ctx.roundRect(cx - w / 2, yy - hh / 2, w, hh, fs * 0.3);
       ctx.fill();
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillText(t, cx, y + fs * 0.04);
+      ctx.font = `600 ${fs}px -apple-system, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillText(t, cx, two ? yy - hh / 2 + fs * 0.62 : yy + fs * 0.04);
+      if (two) {
+        ctx.font = `600 ${fs2}px -apple-system, "Segoe UI", Roboto, sans-serif`;
+        ctx.fillText(tag.text, cx, yy + hh / 2 - fs2 * 0.7);
+      }
     }
   }
   ctx.restore();
@@ -645,4 +718,31 @@ function simplify(p: number[]): Float32Array {
     o[i * 2 + 1] = (p[a * 2 + 1] + 2 * p[i * 2 + 1] + p[b * 2 + 1]) / 4;
   }
   return o;
+}
+
+/** ΔE00 acceptability threshold (Paravina 2015, PMID 25740131). */
+export const SHADE_ACCEPT = 1.8;
+
+/** Clinician line for the tooth's shade change (photo estimate), or null without photo data. */
+export function shadeLine(t: ToothPrep): string | null {
+  const s = t.shade;
+  if (!s) return null;
+  if (s.dE < SHADE_ACCEPT) return `Shade: matches the target (ΔE00 ${s.dE.toFixed(1)}, photo estimate).`;
+  const parts: string[] = [];
+  if (Math.abs(s.dL) >= 1.5) parts.push(s.dL > 0 ? `lighter by ${s.dL.toFixed(0)} L*` : `darker by ${(-s.dL).toFixed(0)} L*`);
+  if (Math.abs(s.db) >= 1.5) parts.push(s.db < 0 ? `less yellow by ${(-s.db).toFixed(0)} b*` : `more yellow by ${s.db.toFixed(0)} b*`);
+  else if (Math.abs(s.dC) >= 1.5) parts.push(s.dC < 0 ? `less saturated` : `more saturated`);
+  return `Shade change: ${parts.length ? joinList(parts) : "small hue shift"} (ΔE00 ${s.dE.toFixed(1)}, beyond ${SHADE_ACCEPT} acceptability; photo estimate, confirm with a shade guide).`;
+}
+
+/** Short tag for the map chip: what this tooth needs. */
+export function changeTag(t: ToothPrep): { text: string; kind: "shade" | "add" | "reduce" | "mixed" | "none" } {
+  const shade = !!t.shade && t.shade.dE >= SHADE_ACCEPT;
+  const kind = t.category === "additive" ? "add" : t.category === "reduction" ? "reduce" : t.category === "mixed" ? "mixed" : shade ? "shade" : "none";
+  const bits: string[] = [];
+  if (t.category === "additive") bits.push("add");
+  if (t.category === "reduction") bits.push("reduce");
+  if (t.category === "mixed") bits.push("add+reduce");
+  if (shade) bits.push(`ΔE ${t.shade!.dE.toFixed(0)}`);
+  return { text: bits.join(" · "), kind };
 }

@@ -467,6 +467,7 @@ input[type="range"] { flex: 1; min-width: 0; accent-color: var(--bronze-light); 
 .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; }
 .sw.add { background: rgb(40, 200, 110); }
 .sw.reduce { background: rgb(235, 60, 50); }
+.sw.shade { background: rgb(176, 120, 30); }
 .prep-list { list-style: none; margin: 0 0 12px; padding: 0 16px; background: var(--surface-2); border-radius: var(--r); }
 .prep-list li { display: grid; grid-template-columns: 76px 1fr; gap: 8px; padding: 10px 0; }
 .prep-list li + li { border-top: 1px solid var(--sep); }

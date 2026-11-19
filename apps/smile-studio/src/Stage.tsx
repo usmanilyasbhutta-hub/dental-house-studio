@@ -293,7 +293,7 @@ export function Stage(props: Props) {
       }
       drawFitPins(ctx, fitPts!, v.scale, active.current ?? selRef.current);
     } else if (!p.showOriginal && prepOn) {
-      drawPrepMap(ctx, s, p.prep!);
+      drawPrepMap(ctx, s, p.prep!, { labels: true });
       ctx.save();
       ctx.globalAlpha = 0.75;
       drawTeeth(ctx, s, "outline", q);

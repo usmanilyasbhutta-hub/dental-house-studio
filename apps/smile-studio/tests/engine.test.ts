@@ -4,7 +4,7 @@ import type { Mask, ToothPrep } from "../src/contracts";
 import { centralLength, designHandles, plannedOutlines, PROPORTIONS_LOWER, toImage, toLocal, toothBoxes, toothLabel } from "../src/geometry";
 import { DEFAULT_DESIGN, type Design, type Pt } from "../src/model";
 import { analyse, keepShapes, lipGrid, makeFrame, planInGrid, pushPull, resampleLab, resampleMask, shadeTarget, synthesise } from "../src/photoTeeth";
-import { computePrep, contours, ENAMEL_MM, fmtMm, HIDDEN_LEGEND, HIDDEN_NOTE, PREP_DISCLAIMER, prepWording, setPrepPhotoReader } from "../src/prep";
+import { changeTag, computePrep, contours, ENAMEL_MM, fmtMm, HIDDEN_LEGEND, HIDDEN_NOTE, PREP_DISCLAIMER, prepWording, setPrepPhotoReader, shadeLine } from "../src/prep";
 import { hexToLab, labToRgb, rgbToLab, shadeLab } from "../src/shades";
 import { detectTeethRGBA, lipCoverage, maskVersion, newMask, paintMask, rasterPolygon } from "../src/teethMask";
 
@@ -559,5 +559,37 @@ describe("shade only: the patient's own tooth shapes are kept (round 8)", () => 
     expect(reduced).toBe(0);
     expect(outside).toBe(0);
     expect(an.T.some((v) => v > 0)).toBe(true);
+  });
+});
+
+describe("changes map: per-tooth shade change (round 8)", () => {
+  it("yellow teeth planned to a bleach shade are reported lighter / less yellow, with an amber chip in shade-only", () => {
+    const inside = lipCoverage(lips, W, H, 1);
+    const acc = new Float32Array(W * H);
+    for (const o of plannedOutlines(upper, 0)) rasterPolygon(acc, W, H, o.pts);
+    const m = newMask(W, H);
+    const px = new Uint8ClampedArray(W * H * 4);
+    for (let i = 0; i < W * H; i++) {
+      const tooth = acc[i] >= 0.5 && inside[i] >= 0.5;
+      m.data[i] = tooth ? 255 : 0;
+      const c = inside[i] < 0.5 ? [196, 96, 98] : tooth ? [214, 190, 140] : [45, 22, 24]; // yellowish teeth
+      px.set([c[0], c[1], c[2], 255], i * 4);
+    }
+    const design: Design = { ...upper, shade: "BL1", change: "shade" };
+    setPrepPhotoReader(() => ({ data: px, rx: 0, ry: 0, rw: W, rh: H }));
+    try {
+      const res = computePrep({ img: null as unknown as CanvasImageSource, imgW: W, imgH: H, guides, lips, design }, m);
+      const t = res.teeth.find((x) => x.label === "UR1")!;
+      expect(t.shade).toBeDefined();
+      expect(t.shade!.dE).toBeGreaterThan(1.8);
+      expect(t.shade!.db).toBeLessThan(0);
+      expect(t.category).toBe("unchanged"); // shade only: no outline change
+      expect(res.add.data.some((v) => v > 0)).toBe(false);
+      expect(shadeLine(t)).toMatch(/less yellow/);
+      expect(changeTag(t).kind).toBe("shade");
+      expect(prepWording(t).patient).toMatch(/Colour:/);
+    } finally {
+      setPrepPhotoReader(null);
+    }
   });
 });
