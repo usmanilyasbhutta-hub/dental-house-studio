@@ -500,3 +500,37 @@ describe("diastema: a gap between the centrals is closed by the plan (round 8)",
     });
   }
 });
+
+describe("opposing-teeth edge set by the dentist (round 8)", () => {
+  it("default points sit past the lower incisal line toward the lower gum (below it on the photo)", async () => {
+    const { defaultOpposing } = await import("../src/geometry");
+    const low: Design = { ...upper, arch: "lower", center: { x: 200, y: 120 }, width: 190, wl: 0.62 };
+    const pts = defaultOpposing(low, guides);
+    expect(pts).toHaveLength(5);
+    for (const p of pts) expect(p.y).toBeGreaterThan(120);
+    expect(pts[0].x).toBeLessThan(pts[4].x);
+  });
+
+  it("lower teeth are never painted beyond the line, even when upper and lower teeth form one block", () => {
+    const low: Design = { ...upper, arch: "lower", center: { x: 200, y: 120 }, width: 190, wl: 0.62, arc: 0 };
+    const Ll = centralLength(low);
+    const edgeY = Math.round(120 + Ll * 0.35); // the real upper edge on the photo
+    const inside = lipCoverage(lips, W, H, 1);
+    // one joined block of tooth from well above the lower incisal line down to the lower gum: no shadow line
+    const m = newMask(W, H);
+    for (let y = 60; y < 120 + Ll + 2; y++) for (let x = 110; x < 290; x++) if (inside[y * W + x] >= 0.5) m.data[y * W + x] = 255;
+    const withLine = { ...low, opposing: [{ x: 100, y: edgeY }, { x: 200, y: edgeY }, { x: 300, y: edgeY }] };
+    const run = (d: Design) => {
+      const f = makeFrame({ lips, design: d, guides, imgW: W, imgH: H }, 1);
+      const plan = planInGrid(f, d);
+      const E = resampleMask(f, m, W, H);
+      return { an: analyse(f, plan, E, lipGrid(f, lips)), f };
+    };
+    const { an } = run(withLine);
+    // columns of the centrals: hidden at the dentist's line, painted edge (pEnd) not beyond it
+    let hid = 0;
+    let n = 0;
+    for (let x = 0; x < an.hidden.length; x++) if (an.pEnd[x] === an.pEnd[x]) { n++; if (an.hidden[x]) hid++; }
+    expect(hid / n).toBeGreaterThan(0.5);
+  });
+});

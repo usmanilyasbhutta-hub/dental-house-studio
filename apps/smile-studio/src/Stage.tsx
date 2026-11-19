@@ -127,7 +127,8 @@ function handlesOf(s: Scene, step: Step, calibrating: boolean, calib?: Calib, sa
   if (step === "lips") return s.lips.map((q, i) => [`lip${i}`, q]);
   if (step === "design") {
     const h = uiHandles(s.design, designAngle(s.design, s.guides));
-    return [["move", h.move], ["widthL", h.widthL], ["widthR", h.widthR], ["length", h.length]];
+    const opp = (s.design.opposing ?? []).map((q, i) => [`opp${i}`, q] as [string, Pt]);
+    return [...opp, ["move", h.move], ["widthL", h.widthL], ["widthR", h.widthR], ["length", h.length]];
   }
   return [];
 }
@@ -156,6 +157,10 @@ function moveHandle(s: Scene, calib: Calib | undefined, id: string, p: Pt, grab:
   }
   const d = s.design;
   const a = designAngle(d, s.guides);
+  if (id.startsWith("opp") && d.opposing) {
+    const i = Number(id.slice(3));
+    return { design: { ...d, opposing: d.opposing.map((q, j) => (j === i ? p : q)) } };
+  }
   if (id === "move") return { design: { ...d, center: { x: p.x - grab.x, y: p.y - grab.y } } };
   const l = toLocal(p, d, a);
   if (id === "widthL" || id === "widthR") return { design: { ...d, width: Math.max(s.imgW * 0.04, Math.abs(l.x) * 2) } };
@@ -894,6 +899,7 @@ function handlePos(s: Scene, calib: Calib | undefined, id: string, pins?: Pt[], 
   if (id === "calB") return calib?.b ?? null;
   if (id === "pupilR" || id === "pupilL" || id === "midline") return s.guides[id];
   if (id.startsWith("lip")) return s.lips[Number(id.slice(3))] ?? null;
+  if (id.startsWith("opp")) return s.design.opposing?.[Number(id.slice(3))] ?? null;
   const h = uiHandles(s.design, designAngle(s.design, s.guides));
   return (h as Record<string, Pt>)[id] ?? null;
 }
@@ -938,6 +944,19 @@ function drawDesignOverlay(ctx: CanvasRenderingContext2D, s: Scene, scale: numbe
   ctx.strokeStyle = "rgba(201,171,134,0.55)";
   line(s.design.center, pa);
   ctx.setLineDash([]);
+  const opp = s.design.opposing;
+  if (opp && opp.length >= 2) {
+    // the opposing teeth's edge: the design is never painted beyond this line
+    const sorted = [...opp].sort((a, b) => a.x - b.x);
+    ctx.beginPath();
+    sorted.forEach((q, i) => (i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)));
+    ctx.setLineDash([5 * u, 4 * u]);
+    ctx.lineWidth = 2 * u;
+    ctx.strokeStyle = "rgba(120,190,255,0.95)";
+    ctx.stroke();
+    ctx.setLineDash([]);
+    opp.forEach((q, i) => dot(ctx, q, r * 0.85, activeId === `opp${i}`, "rgb(120,190,255)"));
+  }
   const h = uiHandles(s.design, designAngle(s.design, g));
   dot(ctx, h.widthL, r, activeId === "widthL", C.bronzeLight);
   dot(ctx, h.widthR, r, activeId === "widthR", C.bronzeLight);

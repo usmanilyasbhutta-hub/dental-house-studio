@@ -503,3 +503,13 @@ export function fitArcToLowerLip(lips: Pt[], d: Design, g: Guides): number {
   const arc = (c * half * half) / (0.35 * centralLength(d));
   return Math.min(1, Math.max(0, arc));
 }
+
+/**
+ * Starting points for the opposing-teeth edge (dentist drags them onto the real edge): across the design, about one
+ * normal overbite (≈ 0.3 × central length) past the incisal line toward this arch's gum.
+ */
+export function defaultOpposing(d: Design, g: Guides): Pt[] {
+  const a = designAngle(d, g);
+  const L = centralLength(d);
+  return [-0.47, -0.25, 0, 0.25, 0.47].map((t) => toImage({ x: d.width * t, y: -0.3 * L }, d, a));
+}

@@ -57,6 +57,11 @@ export interface Design {
   arch?: Arch;
   /** Default "photo". */
   render?: RenderMode;
+  /**
+   * The visible edge of the OPPOSING teeth (image px, left → right), set by the dentist when the photo has no clear
+   * line between the arches (e.g. ceramic uppers over natural lowers). The design is never painted beyond it.
+   */
+  opposing?: Pt[];
 }
 
 export interface CaseData {

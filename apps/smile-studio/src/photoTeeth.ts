@@ -249,6 +249,8 @@ export interface Plan {
   teeth: PlanTooth[];
   /** columns covered only by the embrasure fill between two outlines */
   joined: Uint8Array;
+  /** dentist-set edge of the opposing teeth per grid column (grid y; NaN outside), or null */
+  opp: Float32Array | null;
   /** union of the planned outlines per grid column: top / bottom (NaN outside) */
   pTop: Float32Array;
   pBot: Float32Array;
@@ -258,6 +260,32 @@ export interface Plan {
   /** central length in grid px */
   L: number;
   lower: boolean;
+}
+
+/** The dentist's opposing-teeth edge (image polyline) as a grid y per column, interpolated, flat beyond the ends. */
+export function opposingInGrid(f: Frame, d: Design): Float32Array | null {
+  const pts = d.opposing;
+  if (!pts || pts.length < 2) return null;
+  const q = { x: 0, y: 0 };
+  const g = pts.map((p) => {
+    imageToGrid(f, p.x, p.y, q);
+    return { x: q.x, y: q.y };
+  }).sort((a, b) => a.x - b.x);
+  const out = new Float32Array(f.gw).fill(NaN);
+  for (let x = 0; x < f.gw; x++) {
+    const xc = x + 0.5;
+    let y: number;
+    if (xc <= g[0].x) y = g[0].y;
+    else if (xc >= g[g.length - 1].x) y = g[g.length - 1].y;
+    else {
+      let i = 0;
+      while (i + 1 < g.length && g[i + 1].x < xc) i++;
+      const t = (xc - g[i].x) / Math.max(1e-6, g[i + 1].x - g[i].x);
+      y = g[i].y + t * (g[i + 1].y - g[i].y);
+    }
+    out[x] = y;
+  }
+  return out;
 }
 
 export function planInGrid(f: Frame, d: Design): Plan {
@@ -331,7 +359,7 @@ export function planInGrid(f: Frame, d: Design): Plan {
       joined[c] = 1;
     }
   }
-  return { teeth, pTop, pBot, joined, x0: ax0 === Infinity ? 0 : ax0, x1: ax1 === -Infinity ? 0 : ax1, L: centralLength(d) * f.k, lower: isLower(d) };
+  return { teeth, pTop, pBot, joined, opp: opposingInGrid(f, d), x0: ax0 === Infinity ? 0 : ax0, x1: ax1 === -Infinity ? 0 : ax1, L: centralLength(d) * f.k, lower: isLower(d) };
 }
 
 // ---------- column analysis ----------
@@ -462,7 +490,8 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
   const L = plan.L;
   const xa = Math.max(0, plan.x0 - Math.ceil(L * 0.3));
   const xb = Math.min(gw, plan.x1 + Math.ceil(L * 0.3));
-  const occl = Lg ? occlusalCurve(f, plan, E, lip, Lg, xa, xb) : null;
+  // the dentist's line wins over the automatic occlusal curve (and works without the photo)
+  const occl = plan.opp ?? (Lg ? occlusalCurve(f, plan, E, lip, Lg, xa, xb) : null);
   for (let x = xa; x < xb; x++) {
     const t = toothAt(plan, x + 0.5);
     if (!t) continue;
@@ -520,6 +549,11 @@ export function analyse(f: Frame, plan: Plan, E: Float32Array, lip: Float32Array
       if (end === bestE && oc === oc && oc > bestS + h * 0.3 && oc < bestE - 1) occ = oc;
       void sa;
       void sb;
+    }
+    // dentist-set opposing edge: everything beyond it is the opposing teeth, whatever the photo shows
+    if (plan.opp) {
+      const oc = plan.opp[x];
+      if (oc === oc && oc > bestS && oc < end) occ = Math.max(bestS + 1, oc);
     }
     eC[x] = bestS;
     eI[x] = end;
@@ -1681,7 +1715,8 @@ interface Out {
 const outs: Record<string, Out> = {};
 
 function designKey(d: Design, extra: string) {
-  return [d.center.x, d.center.y, d.width, d.wl, d.arc, d.tilt, d.lateralStep, d.count, d.proportion, d.shape, d.shade, d.arch ?? "upper", extra].join("|");
+  const opp = (d.opposing ?? []).map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(";");
+  return [d.center.x, d.center.y, d.width, d.wl, d.arc, d.tilt, d.lateralStep, d.count, d.proportion, d.shape, d.shade, d.arch ?? "upper", opp, extra].join("|");
 }
 
 /** Builds (or reuses) the photo-teeth layer for a scene. `slot` separates the screen and export caches. */
@@ -1750,4 +1785,30 @@ export function resetPhotoCaches() {
   imgIds = new WeakMap();
   maskIds = new WeakMap();
   for (const k of Object.keys(outs)) delete outs[k];
+}
+
+/**
+ * Starting points for the dentist's opposing-teeth edge: the automatic occlusal curve when the photo shows one
+ * (5 points across the planned teeth), or null (the caller then uses the template default).
+ */
+export function autoOpposing(s: EngineScene): Pt[] | null {
+  const mask = existingMask(s);
+  const g = sceneGrid(s, "fast", mask);
+  if (!g || !g.E) return null;
+  const f = g.f;
+  const plan = planInGrid(f, { ...s.design, opposing: undefined });
+  const xa = Math.max(0, plan.x0);
+  const xb = Math.min(f.gw, plan.x1);
+  if (xb - xa < 5) return null;
+  const oc = occlusalCurve(f, plan, g.E, g.lip, g.Lg, xa, xb);
+  const out: Pt[] = [];
+  const q = { x: 0, y: 0 };
+  for (const t of [0.06, 0.28, 0.5, 0.72, 0.94]) {
+    const x = Math.round(xa + t * (xb - xa - 1));
+    const v = oc[x];
+    if (v !== v) return null;
+    gridToImage(f, x + 0.5, v, q);
+    out.push({ x: q.x, y: q.y });
+  }
+  return out;
 }

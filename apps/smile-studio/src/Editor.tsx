@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { archOf, withArch } from "./arch";
-import { computePrep, detectTeeth, maskFromToothMask, toothMaskFromMask, type Mask } from "./engineShim";
-import { centralLength, centralWidth, deg, fitArcToLowerLip, measure, pupilAngle, PROPORTIONS, rad, SHAPE_LABELS, TOOTH_NAMES } from "./geometry";
+import { autoOpposing, computePrep, detectTeeth, maskFromToothMask, toothMaskFromMask, type Mask } from "./engineShim";
+import { centralLength, centralWidth, defaultOpposing, deg, fitArcToLowerLip, measure, pupilAngle, PROPORTIONS, rad, SHAPE_LABELS, TOOTH_NAMES } from "./geometry";
 import { useHistory } from "./history";
 import { defaultLips, initialLayout, type Arch, type CaseData, type CasePlan, type Design, type Guides, type Proportion, type Pt, type RenderMode, type ShadeSample, type ToothCount, type ToothShape } from "./model";
 import { LABS_FAIL, LABS_FAIL_TEETH, labsOn, withAssist } from "./labs";
@@ -1018,13 +1018,37 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
               </button>
               <Chips
                 label="Teeth look"
-                value={c.design.render ?? "photo"}
+                value={mode === "outline" ? "outline" : (c.design.render ?? "photo")}
                 options={[
                   { value: "photo", label: "Photo-real" },
                   { value: "drawn", label: "Drawn" },
+                  { value: "outline", label: "Outline" },
                 ]}
-                onChange={(render: RenderMode) => setDesign({ render })}
+                onChange={(look: RenderMode | "outline") => {
+                  // one choice: Outline is a view of the template, Photo-real / Drawn are how the teeth are rendered
+                  if (look === "outline") return setMode("outline");
+                  setMode("mockup");
+                  setDesign({ render: look });
+                }}
               />
+              {lower && (
+                <Toggle
+                  label="Upper teeth edge"
+                  note="Drag the 5 blue dots onto the lower edge of the upper teeth; the lower design is never painted above it"
+                  checked={!!c.design.opposing}
+                  onChange={(on) => {
+                    if (!on) return setDesign({ opposing: undefined });
+                    // start on the edge the photo shows, when the engine can find one; else one overbite past the template
+                    let pts: Pt[] | null = null;
+                    try {
+                      if (scene) pts = autoOpposing(scene);
+                    } catch {
+                      pts = null;
+                    }
+                    setDesign({ opposing: pts ?? defaultOpposing(c.design, c.guides) });
+                  }}
+                />
+              )}
               <Toggle label="Prep map" note="Design vs existing teeth: green added, red reduced" checked={prepOn} onChange={setPrepOn} />
               {prepOn && (
                 <PrepPanel
@@ -1078,7 +1102,6 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
               </div>
               <details className="fine">
                 <summary>Fine-tune</summary>
-                <Toggle label="Outline view" note="Edges only, like a wax-up template" checked={mode === "outline"} onChange={(v) => setMode(v ? "outline" : "mockup")} />
                 <Slider
                   label={lower ? "Lower central width / length" : "Central width / length"}
                   value={c.design.wl}
