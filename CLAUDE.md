@@ -52,6 +52,8 @@ The logo bug and HUD label sit in the top band on purpose. They're decorative, n
 ## Saving credits (read this first in every chat)
 - **Start from `docs/project-map.md`** (~5k tokens: every file, its purpose, size and links). Open only the files the task
   needs. Files marked ⚠ (>4k tokens) are searched with `grep -n` and read in ranges, never whole.
+- **Smile Studio app:** start from `apps/smile-studio/docs/code-index.md` (~2k tokens: purpose, imports and main symbols with
+  line numbers for every file), then read only around the line. Refreshes on `npm run check` / `npm run map`.
 - Don't re-read a file you just edited or already read in this chat. Don't print long logs: `| tail`, `| grep`.
 - Check visuals with a few **stills or a contact sheet**, not full renders; full renders only after the owner approves.
 - Use subagents only when the owner asks (they start from zero and cost more). One chat per job; keep chats short.

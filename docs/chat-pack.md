@@ -97,6 +97,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T10 | Likes "wow" 3D/motion pieces as occasional features: map route (most), blueprint, receipt, exploded view, data city, hand-drawn explainer. | lean | "especially map route"; "Blue print animation from this"; "This reciept effect"; "Add this skill also" (hand-drawn) |
 | T11 | Three.js for 3D first; Blender photoreal (with Tripo meshes) for close-up detail. | lean | "Lets see three.js first"; "Use tripo 3d blender creative directions for detailing" |
 | T13 | Photoreal 3D close-ups use the clinical-macro look: dark field, wet natural enamel, warm key + cool rim, shallow focus. | lean | picked direction A (2026-11-14) |
+| T14 | Smile Studio app UI should feel like Apple: sleek, neat, native (HIG). Brand palette + logo stay; system font and sentence case for UI, brand type only for brand moments. | lean | "Build an againt that improves UI based on Apples sleek and neat design." |
 | T12 | Keeps trying new styles; taste is a baseline to improve on, not a cage. Every option set has a stretch. | firm | "continuously to improve and try new"; "it should improve on baseline rather than 100% sticking" |
 
 ### Not wanted

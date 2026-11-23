@@ -12,7 +12,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
     "test": "vitest run",
-    "check": "tsc --noEmit && vitest run",
+    "index": "python3 ../../scripts/app_index.py",
+    "check": "python3 ../../scripts/app_index.py && tsc --noEmit && vitest run",
     "e2e": "node scripts/models.mjs && node e2e/run.cjs"
   },
   "dependencies": {

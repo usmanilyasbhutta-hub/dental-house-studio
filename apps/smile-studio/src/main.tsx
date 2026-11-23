@@ -1,3 +1,5 @@
+// App entry: mounts Home (saved cases) or the Editor for the open case.
+
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Editor } from "./Editor";

@@ -15,7 +15,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKIP = re.compile(r"^(public|assets|references|out|qc)/|__pycache__|\.(png|jpg|jpeg|wav|mp3|mp4|webm|woff2?|glb|pyc|lock)$|package-lock\.json$|^docs/project-(map\.md|graph\.json)$")
+SKIP = re.compile(r"^(public|assets|references|out|qc|apps)/|__pycache__|\.(png|jpg|jpeg|wav|mp3|mp4|webm|woff2?|glb|pyc|lock)$|package-lock\.json$|^docs/project-(map\.md|graph\.json)$")
 
 
 def files():
@@ -96,6 +96,8 @@ def index_section():
              "- **3D**: three.js `src/three/`; Blender `scripts/blender/` (modelgen = text → 3D, directions = looks, composite_clip).",
              "- **Taste and decisions**: `docs/taste.md` (read before creative choices), `docs/style-profile.md`, `docs/style-recipes.md`.",
              "- **Brand and clinic facts**: `src/brand.ts` only. Themes: `src/theme.ts`.",
+             "- **Smile Studio app** (`apps/smile-studio/`, not listed below): its own ~2k-token index with symbols and line numbers,",
+             "  `apps/smile-studio/docs/code-index.md` (`python3 scripts/app_index.py`; one file in full: `--file src/<file>`).",
              f"- **npm scripts**: {', '.join(f'`{k}`' for k in pkg)}.", ""]
     return lines
 
