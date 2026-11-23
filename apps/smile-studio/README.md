@@ -145,6 +145,8 @@ Camera access (the **Take photo** button) needs HTTPS or `localhost`. Over plain
 | `src/Stage.tsx` | Interactive canvas: drag handles, pan, pinch-zoom, compare divider |
 | `src/Editor.tsx` | The 6-step editor and controls |
 | `src/planner.ts` | Case planner logic: CIELAB sampling, ΔE76/ΔE00, shade gap, tabs, materials library, FDI helpers, plan warnings, summary (unit-tested) |
+| `src/reduction.ts` | 3D wax-up reduction estimate: material minimum − wax-up addition per surface, per tooth (dentist picks the material; typical thicknesses editable; unit-tested) |
+| `src/enamel.ts` | Typical labial enamel mm (shared by the photo prep guide and the reduction estimate) |
 | `src/PlanPanel.tsx` | Step 06 UI: shade card, FDI chart + tooth sheet + bulk edit, flags/checklist, warnings, clinic materials editor |
 | `src/sheets.ts` | A4 sheets: clinician prep guide (+ plan section), patient sheet, lab prescription |
 | `src/clinic.ts` | Clinic facts printed on sheets (mirrors `clinic` in the studio's `src/brand.ts`) |

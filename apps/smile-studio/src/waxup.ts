@@ -499,6 +499,52 @@ export function archLength(arch: { a: number; b: number }, x: number) {
   return g(x) - g(x0);
 }
 
+
+export type Surface = "facial" | "edge" | "lingual";
+
+/**
+ * Tooth slices along the arch from the midline (apex + shift), using mean widths: an estimate, not a segmentation.
+ * Left/right comes from the scan's geometry; `flip` swaps it (for a mirrored export).
+ */
+export function slotter(th: Thickness, arch: WaxArch, opts: { shift?: number; flip?: boolean } = {}) {
+  const { c, w, o } = th.frame;
+  const shift = th.mid + (opts.shift ?? 0);
+  const widths = MEAN_WIDTH[arch];
+  const bounds = [0];
+  for (const x of widths) bounds.push(bounds[bounds.length - 1] + x);
+  const slot = (x: number, y: number, z: number) => {
+    const dx = x - c[0], dy = y - c[1], dz = z - c[2];
+    const lw = dx * w[0] + dy * w[1] + dz * w[2];
+    const s = archLength(th.arch, lw) - shift;
+    // patient's left = occlusal × anterior: −w for a lower jaw (occlusal up), +w for an upper jaw (occlusal down)
+    const left = arch === "lower" ? s < 0 : s >= 0;
+    const side = left !== !!opts.flip ? 1 : -1; // +1 = patient's left
+    const a = Math.abs(s);
+    for (let k = 0; k < widths.length; k++) if (a < bounds[k + 1]) return { tooth: k, side, h: dx * o[0] + dy * o[1] + dz * o[2], lw };
+    return null;
+  };
+  const quadrant = (side: number) => (arch === "upper" ? (side > 0 ? 2 : 1) : side > 0 ? 3 : 4);
+  const fdiOf = (s: { tooth: number; side: number }) => quadrant(s.side) * 10 + s.tooth + 1;
+  return { slot, fdiOf };
+}
+
+/** Which surface a wax-up vertex is on: its normal (rotated into the original's space) against the arch directions. */
+export function surfaceOf(th: Thickness, wn: Float32Array, R: number[] | undefined, i: number, lw: number): Surface | null {
+  const { w, f, o } = th.frame;
+  let nx = wn[i * 3], ny = wn[i * 3 + 1], nz = wn[i * 3 + 2];
+  if (R) [nx, ny, nz] = [R[0] * nx + R[1] * ny + R[2] * nz, R[3] * nx + R[4] * ny + R[5] * nz, R[6] * nx + R[7] * ny + R[8] * nz];
+  const no = nx * o[0] + ny * o[1] + nz * o[2];
+  // outward from the arch: the depth direction rotated by the arch slope at this point
+  const slope = 2 * th.arch.a * lw + th.arch.b;
+  const nf = nx * f[0] + ny * f[1] + nz * f[2];
+  const nw = nx * w[0] + ny * w[1] + nz * w[2];
+  const out = (nf - slope * nw) / Math.sqrt(1 + slope * slope);
+  if (no > 0.6) return "edge";
+  if (out > 0.3) return "facial";
+  if (out < -0.3) return "lingual";
+  return null;
+}
+
 export interface ToothChange {
   fdi: number;
   /** points compared in this tooth's slice */
@@ -517,11 +563,7 @@ export interface ToothChange {
   lengthen: number;
 }
 
-/**
- * Per-tooth summary. Teeth are slices along the arch from the midline (apex + shift), using mean widths:
- * an estimate to read the numbers by, not a segmentation. Left/right comes from the scan's geometry; `flip` swaps it
- * (for a mirrored export).
- */
+/** Per-tooth summary of the changes (teeth = `slotter` slices: an estimate to read the numbers by). */
 export function perTooth(
   th: Thickness,
   original: Mesh,
@@ -530,23 +572,7 @@ export function perTooth(
   /** shift: mm added to the estimated midline (dentist's correction) */
   opts: { shift?: number; flip?: boolean } = {},
 ): ToothChange[] {
-  const { c, w, f, o } = th.frame;
-  const shift = th.mid + (opts.shift ?? 0);
-  const widths = MEAN_WIDTH[arch];
-  const bounds = [0];
-  for (const x of widths) bounds.push(bounds[bounds.length - 1] + x);
-  const slot = (x: number, y: number, z: number) => {
-    const dx = x - c[0], dy = y - c[1], dz = z - c[2];
-    const lw = dx * w[0] + dy * w[1] + dz * w[2];
-    const s = archLength(th.arch, lw) - shift;
-    // patient's left = occlusal × anterior: −w for a lower jaw (occlusal up), +w for an upper jaw (occlusal down)
-    const left = arch === "lower" ? s < 0 : s >= 0;
-    const side = left !== !!opts.flip ? 1 : -1; // +1 = patient's left
-    const a = Math.abs(s);
-    for (let k = 0; k < widths.length; k++) if (a < bounds[k + 1]) return { tooth: k, side, h: dx * o[0] + dy * o[1] + dz * o[2], lw };
-    return null;
-  };
-  const quadrant = (side: number) => (arch === "upper" ? (side > 0 ? 2 : 1) : side > 0 ? 3 : 4);
+  const { slot, fdiOf } = slotter(th, arch, opts);
   type Acc = { n: number; ch: number; fac: number[]; edge: number[]; lin: number[]; red: number[]; hw: number; ho: number };
   const acc = new Map<number, Acc>();
   const get = (fdi: number) => {
@@ -563,24 +589,16 @@ export function perTooth(
     const x = th.pos[i * 3], y = th.pos[i * 3 + 1], z = th.pos[i * 3 + 2];
     const s = slot(x, y, z);
     if (!s) continue;
-    const a = get(quadrant(s.side) * 10 + s.tooth + 1);
+    const a = get(fdiOf(s));
     a.n++;
     if (Math.abs(dd) > SAME_MM) a.ch++;
     a.hw = Math.max(a.hw, s.h);
     if (dd < -SAME_MM) a.red.push(dd);
     else if (dd > SAME_MM) {
-      // which surface: normal (rotated into the original's space) against the arch directions
-      let nx = wn[i * 3], ny = wn[i * 3 + 1], nz = wn[i * 3 + 2];
-      if (R) [nx, ny, nz] = [R[0] * nx + R[1] * ny + R[2] * nz, R[3] * nx + R[4] * ny + R[5] * nz, R[6] * nx + R[7] * ny + R[8] * nz];
-      const no = nx * o[0] + ny * o[1] + nz * o[2];
-      // outward from the arch: the depth direction rotated by the arch slope at this point
-      const slope = 2 * th.arch.a * s.lw + th.arch.b;
-      const nf = nx * f[0] + ny * f[1] + nz * f[2];
-      const nw = nx * w[0] + ny * w[1] + nz * w[2];
-      const out = (nf - slope * nw) / Math.sqrt(1 + slope * slope);
-      if (no > 0.6) a.edge.push(dd);
-      else if (out > 0.3) a.fac.push(dd);
-      else if (out < -0.3) a.lin.push(dd);
+      const surf = surfaceOf(th, wn, R, i, s.lw);
+      if (surf === "edge") a.edge.push(dd);
+      else if (surf === "facial") a.fac.push(dd);
+      else if (surf === "lingual") a.lin.push(dd);
     }
   }
   // highest original point per tooth slice
@@ -588,8 +606,7 @@ export function perTooth(
   for (let i = 0; i < O.length / 3; i++) {
     const s = slot(O[i * 3], O[i * 3 + 1], O[i * 3 + 2]);
     if (!s) continue;
-    const fdi = quadrant(s.side) * 10 + s.tooth + 1;
-    const a = acc.get(fdi);
+    const a = acc.get(fdiOf(s));
     if (a) a.ho = Math.max(a.ho, s.h);
   }
   const pct = (v: number[], q: number) => {

@@ -13,16 +13,7 @@ export type { PrepResult, ToothPrep };
 export const PREP_DISCLAIMER =
   "Planning aid only. Measured from a 2D photo: shows outline length and width differences (±0.5 mm), not facial depth or the amount of tooth to remove. Preparation depth must be planned on a mock-up, wax-up or silicone index and decided by the treating dentist. Enamel values are population averages, not this patient's.";
 
-/**
- * Typical labial enamel mm (cervical, middle, incisal). Pei 2025 PMID 40300924; Pahlevan 2014 PMID 25584054 (PMC4283744).
- * Middle interpolated; canine/premolar reuse upper lateral (no data, conservative). Show as "typical values, not this patient".
- */
-export const ENAMEL_MM = {
-  upperCentral: [0.35, 0.65, 0.95],
-  upperLateral: [0.25, 0.6, 0.95],
-  lowerIncisor: [0.3, 0.5, 0.75],
-  canine: [0.25, 0.6, 0.95],
-};
+export { ENAMEL_MM } from "./enamel";
 
 /** Fixed note for lower incisors (spec B). */
 export const LOWER_INCISOR_NOTE = "Thin enamel; additive or minimal approaches are usually explored first; clinician to decide.";

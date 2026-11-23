@@ -32,6 +32,13 @@ On-device smile design mockups for consultations. Read `apps/smile-studio/README
   Before / Wax-up / Changes, Front / Occlusal / Side, tap-to-read mm and "Save image". Tooth numbers are **estimates**
   (mean widths from the midline; dentist can shift / swap sides) and are always shown with "≈". The values never fill
   the plan's prep mm automatically. Tests use synthetic meshes only (`tests/waxup.test.ts`, `e2e/make_arch_stl.cjs`).
+- **Reduction estimate (round 10, 3D wax-up → Show "Reduction"):** pure in `src/reduction.ts`. Per covered surface,
+  estimated reduction = minimum material thickness − what the wax-up adds (wax-up inside the tooth adds its depth).
+  The **dentist picks the material per tooth** (none by default; stored in the case's `waxups` record as `materials`);
+  minimum thicknesses are typical values the dentist edits (localStorage `smile-studio.reduction.thickness.v1`).
+  Coverage starts at the cervical end of the wax-up's changed area on that tooth (the margin estimate); gum below is
+  never counted. Flags a facial estimate deeper than typical enamel (`src/enamel.ts`, shared with the photo prep guide).
+  Never fills the plan's prep mm, never chooses a material. Tests: `tests/reduction.test.ts` (synthetic meshes).
 
 ## Workflow
 1. `cd apps/smile-studio && npm install` (once).

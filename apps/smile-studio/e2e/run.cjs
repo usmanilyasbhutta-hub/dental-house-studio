@@ -537,6 +537,35 @@ async function deviceSuite(browser, devName, face) {
     return `teeth ${teeth.join(" ")}; ${fit.trim()}`;
   });
 
+  await test(devName, "Wax-up: reduction estimate appears only after the dentist picks a material, per tooth in mm", async () => {
+    await gotoStep(page, "Plan");
+    await page.getByRole("button", { name: /3D wax-up/ }).click();
+    await page.getByRole("radio", { name: "Lower" }).click();
+    await page.locator(".wax-fit").waitFor({ timeout: 30000 });
+    await page.getByRole("radio", { name: "Reduction" }).click();
+    await page.locator(".wax-red").first().waitFor();
+    // nothing chosen yet: no estimate is shown
+    const pre = await page.locator(".wax-red").first().innerText();
+    if (/up to|none/.test(pre)) throw new Error(`estimate shown before a material was chosen: ${pre}`);
+    await page.getByLabel("Set the material for all listed teeth").selectOption("veneer-min");
+    await page.waitForTimeout(300);
+    const lines = await page.locator(".wax-red").allInnerTexts();
+    // the synthetic wax-up adds 0.6 mm everywhere: a minimal veneer (0.3 facial) needs no facial reduction
+    if (!lines.every((l) => /facial none/.test(l))) throw new Error(`expected no facial reduction: ${lines.join(" | ")}`);
+    await page.getByLabel("Material for tooth 41").selectOption("crown-ld");
+    await page.waitForTimeout(300);
+    const crown = await page.locator(".wax-red", { hasText: "≈ 41" }).innerText();
+    if (!/facial up to 0\.\d/.test(crown) || !/lingual/.test(crown)) throw new Error(`crown 41 should need facial + lingual reduction: ${crown}`);
+    await page.getByRole("radio", { name: "Front" }).click();
+    await page.waitForTimeout(300);
+    await shot("reduction");
+    const before = await page.evaluate(() => window.__shared.length);
+    await page.getByRole("button", { name: "Save image" }).click();
+    await page.waitForFunction((n) => window.__shared.length > n, before, { timeout: 10000 });
+    await page.getByRole("button", { name: "Back to the plan" }).click();
+    return crown.replace(/\s+/g, " ").slice(0, 120);
+  });
+
   await test(devName, "Plan: shade pins (reference + match) give a ΔE00 gap with the photo-estimate note", async () => {
     await gotoStep(page, "Plan");
     await page.getByRole("tab", { name: /Shade/ }).click();

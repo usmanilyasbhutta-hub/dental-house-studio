@@ -41,11 +41,19 @@ export interface WaxFile {
   name: string;
   blob: Blob;
 }
+/** One jaw: files, the dentist's tooth-number corrections and material per tooth (FDI → material id) for the reduction estimate. */
+export interface WaxJaw {
+  original?: WaxFile;
+  waxup?: WaxFile;
+  shift?: number;
+  flip?: boolean;
+  materials?: Record<number, string>;
+}
 /** Wax-up files of a case (key = case id). Stays on this device like the photo. */
 export interface WaxupData {
   id: string;
-  lower?: { original?: WaxFile; waxup?: WaxFile; shift?: number; flip?: boolean };
-  upper?: { original?: WaxFile; waxup?: WaxFile; shift?: number; flip?: boolean };
+  lower?: WaxJaw;
+  upper?: WaxJaw;
   updatedAt: number;
 }
 export const loadWaxup = (id: string) => tx<WaxupData | undefined>("readonly", (s) => s.get(id), WAX);

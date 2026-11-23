@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { archLength, changedTeeth, FAR_MM, MEAN_WIDTH, perTooth, SAME_MM, toothLine, WAXUP_DISCLAIMER, type Mesh, type Thickness, type ToothChange, type WaxArch } from "./waxup";
+import { archLength, changedTeeth, FAR_MM, MEAN_WIDTH, perTooth, SAME_MM, toothLine, WAXUP_DISCLAIMER, type Mesh, type Rigid, type Thickness, type ToothChange, type WaxArch } from "./waxup";
 import type { WaxReply } from "./waxupWorker";
+import { mergeMaterials, reduction, reductionLine, REDUCTION_DISCLAIMER, THICKNESS_KEY, type MaterialMin, type ToothReduction } from "./reduction";
 import { loadWaxup, saveWaxup, type WaxFile, type WaxupData } from "./storage";
 import { Chips, Hint, Icon, Toggle } from "./ui";
 
-type Mode = "before" | "after" | "changes";
+type Mode = "before" | "after" | "changes" | "reduction";
 type View = "front" | "occlusal" | "side";
 type Slot = "original" | "waxup";
 
@@ -16,7 +17,7 @@ interface Loaded {
   key: string;
   original?: Mesh;
   waxup: Mesh;
-  th?: Thickness & { T?: unknown };
+  th?: Thickness & { T?: Rigid };
   fit?: number;
   close?: number;
 }
@@ -33,6 +34,25 @@ export function heatColour(d: number): [number, number, number] {
   return [ivory[0] + (to[0] - ivory[0]) * k, ivory[1] + (to[1] - ivory[1]) * k, ivory[2] + (to[2] - ivory[2]) * k];
 }
 
+/** Colour of an estimated reduction: ivory = none needed, amber → red up to 1 mm, grey = not estimated. */
+export function prepColour(p: number): [number, number, number] {
+  if (Number.isNaN(p)) return [0.62, 0.65, 0.64];
+  const ivory: [number, number, number] = [0.91, 0.89, 0.85];
+  if (p <= SAME_MM) return ivory;
+  const k = Math.min(1, (p - SAME_MM) / (1 - SAME_MM));
+  const amber: [number, number, number] = [0.95, 0.68, 0.2], red: [number, number, number] = [0.78, 0.16, 0.18];
+  const a = k < 0.5 ? ivory : amber, b = k < 0.5 ? amber : red, t = k < 0.5 ? k * 2 : (k - 0.5) * 2;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+function loadThickness(): MaterialMin[] {
+  try {
+    return mergeMaterials(JSON.parse(localStorage.getItem(THICKNESS_KEY) ?? "null"));
+  } catch {
+    return mergeMaterials(null);
+  }
+}
+
 export default function WaxupView({ caseId, arch: startArch, onClose, deliver }: { caseId: string; arch: WaxArch; onClose: () => void; deliver: (files: File[], title: string) => Promise<void> }) {
   const [data, setData] = useState<WaxupData | null>(null);
   const [arch, setArch] = useState<WaxArch>(startArch);
@@ -41,7 +61,16 @@ export default function WaxupView({ caseId, arch: startArch, onClose, deliver }:
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [probe, setProbe] = useState<{ d: number; fdi?: number } | null>(null);
+  const [probe, setProbe] = useState<{ d: number; fdi?: number; i: number } | null>(null);
+  const [mats, setMats] = useState<MaterialMin[]>(loadThickness);
+  const saveMats = (next: MaterialMin[]) => {
+    setMats(next);
+    try {
+      localStorage.setItem(THICKNESS_KEY, JSON.stringify(next));
+    } catch {
+      /* private mode: edits last for this visit */
+    }
+  };
   const files = data?.[arch];
 
   useEffect(() => {
@@ -117,6 +146,20 @@ export default function WaxupView({ caseId, arch: startArch, onClose, deliver }:
     [loaded, arch, shift, flip],
   );
 
+  const choice = useMemo(() => files?.materials ?? {}, [files?.materials]);
+  const red = useMemo(
+    () => (loaded?.th && Object.keys(choice).length ? reduction(loaded.th, loaded.waxup, arch, choice, mats, { shift, flip }) : null),
+    [loaded, arch, choice, mats, shift, flip],
+  );
+  const redTeeth: ToothReduction[] = red?.teeth ?? [];
+  const setMaterial = (fdi: number, id: string) => {
+    const next = { ...choice };
+    if (id) next[fdi] = id;
+    else delete next[fdi];
+    update({ materials: next });
+  };
+  const setAll = (id: string) => update({ materials: id ? Object.fromEntries(teeth.map((t) => [t.fdi, id])) : {} });
+
   const canvasHost = useRef<HTMLDivElement>(null);
   const three = useRef<ReturnType<typeof makeScene> | null>(null);
   const [no3d, setNo3d] = useState(false);
@@ -131,17 +174,22 @@ export default function WaxupView({ caseId, arch: startArch, onClose, deliver }:
     }
   }, []);
   useEffect(() => {
-    three.current?.setMeshes(loaded, arch, { shift, flip }, (d, fdi) => setProbe({ d, fdi }));
+    three.current?.setMeshes(loaded, arch, { shift, flip }, (d, fdi, i) => setProbe({ d, fdi, i }));
   }, [loaded, arch, shift, flip]);
-  useEffect(() => three.current?.setMode(mode, !!loaded?.th), [mode, loaded]);
+  useEffect(() => three.current?.setReduction(red?.prep ?? null), [red, loaded]);
+  useEffect(() => three.current?.setMode(mode, !!loaded?.th), [mode, loaded, red]);
   useEffect(() => three.current?.setView(view, arch), [view, loaded, arch]);
 
   const saveImage = async () => {
     const s = three.current;
     if (!s || !loaded) return;
-    const cv = s.snapshot(teeth, arch);
+    const cv = mode === "reduction" ? s.snapshot(teeth, arch, redTeeth) : s.snapshot(teeth, arch);
     const blob = await new Promise<Blob | null>((r) => cv.toBlob(r, "image/png"));
-    if (blob) await deliver([new File([blob], `waxup-${arch}.png`, { type: "image/png" })], "Wax-up changes");
+    if (blob)
+      await deliver(
+        [new File([blob], `${mode === "reduction" ? "reduction" : "waxup"}-${arch}.png`, { type: "image/png" })],
+        mode === "reduction" ? "Reduction estimate" : "Wax-up changes",
+      );
   };
 
   return (
@@ -176,8 +224,25 @@ export default function WaxupView({ caseId, arch: startArch, onClose, deliver }:
         )}
         {probe && (
           <div className="wax-probe" role="status">
-            {Number.isNaN(probe.d) ? "Not compared here" : Math.abs(probe.d) <= SAME_MM ? "Unchanged" : `${probe.d > 0 ? "+" : "−"}${Math.abs(probe.d).toFixed(1)} mm ${probe.d > 0 ? "added" : "to reduce"}`}
+            {mode === "reduction"
+              ? Number.isNaN(red?.prep[probe.i] ?? NaN)
+                ? "Not estimated here"
+                : red!.prep[probe.i] <= SAME_MM
+                  ? "No reduction needed"
+                  : `≈ ${red!.prep[probe.i].toFixed(1)} mm to reduce`
+              : Number.isNaN(probe.d)
+                ? "Not compared here"
+                : Math.abs(probe.d) <= SAME_MM
+                  ? "Unchanged"
+                  : `${probe.d > 0 ? "+" : "−"}${Math.abs(probe.d).toFixed(1)} mm ${probe.d > 0 ? "added" : "to reduce"}`}
             {probe.fdi ? ` · ≈ ${probe.fdi}` : ""}
+          </div>
+        )}
+        {loaded?.th && mode === "reduction" && (
+          <div className="wax-legend" aria-label="Colour key">
+            <span>0</span>
+            <i className="red" />
+            <span>1 mm reduce</span>
           </div>
         )}
         {loaded?.th && mode === "changes" && (
@@ -213,6 +278,7 @@ export default function WaxupView({ caseId, arch: startArch, onClose, deliver }:
                 { value: "before", label: "Before" },
                 { value: "after", label: "Wax-up" },
                 { value: "changes", label: "Changes" },
+                ...(loaded.th ? [{ value: "reduction" as const, label: "Reduction" }] : []),
               ]}
               onChange={setMode}
             />
@@ -235,21 +301,114 @@ export default function WaxupView({ caseId, arch: startArch, onClose, deliver }:
               Matched on the unchanged areas: {loaded.fit! < 0.05 ? "< 0.05" : loaded.fit!.toFixed(2)} mm
               {loaded.fit! > 0.15 && " · check that both files are the same jaw"}
             </p>
+            {mode === "reduction" ? (
+              <>
+                <div className="field">
+                  <span className="field-label">Material per tooth · you choose</span>
+                  {teeth.length ? (
+                    <>
+                      <label className="wax-mat all">
+                        <span>All listed teeth</span>
+                        <select value="" onChange={(e) => setAll(e.target.value)} aria-label="Set the material for all listed teeth">
+                          <option value="">Set all…</option>
+                          {mats.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.label}
+                            </option>
+                          ))}
+                          <option value="">— clear all</option>
+                        </select>
+                      </label>
+                      <ul className="wax-teeth">
+                        {teeth.map((t) => {
+                          const r = redTeeth.find((x) => x.fdi === t.fdi);
+                          return (
+                            <li key={t.fdi} className="wax-red">
+                              <b>≈ {t.fdi}</b>
+                              <div>
+                                <select value={choice[t.fdi] ?? ""} onChange={(e) => setMaterial(t.fdi, e.target.value)} aria-label={`Material for tooth ${t.fdi}`}>
+                                  <option value="">No material chosen</option>
+                                  {mats.map((m) => (
+                                    <option key={m.id} value={m.id}>
+                                      {m.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                {r && <span>{reductionLine(r)}</span>}
+                                {r?.enamelNote && <span className="wax-note">{r.enamelNote}</span>}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </>
+                  ) : (
+                    <Hint>No tooth changed by more than {SAME_MM} mm.</Hint>
+                  )}
+                </div>
+                <details className="field wax-thick">
+                  <summary className="field-label">Minimum thickness · typical values, edit to your materials</summary>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Material</th>
+                        <th>Facial</th>
+                        <th>Edge</th>
+                        <th>Lingual</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mats.map((m, k) => (
+                        <tr key={m.id}>
+                          <td>{m.label}</td>
+                          {(["facial", "edge", "lingual"] as const).map((s) => (
+                            <td key={s}>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                min={0}
+                                max={3}
+                                step={0.1}
+                                value={m[s]}
+                                aria-label={`${m.label} ${s} minimum, mm`}
+                                onChange={(e) => {
+                                  const v = Number(e.target.value);
+                                  if (!Number.isFinite(v) || v < 0 || v > 3) return;
+                                  saveMats(mats.map((x, j) => (j === k ? { ...x, [s]: v } : x)));
+                                }}
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <Hint>0 = surface not covered by that restoration. Saved on this phone.</Hint>
+                  <button className="btn secondary" onClick={() => saveMats(mergeMaterials(null))}>
+                    Reset to typical values
+                  </button>
+                </details>
+                <p className="disclaimer" role="note">
+                  {REDUCTION_DISCLAIMER}
+                </p>
+              </>
+            ) : (
             <div className="field">
-              <span className="field-label">Per tooth · mm (90th percentile)</span>
-              {teeth.length ? (
-                <ul className="wax-teeth">
-                  {teeth.map((t) => (
-                    <li key={t.fdi}>
-                      <b>≈ {t.fdi}</b>
-                      <span>{toothLine(t)}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <Hint>No tooth changed by more than {SAME_MM} mm.</Hint>
-              )}
-            </div>
+                <span className="field-label">Per tooth · mm (90th percentile)</span>
+                {teeth.length ? (
+                  <ul className="wax-teeth">
+                    {teeth.map((t) => (
+                      <li key={t.fdi}>
+                        <b>≈ {t.fdi}</b>
+                        <span>{toothLine(t)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <Hint>No tooth changed by more than {SAME_MM} mm.</Hint>
+                )}
+              </div>
+            )}
             <div className="field">
               <span className="field-label">Tooth numbers {loaded.th.midFrom === "changes" ? "(midline from the wax-up)" : "(midline from the arch)"}</span>
               <div className="row tight">
@@ -360,7 +519,9 @@ function makeScene(host: HTMLDivElement) {
   let state: Loaded | null = null;
   let heat: Float32Array | null = null;
   let plain: Float32Array | null = null;
-  let onProbe: ((d: number, fdi?: number) => void) | null = null;
+  let redCol: Float32Array | null = null;
+  let onProbe: ((d: number, fdi: number | undefined, i: number) => void) | null = null;
+  const marked = (m: Mode) => m === "changes" || m === "reduction";
   let slotOf: ((p: THREE.Vector3) => number | undefined) | null = null;
   /** front-teeth centre (midline, mid-crown) and the original's highest point along the occlusal axis */
   let focus: THREE.Vector3 | null = null;
@@ -403,11 +564,11 @@ function makeScene(host: HTMLDivElement) {
       const d = hit.point.distanceToSquared(new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)));
       if (d < bd) (bd = d), (best = i);
     }
-    onProbe?.(state.th.d[best], slotOf?.(hit.point));
+    onProbe?.(state.th.d[best], slotOf?.(hit.point), best);
   });
 
   const api = {
-    setMeshes(l: Loaded | null, arch: WaxArch, opts: { shift: number; flip: boolean }, probe: (d: number, fdi?: number) => void) {
+    setMeshes(l: Loaded | null, arch: WaxArch, opts: { shift: number; flip: boolean }, probe: (d: number, fdi: number | undefined, i: number) => void) {
       onProbe = probe;
       const same = state === l && waxMesh;
       state = l;
@@ -476,7 +637,7 @@ function makeScene(host: HTMLDivElement) {
         const lines = new THREE.LineSegments(lg, lineMat);
         lines.renderOrder = 9;
         marks.add(lines);
-        marks.visible = modeNow === "changes" && viewNow !== "side";
+        marks.visible = marked(modeNow) && viewNow !== "side";
         group.add(marks);
         const bounds = [0];
         for (const x of widths) bounds.push(bounds[bounds.length - 1] + x);
@@ -498,17 +659,27 @@ function makeScene(host: HTMLDivElement) {
       if (origMesh) origMesh.visible = showOrig;
       waxMesh.visible = !showOrig;
       const col = waxMesh.geometry.getAttribute("color") as THREE.BufferAttribute;
-      const want = mode === "changes" && measured && heat ? heat : plain!;
+      const want = mode === "changes" && measured && heat ? heat : mode === "reduction" && measured && redCol ? redCol : plain!;
       if (col.array !== want) {
         waxMesh.geometry.setAttribute("color", new THREE.BufferAttribute(want, 3));
       }
       modeNow = mode;
-      if (marks) marks.visible = mode === "changes" && viewNow !== "side";
+      if (marks) marks.visible = marked(mode) && viewNow !== "side";
       draw();
+    },
+    /** per-vertex estimated reduction (mm, NaN = not estimated); null = no material chosen yet */
+    setReduction(prep: Float32Array | null) {
+      if (!prep || !waxMesh) {
+        redCol = null;
+        return;
+      }
+      const n = prep.length;
+      redCol = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) redCol.set(prepColour(prep[i]), i * 3);
     },
     setView(view: View, arch: WaxArch) {
       viewNow = view;
-      if (marks) marks.visible = modeNow === "changes" && view !== "side";
+      if (marks) marks.visible = marked(modeNow) && view !== "side";
       const mesh = waxMesh ?? origMesh;
       if (!mesh) return draw();
       const box = new THREE.Box3().setFromObject(mesh);
@@ -542,15 +713,15 @@ function makeScene(host: HTMLDivElement) {
       draw();
     },
     /** The current view with the per-tooth list and the disclaimer, for sharing with the lab or the patient file. */
-    snapshot(teeth: ToothChange[], arch: WaxArch) {
+    snapshot(teeth: ToothChange[], arch: WaxArch, red?: ToothReduction[]) {
       renderer.render(scene, camera);
       const src = renderer.domElement;
       const W = 1200;
       const imgH = Math.round((src.height / src.width) * W);
-      const rows = Math.max(1, teeth.length);
+      const listH = red ? Math.max(44, red.reduce((h, t) => h + 78 + (t.enamelNote ? 26 : 0), 0)) : Math.max(1, teeth.length) * 44;
       const cv = document.createElement("canvas");
       cv.width = W;
-      cv.height = imgH + 120 + rows * 44 + 120;
+      cv.height = imgH + 120 + listH + (red ? 170 : 120);
       const g = cv.getContext("2d")!;
       g.fillStyle = "#ffffff";
       g.fillRect(0, 0, cv.width, cv.height);
@@ -560,13 +731,18 @@ function makeScene(host: HTMLDivElement) {
       let y = imgH + 50;
       g.fillStyle = "#1c2220";
       g.font = "600 30px -apple-system, Segoe UI, Roboto, sans-serif";
-      g.fillText(`Wax-up changes · ${arch} jaw · mm`, 40, y);
+      g.fillText(red ? `Reduction estimate · ${arch} jaw · mm` : `Wax-up changes · ${arch} jaw · mm`, 40, y);
       g.font = "26px -apple-system, Segoe UI, Roboto, sans-serif";
       // key
-      const key = [
-        ["#1a9954", "added"],
-        ["#d64040", "to reduce"],
-      ];
+      const key = red
+        ? [
+            ["#f2ad33", "≈0.5"],
+            ["#c7292e", "≥1 to reduce"],
+          ]
+        : [
+            ["#1a9954", "added"],
+            ["#d64040", "to reduce"],
+          ];
       let kx = W - 360;
       for (const [col, t] of key) {
         g.fillStyle = col;
@@ -577,17 +753,37 @@ function makeScene(host: HTMLDivElement) {
       }
       y += 54;
       g.fillStyle = "#333c39";
-      if (!teeth.length) g.fillText(`No tooth changed by more than ${SAME_MM} mm.`, 40, y);
-      for (const t of teeth) {
-        g.font = "600 26px -apple-system, Segoe UI, Roboto, sans-serif";
-        g.fillText(`≈ ${t.fdi}`, 40, y);
-        g.font = "26px -apple-system, Segoe UI, Roboto, sans-serif";
-        g.fillText(toothLine(t), 150, y);
-        y += 44;
+      if (red) {
+        if (!red.length) g.fillText("No material chosen yet.", 40, y);
+        for (const t of red) {
+          g.font = "600 26px -apple-system, Segoe UI, Roboto, sans-serif";
+          g.fillText(`≈ ${t.fdi}`, 40, y);
+          g.font = "26px -apple-system, Segoe UI, Roboto, sans-serif";
+          g.fillText(t.material, 150, y);
+          y += 34;
+          g.fillText(reductionLine(t), 150, y);
+          y += t.enamelNote ? 30 : 44;
+          if (t.enamelNote) {
+            g.font = "20px -apple-system, Segoe UI, Roboto, sans-serif";
+            g.fillStyle = "#816951";
+            g.fillText(t.enamelNote, 150, y);
+            g.fillStyle = "#333c39";
+            y += 40;
+          }
+        }
+      } else {
+        if (!teeth.length) g.fillText(`No tooth changed by more than ${SAME_MM} mm.`, 40, y);
+        for (const t of teeth) {
+          g.font = "600 26px -apple-system, Segoe UI, Roboto, sans-serif";
+          g.fillText(`≈ ${t.fdi}`, 40, y);
+          g.font = "26px -apple-system, Segoe UI, Roboto, sans-serif";
+          g.fillText(toothLine(t), 150, y);
+          y += 44;
+        }
       }
       g.font = "20px -apple-system, Segoe UI, Roboto, sans-serif";
       g.fillStyle = "#5b6461";
-      wrap(g, `${WAXUP_DISCLAIMER} Areas over ${FAR_MM} mm apart or on the trimmed rim are not compared (grey).`, 40, y + 20, W - 80, 26);
+      wrap(g, `${red ? REDUCTION_DISCLAIMER : WAXUP_DISCLAIMER} Areas over ${FAR_MM} mm apart or on the trimmed rim are not compared (grey).`, 40, y + 20, W - 80, 26);
       return cv;
     },
     dispose() {
