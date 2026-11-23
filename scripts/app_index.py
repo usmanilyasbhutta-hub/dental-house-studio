@@ -1,15 +1,19 @@
 """App code index (graphify idea, our own code): one ~2k-token page per app listing, for every file, its purpose, local
 imports, outside packages and its main symbols with line numbers, so a chat can jump straight to `file:line` instead
-of opening big files.
+of opening big files. Every folder under apps/ gets one automatically (apps/<name>/docs/code-index.md), so a new app
+is covered the day it is added. Strategy and rules: docs/token-saving.md.
 
-  python3 scripts/app_index.py                         # writes apps/smile-studio/docs/code-index.md (runs in npm run map / check)
-  python3 scripts/app_index.py --check                 # exit 1 if the index is out of date
-  python3 scripts/app_index.py --file src/planner.ts   # every symbol of one file with its line (stdout, nothing written)
+  python3 scripts/app_index.py                         # (re)write the index of every app (runs in npm run map / check
+                                                       #  and after every edit inside apps/, via .claude/hooks/after-edit.sh)
+  python3 scripts/app_index.py apps/smile-studio       # one app only
+  python3 scripts/app_index.py --check                 # exit 1 if any index is out of date
+  python3 scripts/app_index.py --file apps/smile-studio/src/planner.ts   # every symbol of one file with its line
 
 Symbols are ranked by how many other app files import them (the real API first), then exported functions, then
 big files' internal functions, then types. Each file keeps as many as fit the budget; the rest show as "+N".
 Regex-based on purpose: no TypeScript compiler needed, runs in well under a second.
 """
+import json
 import posixpath
 import re
 import subprocess
@@ -18,8 +22,9 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-APP = "apps/smile-studio"
-OUT = f"{APP}/docs/code-index.md"
+APPS_DIR = "apps"
+OUT_NAME = "docs/code-index.md"
+TEST = re.compile(r"(^|/)(tests?|e2e|__tests__)/|\.(test|spec)\.\w+$")
 BUDGET = 2000            # target tokens for the whole page (≈ chars / 4, same measure as docs/project-map.md)
 BIG = 4000               # tokens: files above this get ⚠ and list internal functions too
 CODE = re.compile(r"\.(tsx?|mjs|cjs|js|py)$")
@@ -27,14 +32,27 @@ SKIP_EXT = {"react", "react-dom", "react/jsx-runtime", "vitest", "fs", "path", "
             "http", "https", "zlib", "stream", "util", "worker_threads", "module", "assert", "events"}
 
 
-def app_files():
-    out = subprocess.check_output(["git", "ls-files", APP], cwd=ROOT, text=True).split()
-    keep = [f for f in out if CODE.search(f) and "/.tmp/" not in f and not f.endswith(("vite.config.ts",))]
-    return sorted(f[len(APP) + 1:] for f in keep)
+def git_files(path):
+    """Tracked files plus new ones not yet committed (gitignored files stay out: patient data never gets indexed)."""
+    return subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", path],
+                                   cwd=ROOT, text=True).split()
 
 
-def readme_purposes():
-    p = ROOT / APP / "README.md"
+def all_apps():
+    """Every apps/<name>/ folder that has tracked code."""
+    names = sorted({f.split("/")[1] for f in git_files(APPS_DIR) if f.count("/") >= 2 and CODE.search(f)})
+    return [f"{APPS_DIR}/{n}" for n in names]
+
+
+def app_files(app):
+    keep = [f for f in git_files(app) if CODE.search(f) and "/.tmp/" not in f and "/node_modules/" not in f
+            and not re.search(r"(^|/)(vite|vitest|eslint|postcss|tailwind|jest|playwright)\.config\.\w+$", f)
+            and not f.endswith(OUT_NAME)]
+    return sorted(f[len(app) + 1:] for f in keep)
+
+
+def readme_purposes(app):
+    p = ROOT / app / "README.md"
     rows = re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(.+?)\s*\|\s*$", p.read_text(), re.M) if p.exists() else []
     return dict(rows)
 
@@ -147,18 +165,18 @@ def imports(path, text, known):
     return local, named, ext
 
 
-def build():
-    fs = app_files()
+def build(app):
+    fs = app_files(app)
     known = set(fs)
-    rp = readme_purposes()
+    rp = readme_purposes(app)
     nodes = {}
     for f in fs:
-        text = (ROOT / APP / f).read_text(errors="ignore")
+        text = (ROOT / app / f).read_text(errors="ignore")
         local, named, ext = imports(f, text, known)
         nodes[f] = {"file": f, "tokens": len(text) // 4, "purpose": purpose(text, rp.get(f)), "syms": symbols(f, text),
                     "local": sorted(local), "named": named, "ext": sorted(ext)}
     use = defaultdict(int)           # (file, symbol) -> number of other files importing it
-    use_app = defaultdict(int)       # same, counting only app code (src/), so test-only helpers don't rank as API
+    use_app = defaultdict(int)       # same, counting only app code (not tests), so test-only helpers don't rank as API
     used_by = defaultdict(set)
     for f, n in nodes.items():
         for dep in n["local"]:
@@ -166,7 +184,7 @@ def build():
         for dep, names in n["named"].items():
             for s in names:
                 use[(dep, s)] += 1
-                use_app[(dep, s)] += f.startswith("src/")
+                use_app[(dep, s)] += not TEST.search(f)
     for f, n in nodes.items():
         big = n["tokens"] > BIG
         seen, ranked = set(), []
@@ -225,46 +243,66 @@ def file_line(n, cap):
 
 def group_line(title, ns):
     """Tests / e2e collapsed to one line each: which modules they cover."""
-    covers = sorted({short(d) for n in ns for d in n["local"] if d.startswith("src/")})
-    names = " ".join(short(n["file"]).split("/")[-1].replace(".test", "") for n in ns)
+    covers = sorted({short(d) for n in ns for d in n["local"] if not TEST.search(d)})
+    names = " ".join(re.sub(r"\.(test|spec)$", "", short(n["file"]).split("/")[-1]) for n in ns)
     tok = sum(n["tokens"] for n in ns) // 1000
     return f"- **{title}** ({len(ns)} files, {tok}k): {names}" + (f" · cover {' '.join(covers)}" if covers else "")
 
 
-def render(nodes, cap):
-    src = [n for f, n in nodes.items() if f.startswith("src/")]
-    other = [n for f, n in nodes.items() if not f.startswith(("src/", "tests/", "e2e/"))]
-    tests = [n for f, n in nodes.items() if f.startswith("tests/")]
-    e2e = [n for f, n in nodes.items() if f.startswith("e2e/")]
+def title_of(app):
+    return app.split("/")[-1].replace("-", " ").replace("_", " ").title()
+
+
+def render(nodes, cap, app):
+    tests = [n for f, n in nodes.items() if TEST.search(f) and not re.match(r"e2e/", f)]
+    e2e = [n for f, n in nodes.items() if re.match(r"e2e/", f)]
+    code = [n for f, n in nodes.items() if not TEST.search(f)]
+    main = [n for n in code if n["file"].startswith("src/")] or code
+    other = [n for n in code if n not in main]
     total = sum(n["tokens"] for n in nodes.values())
-    out = [f"# Smile Studio code index (generated by `python3 scripts/app_index.py`; do not edit)", "",
-           f"{len(nodes)} code files in `{APP}/`, ~{total // 1000}k tokens if read in full. Find the symbol here, then read "
-           f"only around it: `sed -n 'L-20,L+60p' {APP}/src/<file>`. All symbols of one file: `python3 scripts/app_index.py --file src/<file>`.",
+    scripts = {}
+    pkg = ROOT / app / "package.json"
+    if pkg.exists():
+        scripts = json.loads(pkg.read_text()).get("scripts", {})
+    out = [f"# {title_of(app)} code index (generated by `python3 scripts/app_index.py`; do not edit)", "",
+           f"{len(nodes)} code files in `{app}/`, ~{total // 1000}k tokens if read in full. Find the symbol here, then read "
+           f"only around it: `sed -n 'L-20,L+60p' {app}/{'src/' if main is not code else ''}<name>.<ext>`. All symbols of one file: "
+           f"`python3 scripts/app_index.py --file {app}/<file>`.",
            f"Key: `name:line` exported · `·name:line` internal · `← a b` imports · ⚠ >{BIG // 1000}k tokens, never read whole · "
            "symbols ranked by how many app files import them.", ""]
-    out += ["## src", ""] + [file_line(n, cap) for n in sorted(src, key=lambda n: n["file"])] + [""]
-    out += ["## Other code", ""] + [file_line(n, min(cap, 3)) for n in other]
-    out += [group_line("tests (vitest)", tests), group_line("e2e (Playwright, `npm run e2e`)", e2e), ""]
+    out += [f"## {'src' if main is not code else 'code'}", ""] + [file_line(n, cap) for n in sorted(main, key=lambda n: n["file"])] + [""]
+    groups = []
+    if tests:
+        groups.append(group_line("tests" + (" (`npm test`)" if "test" in scripts else ""), tests))
+    if e2e:
+        groups.append(group_line("e2e" + (" (`npm run e2e`)" if "e2e" in scripts else ""), e2e))
+    if other or groups:
+        out += ["## Other code", ""] + [file_line(n, min(cap, 3)) for n in other] + groups + [""]
     return "\n".join(out) + "\n"
 
 
-def fit(nodes):
+def fit(nodes, app):
     """Largest per-file symbol cap that keeps the page within BUDGET tokens."""
-    best = render(nodes, 0)
+    best = render(nodes, 0, app)
     for cap in range(1, 40):
-        md = render(nodes, cap)
+        md = render(nodes, cap, app)
         if len(md) // 4 > BUDGET:
             break
         best = md
     return best
 
 
-def one_file(nodes, f):
-    f = f[len(APP) + 1:] if f.startswith(APP) else f
+def one_file(path):
+    path = path.lstrip("./")
+    app = next((a for a in all_apps() if path.startswith(a + "/")), None)
+    if not app:
+        sys.exit(f"not inside an app: {path} (give the full path, e.g. apps/smile-studio/src/planner.ts)")
+    nodes = build(app)
+    f = path[len(app) + 1:]
     n = nodes.get(f)
     if not n:
-        sys.exit(f"not in the index: {f} (paths are relative to {APP}/, e.g. src/planner.ts)")
-    print(f"{APP}/{f} · ~{n['tokens']} tokens · {n['purpose']}")
+        sys.exit(f"not in the index: {path}")
+    print(f"{path} · ~{n['tokens']} tokens · {n['purpose']}")
     print("imports:", " ".join(n["local"]) or "—", "| packages:", " ".join(n["ext"]) or "—")
     print("used by:", " ".join(n["used_by"]) or "—")
     for s in sorted(n["syms"], key=lambda s: s["line"]):
@@ -273,18 +311,27 @@ def one_file(nodes, f):
 
 
 def main():
-    nodes = build()
-    if "--file" in sys.argv:
-        return one_file(nodes, sys.argv[sys.argv.index("--file") + 1])
-    md = fit(nodes)
-    path = ROOT / OUT
-    if "--check" in sys.argv:
-        stale = not path.exists() or path.read_text() != md
-        print("app code index is " + ("OUT OF DATE: run python3 scripts/app_index.py" if stale else "up to date"))
+    args = sys.argv[1:]
+    if "--file" in args:
+        return one_file(args[args.index("--file") + 1])
+    apps = [a.rstrip("/") for a in args if not a.startswith("--")] or all_apps()
+    stale = []
+    for app in apps:
+        md = fit(build(app), app)
+        path = ROOT / app / OUT_NAME
+        if "--check" in args:
+            if not path.exists() or path.read_text() != md:
+                stale.append(app)
+            continue
+        if path.exists() and path.read_text() == md:
+            continue                                  # unchanged: don't touch the file
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(md)
+        if "--quiet" not in args:
+            print(f"app index → {app}/{OUT_NAME} (~{len(md) // 4:,} tokens)")
+    if "--check" in args:
+        print("app code indexes: " + (f"OUT OF DATE {' '.join(stale)}: run python3 scripts/app_index.py" if stale else "up to date"))
         sys.exit(1 if stale else 0)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(md)
-    print(f"app index → {OUT} (~{len(md) // 4:,} tokens, {len(nodes)} files)")
 
 
 if __name__ == "__main__":

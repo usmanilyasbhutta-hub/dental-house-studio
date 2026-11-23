@@ -7,7 +7,7 @@ description: Work on Smile Studio, the Dental House phone app for smile-design m
 
 On-device smile design mockups for consultations. **Find code with `apps/smile-studio/docs/code-index.md` first** (~2k tokens:
 every file's purpose, imports and main symbols as `name:line`), then read only around that line (`sed -n 'L-20,L+60p'`).
-All symbols of one file: `python3 scripts/app_index.py --file src/<file>`. Features: `apps/smile-studio/README.md`.
+All symbols of one file: `python3 scripts/app_index.py --file apps/smile-studio/src/<file>`. Features: `apps/smile-studio/README.md`.
 
 ## Rules
 - **No network for patient data.** Never add uploads, analytics, cloud sync or third-party AI/3D services that see photos.

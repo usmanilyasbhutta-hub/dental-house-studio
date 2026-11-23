@@ -121,8 +121,8 @@
 },
 {
 "file": ".claude/hooks/after-edit.sh",
-"kb": 0.6,
-"tokens": 142,
+"kb": 1.1,
+"tokens": 274,
 "purpose": "After Claude edits a file: typecheck code, validate briefs. Exit 2 feeds errors back to Claude.",
 "exports": []
 },
@@ -150,7 +150,7 @@
 {
 "file": ".claude/skills/smile-studio/SKILL.md",
 "kb": 3.9,
-"tokens": 988,
+"tokens": 993,
 "purpose": "Work on Smile Studio, the Dental House phone app for smile-design mockups (apps/smile-studio, React + canvas PWA). Us\u2026",
 "exports": []
 },
@@ -170,8 +170,8 @@
 },
 {
 "file": "CLAUDE.md",
-"kb": 10.3,
-"tokens": 2621,
+"kb": 10.4,
+"tokens": 2647,
 "purpose": "Dental House Studio: instructions for Claude",
 "exports": []
 },
@@ -472,6 +472,32 @@
 ]
 },
 {
+"file": "scripts/app_index.py",
+"kb": 15.3,
+"tokens": 3897,
+"purpose": "App code index (graphify idea, our own code): one ~2k-token page per app listing, for every file, its purpose, local",
+"exports": [
+"git_files",
+"all_apps",
+"app_files",
+"readme_purposes",
+"purpose",
+"symbols",
+"resolve",
+"imports",
+"build",
+"short",
+"sym_str",
+"file_line",
+"group_line",
+"title_of",
+"render",
+"fit",
+"one_file",
+"main"
+]
+},
+{
 "file": "scripts/autograde.py",
 "kb": 3.4,
 "tokens": 866,
@@ -699,8 +725,8 @@
 },
 {
 "file": "scripts/project_map.py",
-"kb": 6.9,
-"tokens": 1769,
+"kb": 7.0,
+"tokens": 1784,
 "purpose": "Project map (\"graphify\" idea, our own code): one compact page that tells Claude where everything is, so a new chat",
 "exports": [
 "files",

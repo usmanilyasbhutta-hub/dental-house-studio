@@ -96,8 +96,9 @@ def index_section():
              "- **3D**: three.js `src/three/`; Blender `scripts/blender/` (modelgen = text → 3D, directions = looks, composite_clip).",
              "- **Taste and decisions**: `docs/taste.md` (read before creative choices), `docs/style-profile.md`, `docs/style-recipes.md`.",
              "- **Brand and clinic facts**: `src/brand.ts` only. Themes: `src/theme.ts`.",
-             "- **Smile Studio app** (`apps/smile-studio/`, not listed below): its own ~2k-token index with symbols and line numbers,",
-             "  `apps/smile-studio/docs/code-index.md` (`python3 scripts/app_index.py`; one file in full: `--file src/<file>`).",
+             "- **Apps** (`apps/<name>/`, not listed below): each has its own ~2k-token index with symbols and line numbers,",
+             "  `apps/<name>/docs/code-index.md` (`python3 scripts/app_index.py`; one file in full: `--file apps/<name>/<file>`).",
+             "- **Token-saving rules**: `docs/token-saving.md`.",
              f"- **npm scripts**: {', '.join(f'`{k}`' for k in pkg)}.", ""]
     return lines
 

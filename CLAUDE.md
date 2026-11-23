@@ -50,14 +50,15 @@ Safe area: keep text out of the top 220 px, bottom 380 px, right 140 px and left
 The logo bug and HUD label sit in the top band on purpose. They're decorative, not information.
 
 ## Saving credits (read this first in every chat)
-- **Start from `docs/project-map.md`** (~5k tokens: every file, its purpose, size and links). Open only the files the task
-  needs. Files marked ⚠ (>4k tokens) are searched with `grep -n` and read in ranges, never whole.
-- **Smile Studio app:** start from `apps/smile-studio/docs/code-index.md` (~2k tokens: purpose, imports and main symbols with
-  line numbers for every file), then read only around the line. Refreshes on `npm run check` / `npm run map`.
+Standing strategy for every chat, every app, for good: **`docs/token-saving.md`**. In short:
+- **Maps first:** `docs/project-map.md` (~6k tokens, whole repo); each app in `apps/<name>/` has its own
+  `docs/code-index.md` (~2k tokens: purpose, imports, main symbols as `name:line`). Go from the map to the line;
+  ⚠ files (>4k tokens) are grepped and read in ranges, never whole. New apps get an index automatically.
+- Maps refresh after every edit (`.claude/hooks/after-edit.sh`) and on `npm run check` / `npm run map`.
+- Every new file starts with a one-line header comment (it becomes the file's purpose in the maps).
 - Don't re-read a file you just edited or already read in this chat. Don't print long logs: `| tail`, `| grep`.
 - Check visuals with a few **stills or a contact sheet**, not full renders; full renders only after the owner approves.
 - Use subagents only when the owner asks (they start from zero and cost more). One chat per job; keep chats short.
-- The map refreshes on `npm run check` / `npm run map`.
 
 ## Creative judgement (read `docs/taste.md` first)
 - **The owner's word wins** on every creative choice (look, pace, effects, music, wording). Only the golden rules outrank it.

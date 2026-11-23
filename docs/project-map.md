@@ -1,6 +1,6 @@
 # Project map (generated: `python3 scripts/project_map.py`; do not edit by hand)
 
-153 source files, about 185,492 tokens if read in full. **Read this map first and open only the files a task needs;**
+154 source files, about 189,567 tokens if read in full. **Read this map first and open only the files a task needs;**
 for big files, search (`grep -n`) and read the relevant lines instead of the whole file.
 
 ## Where to look
@@ -11,8 +11,9 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - **3D**: three.js `src/three/`; Blender `scripts/blender/` (modelgen = text → 3D, directions = looks, composite_clip).
 - **Taste and decisions**: `docs/taste.md` (read before creative choices), `docs/style-profile.md`, `docs/style-recipes.md`.
 - **Brand and clinic facts**: `src/brand.ts` only. Themes: `src/theme.ts`.
-- **Smile Studio app** (`apps/smile-studio/`, not listed below): its own ~2k-token index with symbols and line numbers,
-  `apps/smile-studio/docs/code-index.md` (`python3 scripts/app_index.py`; one file in full: `--file src/<file>`).
+- **Apps** (`apps/<name>/`, not listed below): each has its own ~2k-token index with symbols and line numbers,
+  `apps/<name>/docs/code-index.md` (`python3 scripts/app_index.py`; one file in full: `--file apps/<name>/<file>`).
+- **Token-saving rules**: `docs/token-saving.md`.
 - **npm scripts**: `studio`, `validate`, `render`, `still`, `qc`, `make`, `typecheck`, `test`, `check`, `brand:assets`, `prep`, `gallery`, `sfx`, `ff`, `map`.
 
 ## Files
@@ -21,7 +22,7 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 
 ### (root)
 - `.gitignore` ~132tok: —
-- `CLAUDE.md` ~2621tok: Dental House Studio: instructions for Claude
+- `CLAUDE.md` ~2647tok: Dental House Studio: instructions for Claude
 - `README.md` ~900tok: Dental House Studio
 - `package.json` ~517tok: —
 - `remotion.config.ts` ~45tok: —
@@ -52,12 +53,12 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - `.claude/commands/taste.md` ~376tok: Tell Claude what you like or don't (or see what it currently believes about your taste and correct it)
 
 ### .claude/hooks
-- `.claude/hooks/after-edit.sh` ~142tok: After Claude edits a file: typecheck code, validate briefs. Exit 2 feeds errors back to Claude.
+- `.claude/hooks/after-edit.sh` ~274tok: After Claude edits a file: typecheck code, validate briefs. Exit 2 feeds errors back to Claude.
 - `.claude/hooks/guard-bash.sh` ~138tok: Block commands that could leak patient material into git or the public bundle.
 
 ### .claude/skills
 - `.claude/skills/dental-animation/SKILL.md` ~1536tok: Make dental procedure animations (3D implant/crown explainers), general dental education graphics, and annotated layo…
-- `.claude/skills/smile-studio/SKILL.md` ~988tok: Work on Smile Studio, the Dental House phone app for smile-design mockups (apps/smile-studio, React + canvas PWA). Us…
+- `.claude/skills/smile-studio/SKILL.md` ~993tok: Work on Smile Studio, the Dental House phone app for smile-design mockups (apps/smile-studio, React + canvas PWA). Us…
 
 ### .github/workflows
 - `.github/workflows/ci.yml` ~215tok: —
@@ -107,6 +108,7 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 
 ### scripts
 - `scripts/analyze_reference.py` ~1586tok: Measure reference videos to learn an editing style. · exports: run, probe, cuts, frames, colour_stats, audio_stats, sheet, main
+- `scripts/app_index.py` ~3897tok: App code index (graphify idea, our own code): one ~2k-token page per app listing, for every file, its purpose, local · exports: git_files, all_apps, app_files, readme_purposes, purpose, symbols, resolve, imports…
 - `scripts/autograde.py` ~866tok: Automatic colour correction ("one-click grade" idea, our own code, local). · exports: sample, main
 - `scripts/beats.py` ~827tok: Beat and onset finder (librosa idea, our own numpy code): where the beats are in a music track, so cuts land on them. · exports: load, onset_envelope, tempo, track, main
 - `scripts/brand_assets.py` ~407tok: Build transparent brand PNGs from the source JPEGs (logo on white). · exports: to_rgba, save
@@ -121,7 +123,7 @@ for big files, search (`grep -n`) and read the relevant lines instead of the who
 - `scripts/make.ts` ~156tok: One command: validate → render (+ loudness master) → QC.
 - `scripts/make_sfx.py` ~1244tok: Generate the UI sound-effect set (public/sfx/*.wav) in code: free, no samples, no licences. · exports: t_, band, env, modes, reverb, finish, stereo, save
 - `scripts/prep_footage.ts` ~753tok: SRT (source seconds) → words relative to the trim; time spread inside each cue by character length. · exports: srtToWords · used by 1
-- `scripts/project_map.py` ~1769tok: Project map ("graphify" idea, our own code): one compact page that tells Claude where everything is, so a new chat · exports: files, purpose, exports, imports, build, index_section, render, main
+- `scripts/project_map.py` ~1784tok: Project map ("graphify" idea, our own code): one compact page that tells Claude where everything is, so a new chat · exports: files, purpose, exports, imports, build, index_section, render, main
 - `scripts/qc.ts` ~1535tok: .jpg. Exit 1 on any FAIL. · exports: qc · used by 1
 - `scripts/render.ts` ~1061tok: Mastering: H.264 yuv420p, TV range, BT.709 tags (what Instagram/TikTok expect), +faststart. · exports: render · used by 1
 - `scripts/stills-many.ts` ~364tok: Render one or more frames for several briefs from ONE bundle (fast visual checks of many examples).
