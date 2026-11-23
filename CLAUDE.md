@@ -50,7 +50,9 @@ Safe area: keep text out of the top 220 px, bottom 380 px, right 140 px and left
 The logo bug and HUD label sit in the top band on purpose. They're decorative, not information.
 
 ## Saving credits (read this first in every chat)
-- **Start from `docs/project-map.md`** (~5k tokens: every file, its purpose, size and links). Open only the files the task
+- **Check `docs/reduction-map.md` first** (~1.7k tokens): task recipes (which files a job needs) and line ranges for big files.
+  If the recipe covers the job, skip the project map.
+- **Otherwise start from `docs/project-map.md`** (~5k tokens: every file, its purpose, size and links). Open only the files the task
   needs. Files marked ⚠ (>4k tokens) are searched with `grep -n` and read in ranges, never whole.
 - Don't re-read a file you just edited or already read in this chat. Don't print long logs: `| tail`, `| grep`.
 - Check visuals with a few **stills or a contact sheet**, not full renders; full renders only after the owner approves.
