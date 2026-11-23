@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { archOf, withArch } from "./arch";
 import { autoOpposing, computePrep, detectTeeth, maskFromToothMask, toothMaskFromMask, type Mask } from "./engineShim";
@@ -27,6 +27,9 @@ const STEPS: { id: Step; label: string; n: string; goal: string; icon: string }[
   { id: "plan", label: "Plan", n: "06", icon: "plan", goal: "Record your plan, check it, then hand it to the lab." },
 ];
 const LAST = STEPS.length - 1;
+
+/** three.js is only loaded when the 3D wax-up screen opens */
+const WaxupView = lazy(() => import("./WaxupView"));
 
 const COACH_KEY = "smile-studio.coach.v1";
 
@@ -78,6 +81,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
   const [pickRole, setPickRole] = useState<PickRole>(null);
   const [clinicMats, setClinicMats] = useState<Material[]>(() => loadClinicMaterials());
   const [matsOpen, setMatsOpen] = useState(false);
+  const [waxOpen, setWaxOpen] = useState(false);
   const pixels = useRef<{ img: ImageBitmap; data: Uint8ClampedArray } | null>(null);
   // round 6: fit to teeth (two canine taps, then the mask refines length and midline)
   const [fitTaps, setFitTaps] = useState<Pt[] | null>(null);
@@ -1212,6 +1216,7 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
               onMaterials={() => setMatsOpen(true)}
               onLabSheet={() => openSheet("lab")}
               onPrepSheet={() => openSheet("clinician")}
+              onWaxup={() => setWaxOpen(true)}
               busy={busy}
             />
           )}
@@ -1428,6 +1433,11 @@ export function Editor({ initial, onClose }: { initial: CaseData; onClose: () =>
             </button>
           </div>
         </Sheet>
+      )}
+      {waxOpen && (
+        <Suspense fallback={<div className="waxup" aria-busy="true" />}>
+          <WaxupView caseId={c.id} arch={arch} onClose={() => setWaxOpen(false)} deliver={deliver} />
+        </Suspense>
       )}
       {matsOpen && <MaterialsSheet clinic={clinicMats} onChange={updateMats} onClose={() => setMatsOpen(false)} />}
       {toast.node}

@@ -57,6 +57,8 @@ interface Props {
   onMaterials: () => void;
   onLabSheet: () => void;
   onPrepSheet: () => void;
+  /** opens the 3D wax-up (STL) screen */
+  onWaxup?: () => void;
   busy: boolean;
 }
 
@@ -67,6 +69,16 @@ export function PlanPanel(p: Props) {
   const badge = stops ? `${stops} stop` : cautions ? `${cautions}` : "";
   return (
     <>
+      {p.onWaxup && (
+        <button className="wax-entry" onClick={p.onWaxup}>
+          <Icon name="tooth" size={20} />
+          <span>
+            <b>3D wax-up</b>
+            <small>Lab STL vs original scan · mm per tooth</small>
+          </span>
+          <Icon name="forward" size={18} />
+        </button>
+      )}
       <div className="plan-tabs" role="tablist" aria-label="Plan sections">
         {(
           [

@@ -25,6 +25,13 @@ On-device smile design mockups for consultations. Read `apps/smile-studio/README
   depth; prep mm are typed in by the dentist from the mock-up. Planner logic stays pure in `src/planner.ts` with every
   warning rule unit-tested in `tests/planner.test.ts` (with its source in the copy). Clinic facts on sheets come from
   `src/clinic.ts` (mirror of the studio's `src/brand.ts`).
+- **3D wax-up (round 9, Plan step → "3D wax-up"):** the lab's wax-up STL vs the original scan STL, per case and jaw,
+  stored in IndexedDB store `waxups` (never uploaded, never in git: `*.stl` is gitignored). Engine is pure in
+  `src/waxup.ts` (STL parse/weld, PCA + trimmed ICP on unchanged areas, signed distance with rim/base/facing exclusions,
+  per-tooth mm along the arch); it runs in `src/waxupWorker.ts`. `src/WaxupView.tsx` (three.js, lazy chunk) shows
+  Before / Wax-up / Changes, Front / Occlusal / Side, tap-to-read mm and "Save image". Tooth numbers are **estimates**
+  (mean widths from the midline; dentist can shift / swap sides) and are always shown with "≈". The values never fill
+  the plan's prep mm automatically. Tests use synthetic meshes only (`tests/waxup.test.ts`, `e2e/make_arch_stl.cjs`).
 
 ## Workflow
 1. `cd apps/smile-studio && npm install` (once).

@@ -500,6 +500,43 @@ async function deviceSuite(browser, devName, face) {
   });
 
   // ---------- round 4: case planner ----------
+  // ---------- 3D wax-up (SYNTHETIC STL meshes) ----------
+  await test(devName, "Wax-up: synthetic scan + moved wax-up are aligned on the phone and listed per tooth in mm", async () => {
+    const { makeArchStl } = require("./make_arch_stl.cjs");
+    const orig = path.join(TMP, "arch-original.stl"), wax = path.join(TMP, "arch-waxup.stl");
+    makeArchStl(orig);
+    makeArchStl(wax, { grow: 0.6, moved: true });
+    await gotoStep(page, "Plan");
+    await page.getByRole("button", { name: /3D wax-up/ }).click();
+    await page.locator(".waxup .wax-files").waitFor();
+    await page.getByRole("radio", { name: "Lower" }).click();
+    for (const [slot, f] of [["Original scan", orig], ["Lab wax-up", wax]]) {
+      const [fc] = await Promise.all([page.waitForEvent("filechooser"), page.getByRole("button", { name: new RegExp(slot) }).click()]);
+      await fc.setFiles(f);
+      await page.waitForTimeout(200);
+    }
+    await page.locator(".wax-fit").waitFor({ timeout: 30000 });
+    const fit = await page.locator(".wax-fit").innerText();
+    if (!/< 0\.05/.test(fit)) throw new Error(`alignment not tight: ${fit}`);
+    const teeth = (await page.locator(".wax-teeth b").allInnerTexts()).map((t) => +t.replace(/\D/g, "")).sort();
+    if (teeth.join() !== "31,32,33,41,42,43") throw new Error(`changed teeth ${teeth.join()}`);
+    const line = await page.locator(".wax-teeth li").first().innerText();
+    if (!/facial \+0\.\d/.test(line)) throw new Error(`no facial mm: ${line}`);
+    await page.getByRole("radio", { name: "Occlusal" }).click();
+    await page.waitForTimeout(300);
+    await shot("waxup");
+    // the files are kept with the case on this device: closing and reopening shows them without picking again
+    await page.getByRole("button", { name: "Back to the plan" }).click();
+    await page.getByRole("button", { name: /3D wax-up/ }).click();
+    await page.getByRole("radio", { name: "Lower" }).click();
+    await page.locator(".wax-fit").waitFor({ timeout: 30000 });
+    const before = await page.evaluate(() => window.__shared.length);
+    await page.getByRole("button", { name: "Save image" }).click();
+    await page.waitForFunction((n) => window.__shared.length > n, before, { timeout: 10000 });
+    await page.getByRole("button", { name: "Back to the plan" }).click();
+    return `teeth ${teeth.join(" ")}; ${fit.trim()}`;
+  });
+
   await test(devName, "Plan: shade pins (reference + match) give a ΔE00 gap with the photo-estimate note", async () => {
     await gotoStep(page, "Plan");
     await page.getByRole("tab", { name: /Shade/ }).click();
@@ -1558,7 +1595,7 @@ async function offlineSuite(browser, face) {
   const bite = path.join(TMP, "bite.jpg");
   const truth = JSON.parse(execFileSync("python3", [path.join(__dirname, "make_bite.py"), bite, "1200", "800"]).toString());
 
-  const browser = await chromium.launch({ headless: !process.env.E2E_HEADED });
+  const browser = await chromium.launch({ headless: !process.env.E2E_HEADED, args: ["--enable-unsafe-swiftshader"] });
   try {
     await startServer([], PORT);
     const only = process.env.E2E_ONLY_LABS;

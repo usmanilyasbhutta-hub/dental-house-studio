@@ -3,20 +3,26 @@ import type { CaseData } from "./model";
 
 const DB = "smile-studio";
 const STORE = "cases";
+/** Wax-up STL files per case, kept apart so the case list never loads big meshes. */
+const WAX = "waxups";
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: "id" });
+    const req = indexedDB.open(DB, 2);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "id" });
+      if (!db.objectStoreNames.contains(WAX)) db.createObjectStore(WAX, { keyPath: "id" });
+    };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
-async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>, store = STORE): Promise<T> {
   const db = await open();
   return new Promise((resolve, reject) => {
-    const req = fn(db.transaction(STORE, mode).objectStore(STORE));
+    const req = fn(db.transaction(store, mode).objectStore(store));
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
@@ -25,7 +31,26 @@ async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBReq
 export const listCases = async () =>
   (await tx<CaseData[]>("readonly", (s) => s.getAll())).sort((a, b) => b.updatedAt - a.updatedAt);
 export const saveCase = (c: CaseData) => tx("readwrite", (s) => s.put(c));
-export const deleteCase = (id: string) => tx("readwrite", (s) => s.delete(id));
+export const deleteCase = async (id: string) => {
+  await tx("readwrite", (s) => s.delete(id), WAX);
+  return tx("readwrite", (s) => s.delete(id));
+};
+
+/** One STL slot: the patient's original scan or the lab's wax-up, for one arch. */
+export interface WaxFile {
+  name: string;
+  blob: Blob;
+}
+/** Wax-up files of a case (key = case id). Stays on this device like the photo. */
+export interface WaxupData {
+  id: string;
+  lower?: { original?: WaxFile; waxup?: WaxFile; shift?: number; flip?: boolean };
+  upper?: { original?: WaxFile; waxup?: WaxFile; shift?: number; flip?: boolean };
+  updatedAt: number;
+}
+export const loadWaxup = (id: string) => tx<WaxupData | undefined>("readonly", (s) => s.get(id), WAX);
+export const saveWaxup = (w: WaxupData) => tx("readwrite", (s) => s.put(w), WAX);
+export const deleteWaxup = (id: string) => tx("readwrite", (s) => s.delete(id), WAX);
 
 /** Deletes the whole database (stronger than deleting records: the browser drops the files). */
 export const wipeAll = () =>

@@ -104,6 +104,7 @@ kinetic type + serif accent word, numbered structure, Roman-Urdu word captions, 
 ## Smile Studio app (apps/smile-studio)
 Phone app (PWA) for smile-design mockups in consultations: face lines → lip mask → tooth shapes/proportions → shade → compare/share.
 Self-contained (own package.json; `npm run check` inside it). Photos stay on the device; exports carry a permanent simulation label.
+Plan step has a **3D wax-up** option: lab STL vs original scan STL, aligned and measured on the phone (mm per tooth). Scans never leave the device or enter git.
 Use the project skill `smile-studio` before changing it.
 
 ## Roadmap (see docs/roadmap.md)
