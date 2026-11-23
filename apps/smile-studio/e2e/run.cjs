@@ -100,7 +100,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 // ---------- page helpers ----------
 const IDB_READ = async () => {
   const db = await new Promise((res, rej) => {
-    const r = indexedDB.open("smile-studio", 1);
+    const r = indexedDB.open("smile-studio");
     r.onupgradeneeded = () => r.result.createObjectStore("cases", { keyPath: "id" });
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
@@ -890,7 +890,7 @@ async function deviceSuite(browser, devName, face) {
 const patchLatest = (page, patch) =>
   page.evaluate(async (patch) => {
     const db = await new Promise((res, rej) => {
-      const r = indexedDB.open("smile-studio", 1);
+      const r = indexedDB.open("smile-studio");
       r.onsuccess = () => res(r.result);
       r.onerror = () => rej(r.error);
     });
