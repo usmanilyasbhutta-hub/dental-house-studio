@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wedding Whitening Reel Storyboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: one column of scenes; each scene = phone frame(s) on the left, shot sheet on the right */
+  --paper:#FBF7F0; --card:#FFFFFF; --ink:#333C39; --soft:#6B736F; --line:#E2DACB;
+  --bronze:#816951; --maroon:#7A1F2E; --ivory:#F1E7D6;
+  --display:"Roboto","Helvetica Neue",Arial,sans-serif; --accent:"Instrument Serif",Georgia,serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--display);font-size:16px;line-height:1.5}
+main{max-width:1100px;margin:0 auto;padding:28px 18px 80px;display:flex;flex-direction:column;gap:44px}
+h1{font-size:clamp(34px,6vw,56px);line-height:1.02;letter-spacing:-.02em;margin:10px 0 0;font-weight:900;text-wrap:balance}
+h1 em,h2 em{font-family:var(--accent);font-weight:400;color:var(--bronze);letter-spacing:0}
+h2{font-size:28px;line-height:1.12;letter-spacing:-.015em;margin:0;font-weight:900;text-wrap:balance}
+h3{font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;margin:0;color:var(--bronze)}
+p{margin:0;max-width:66ch}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--soft)}
+.lede{font-size:18px}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.note{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.note b{font-weight:700}
+.tl{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.tl div{padding:10px 10px 12px;border-right:1px solid var(--line);font-size:12px;min-width:0}
+.tl div:last-child{border-right:0}
+.tl b{display:block;font-size:14px}
+.tl span{color:var(--soft);font-variant-numeric:tabular-nums}
+.tl .new{background:#F6EFE3}
+.scene{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start}
+.frames{display:flex;gap:12px;flex-wrap:wrap}
+.sheet{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sheet .head{display:flex;flex-direction:column;gap:4px}
+.time{font-variant-numeric:tabular-nums;font-size:13px;color:var(--soft);letter-spacing:.06em}
+.chip{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;border-radius:4px;padding:2px 7px;margin-left:6px;vertical-align:middle}
+.keep{background:#E4EDE6;color:#2F5A3A}.chg{background:#F6E7D0;color:#7A4E12}.add{background:#F3DCE0;color:#7A1F2E}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;vertical-align:top;padding:9px 0;border-top:1px solid var(--line)}
+th{width:96px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);font-weight:700;padding-right:12px;padding-top:12px}
+td ol,td ul{margin:0;padding-left:18px}
+td li{margin:2px 0}
+@media (max-width:820px){.scene{grid-template-columns:1fr}}
+
+/* phone frame: real 1080x1920 coordinates scaled to 216x384 */
+.ph{width:216px;height:384px;flex:none;border-radius:14px;overflow:hidden;position:relative;border:1px solid var(--line);background:var(--card);box-shadow:0 10px 30px rgba(51,60,57,.10)}
+.ph .c{position:absolute;left:0;top:0;width:1080px;height:1920px;transform:scale(.2);transform-origin:0 0;background:#FBF7F0;color:#333C39;font-family:var(--display);overflow:hidden}
+.ph .c>*{position:absolute}
+.cap{font-size:11px;color:var(--soft);margin-top:6px;text-align:center;letter-spacing:.04em;max-width:216px}
+.safe{left:60px;top:220px;width:880px;height:1320px;border:4px dashed rgba(122,31,46,.25)}
+.eb{left:90px;top:250px;font-size:27px;letter-spacing:.2em;text-transform:uppercase;font-weight:500}
+.logo{left:700px;top:232px;width:240px;height:84px;border:3px solid #333C39;border-radius:10px;font-size:24px;font-weight:900;display:flex;align-items:center;justify-content:center;letter-spacing:.04em;background:#FBF7F0}
+.hl{left:90px;font-weight:900;letter-spacing:-.025em;line-height:1.0}
+.it{font-family:var(--accent);font-style:italic;font-weight:400;color:#816951;letter-spacing:0}
+.small{left:90px;font-size:27px;line-height:1.4;width:840px}
+/* Apple-style device frame for the before/after */
+.dev{left:56px;top:690px;width:968px;height:560px;border-radius:78px;
+  background:linear-gradient(135deg,#E9E6E1 0%,#B9B4AC 22%,#F4F2EE 45%,#A8A29A 70%,#DCD8D1 100%);
+  box-shadow:0 40px 80px rgba(28,34,32,.28),0 8px 18px rgba(28,34,32,.18),inset 0 2px 2px rgba(255,255,255,.8),inset 0 -2px 3px rgba(0,0,0,.25)}
+.bez{position:absolute;inset:7px;border-radius:72px;background:#0C0D0D}
+.scr{position:absolute;inset:22px;border-radius:56px;overflow:hidden;display:flex}
+.scr .b{flex:0 0 46%;background:linear-gradient(180deg,#8E3B39 0%,#C78F5E 35%,#E6C58E 55%,#B65F53 80%,#7E3532 100%)}
+.scr .a{flex:1;background:linear-gradient(180deg,#8A4A49 0%,#D9B7A8 32%,#F2EEE6 55%,#C98C85 80%,#7A4442 100%)}
+.scr .ln{position:absolute;left:46%;top:0;bottom:0;width:8px;margin-left:-4px;background:#fff}
+.scr .hd{position:absolute;left:46%;top:50%;width:86px;height:86px;margin:-43px 0 0 -43px;border-radius:50%;background:#fff;border:5px solid #816951;font-size:36px;font-weight:700;color:#816951;display:flex;align-items:center;justify-content:center}
+.scr .tg{position:absolute;top:28px;padding:10px 22px;border-radius:999px;font-size:28px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+/* map frames */
+.globe{left:190px;top:560px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7FA6C9 0%,#2F5D86 45%,#122B45 80%);box-shadow:0 0 80px rgba(47,93,134,.35)}
+.land{position:absolute;background:#7C8F5A;border-radius:40% 60% 55% 45%/50% 45% 55% 50%;opacity:.9}
+.sat{left:0;top:0;width:1080px;height:1920px;background:
+  radial-gradient(ellipse at 30% 40%,#8C8A6E 0 12%,transparent 13%),
+  radial-gradient(ellipse at 70% 65%,#7E8461 0 10%,transparent 11%),
+  repeating-linear-gradient(32deg,#9C9479 0 26px,#8D876C 26px 30px,#A49C82 30px 64px),#958E73}
+.road{background:#D9D3C2;height:16px}
+.pin{width:120px;height:160px}
+.tag2{background:#fff;border-radius:18px;padding:16px 24px;font-size:34px;font-weight:700;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.credit{left:90px;top:1490px;font-size:22px;color:#fff;opacity:.85}
+</style>
+</head>
+<body>
+<main>
+
+<header style="display:flex;flex-direction:column;gap:14px">
+  <div class="eyebrow">Dental House Sialkot · Instagram Reel ad · storyboard v4 · 24 Nov 2026</div>
+  <h1>Wedding whitening Reel v4: what I <em>understood</em></h1>
+  <p class="lede">Baseline: the current render (round 3). It's improved in four places, the CTA stays as it is, and a location zoom is added. Nothing is built yet; correct anything here first.</p>
+  <div class="tl" aria-label="Timeline">
+    <div style="flex:4.5"><b>1 Result</b><span>0.0–4.5 s</span></div>
+    <div style="flex:4.5"><b>2 Wedding season sale</b><span>4.5–9.0 s</span></div>
+    <div class="new" style="flex:2.5"><b>3a Location zoom</b><span>9.0–11.5 s</span></div>
+    <div style="flex:2"><b>3b Meet us here</b><span>11.5–13.5</span></div>
+    <div style="flex:4"><b>4 CTA</b><span>13.5–17.5 s</span></div>
+  </div>
+</header>
+
+<section style="display:flex;flex-direction:column;gap:14px">
+  <h3>Your message, as I read it</h3>
+  <div class="grid2">
+    <div class="note"><b>Baseline</b><span>Round 3 (slider → offer → meet us here → CTA) is the base. My five-point resize plan is dropped.</span></div>
+    <div class="note"><b>"Edges of the original pic, Apple hardware"</b><span>The before/after photo becomes a device-like object: continuous-curve rounded corners like an iPhone, a thin brushed-aluminium rim, a black bezel and a soft shadow, instead of a flat band running edge to edge.</span></div>
+    <div class="note"><b>"Pre and post-op line"</b><span>That's a <b>before/after comparison slider</b> (also called a wipe reveal). It stays exactly as it is, now inside the device frame.</span></div>
+    <div class="note"><b>Second frame</b><span>New typography so <b>Wedding Season Sale</b> is the loudest thing on the page. The dupatta and sherwani photo gets more of the screen, because it's working in your R2/R3 Meta ads.</span></div>
+    <div class="note"><b>Meet us here</b><span>A new beat first: a Google-Earth-style zoom from the globe down to Sialkot, a location pin drops on the clinic, then the clinic photo.</span></div>
+    <div class="note"><b>CTA</b><span>Unchanged.</span></div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- 1 -->
+<section class="scene">
+  <div class="frames"><div><div class="ph"><div class="c">
+    <div class="safe"></div>
+    <div class="eb">Sialkot · Brides · Grooms</div><div class="logo">DENTAL HOUSE</div>
+    <div class="hl" style="top:330px;font-size:100px">Shaadi ki<br>photos mein —</div>
+    <div class="hl" style="top:554px;font-size:100px"><span class="it" style="font-size:118px">perfect</span> smile?</div>
+    <div class="dev"><div class="bez"></div><div class="scr"><div class="b"></div><div class="a"></div><div class="ln"></div><div class="hd">‹ ›</div>
+      <div class="tg" style="left:30px;background:#333C39;color:#FBF7F0">Before</div><div class="tg" style="right:30px;background:#FBF7F0;color:#333C39">After</div></div></div>
+    <div class="small" style="top:1290px;font-size:24px;letter-spacing:.1em;text-transform:uppercase;color:#6B736F">Real patient · same smile</div>
+    <div class="small" style="top:1330px;font-size:26px;color:#6B736F">Lighting differs. Results vary. Subject to assessment.</div>
+  </div></div><div class="cap">mid-sweep (the teeth are your real photos; drawn as colour here for privacy)</div></div></div>
+  <div class="sheet">
+    <div class="head"><span class="time">SCENE 1 · 0.0–4.5 s</span><h2>Result: the slider in an Apple-style frame <span class="chip chg">changed</span></h2></div>
+    <table>
+      <tr><th>Keeps</th><td>Same heading, the after smile on frame 0, and the slider sweep (after → before → after). Same honesty lines underneath.</td></tr>
+      <tr><th>New edges</th><td><ul>
+        <li><b>Continuous-curve corners</b> (the "squircle" Apple uses on iPhone and Mac) instead of square edges.</li>
+        <li>A thin <b>brushed-aluminium rim</b> with a light highlight on the top edge and a darker bottom edge, so it reads as a solid object.</li>
+        <li>A slim <b>black bezel</b> between rim and photo, like a screen.</li>
+        <li>A <b>soft two-layer shadow</b> so the device sits on the paper.</li>
+        <li>It sits inside the side margins (about 56 px each side), so it no longer runs off the edges.</li></ul></td></tr>
+      <tr><th>Motion</th><td>Frame 0: already in place, nothing waits. The rim catches one slow light glint at 0.3 s, on the metal only. Then the slider runs as now.</td></tr>
+      <tr><th>Rules</th><td>No shine, zoom or filter on the photo itself. The rounded corners clip a few pixels of the black retractor in the photo's corners; the teeth are untouched.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="scene">
+  <div class="frames"><div><div class="ph"><div class="c">
+    <img style="left:-40px;top:880px;width:1160px;height:1040px;object-fit:cover;object-position:22% 45%" src="data:image/jpeg;base64,FABRIC" alt="Bride's maroon dupatta and groom's ivory sherwani">
+    <div style="left:0;top:860px;width:1080px;height:260px;background:linear-gradient(180deg,#FBF7F0 0%,rgba(251,247,240,.8) 40%,rgba(251,247,240,0) 100%)"></div>
+    <div class="safe"></div>
+    <div class="logo">DENTAL HOUSE</div>
+    <div class="it" style="left:84px;top:340px;font-size:132px;line-height:1">Wedding season</div>
+    <div class="hl" style="top:478px;font-size:300px;letter-spacing:-.04em;line-height:.9">SALE</div>
+    <div style="left:90px;top:770px;background:#7A1F2E;color:#FBF7F0;font-weight:900;font-size:64px;letter-spacing:.02em;padding:14px 32px;border-radius:8px">30% OFF</div>
+    <div class="hl" style="left:440px;top:778px;font-size:56px;letter-spacing:-.01em;line-height:1.05">teeth<br>whitening</div>
+    <div class="small" style="top:940px;font-size:44px;font-weight:900">PKR 21,000 <span style="font-weight:400;font-size:34px;color:#6B736F">Regular <s style="text-decoration-color:#7A1F2E;text-decoration-thickness:4px">PKR 30,000</s></span></div>
+    <div class="small" style="top:1010px;font-size:32px;color:#333C39">Scaling + polish included · Valid until 15 Dec 2026</div>
+  </div></div><div class="cap">at 7 s</div></div></div>
+  <div class="sheet">
+    <div class="head"><span class="time">SCENE 2 · 4.5–9.0 s</span><h2>Wedding Season Sale, made prominent <span class="chip chg">changed</span></h2></div>
+    <table>
+      <tr><th>Type</th><td>Three levels, read in one glance:
+        <ol><li><span style="font-family:var(--accent);font-style:italic;color:var(--bronze)">Wedding season</span>: bronze serif italic, very large (about 130 px, inside the safe area).</li>
+        <li><b>SALE</b>: heaviest weight, the biggest word on the screen (about 300 px).</li>
+        <li>A maroon <b>30% OFF</b> tag beside "teeth whitening", then PKR 21,000 with the regular price struck through, then "Scaling + polish included · Valid until 15 Dec 2026".</li></ol>
+        The small "Wedding season offer" label is gone; its job moves into the headline.</td></tr>
+      <tr><th>Photo</th><td>The dupatta and sherwani get more room: they start higher (about y 880 instead of 1060) and fill the lower half of the screen down to the bottom edge.</td></tr>
+      <tr><th>Motion</th><td><ol>
+        <li>The page swipes in. "Wedding season" writes in, then <b>SALE</b> lands with a slight scale-down (110% → 100%) on a dhol beat.</li>
+        <li>The 30% OFF tag stamps in, then the price fades up and the strike draws across.</li>
+        <li>The photo drifts upward slowly the whole time (as now), with soft light flecks on the fabric only.</li></ol></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 3a -->
+<section class="scene">
+  <div class="frames">
+    <div><div class="ph"><div class="c" style="background:#0B1622">
+      <div class="globe"><div class="land" style="left:330px;top:210px;width:220px;height:170px"></div><div class="land" style="left:240px;top:330px;width:160px;height:120px;opacity:.7"></div>
+        <div style="position:absolute;left:452px;top:268px;width:40px;height:40px;border-radius:50%;border:6px solid #F1E7D6"></div></div>
+      <div class="small" style="top:300px;font-size:60px;font-weight:900;color:#F1E7D6">Pakistan</div>
+    </div></div><div class="cap">9.0 s · globe, Pakistan ringed</div></div>
+    <div><div class="ph"><div class="c">
+      <div class="sat"></div>
+      <div class="road" style="left:0;top:880px;width:1080px;transform:rotate(-8deg)"></div>
+      <div class="road" style="left:520px;top:300px;width:16px;height:1500px"></div>
+      <div class="small" style="top:300px;font-size:72px;font-weight:900;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.5)">Sialkot</div>
+      <div class="credit">Map imagery credit line</div>
+    </div></div><div class="cap">10.0 s · city level</div></div>
+    <div><div class="ph"><div class="c">
+      <div class="sat" style="transform:scale(1.8);transform-origin:50% 45%"></div>
+      <div class="road" style="left:0;top:900px;width:1080px;height:40px"></div>
+      <svg class="pin" style="left:480px;top:720px" viewBox="0 0 24 32"><path d="M12 31s10-11 10-19A10 10 0 0 0 2 12c0 8 10 19 10 19z" fill="#7A1F2E"/><circle cx="12" cy="12" r="4" fill="#FBF7F0"/></svg>
+      <div class="tag2" style="left:300px;top:600px">Dental House</div>
+      <div class="small" style="top:1300px;font-size:34px;font-weight:700;color:#fff;text-shadow:0 3px 14px rgba(0,0,0,.6)">Commissioner Road, Sialkot</div>
+      <div class="credit">Map imagery credit line</div>
+    </div></div><div class="cap">11.0 s · pin drops on the clinic</div></div>
+  </div>
+  <div class="sheet">
+    <div class="head"><span class="time">SCENE 3a · 9.0–11.5 s</span><h2>Location zoom: globe → Sialkot → pin <span class="chip add">new</span></h2></div>
+    <table>
+      <tr><th>Motion</th><td><ol>
+        <li>The page swipes in on a slowly turning globe. Pakistan gets a ring.</li>
+        <li>The camera dives in one continuous move, easing faster in the middle like Google Earth: Pakistan → Punjab → Sialkot ("Sialkot" label) → street level.</li>
+        <li>At the end it tilts slightly to 3D. A maroon pin drops and bounces on the clinic, with a "Dental House" tag and "Commissioner Road, Sialkot".</li></ol></td></tr>
+      <tr><th>Map</th><td>I can't use Google Earth's own footage here. Two honest ways to get the look:
+        <ul><li><b>A. Real satellite imagery</b> from free public sources (NASA for the globe, Sentinel-2 for Sialkot), with a small credit line. Street-level detail is soft, roughly block level. I'd need network access to those sites.</li>
+        <li><b>B. Google Earth Studio</b> on your own computer (free, needs a Google account). It gives true Google Earth footage, which must show a "Google Earth" credit. I'd give you the exact camera moves to enter.</li></ul></td></tr>
+      <tr><th>Needed</th><td>The clinic's exact location: a Google Maps pin link or coordinates from you. I won't guess the building.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 3b -->
+<section class="scene">
+  <div class="frames"><div><div class="ph"><div class="c">
+    <div class="safe"></div>
+    <div class="eb">Your visit · Sialkot</div>
+    <div class="hl" style="top:310px;font-size:112px">Meet us here.</div>
+    <img style="left:90px;top:500px;width:850px;height:637px;object-fit:cover;border-radius:6px" src="data:image/jpeg;base64,CLINIC" alt="Dental House treatment room">
+    <div class="hl" style="top:1170px;font-size:96px">Dental House</div>
+    <div class="small" style="top:1286px;font-size:32px;color:#6B736F">Ahsan Medical Centre, Commissioner Road, Sialkot</div>
+  </div></div><div class="cap">at 12.5 s</div></div></div>
+  <div class="sheet">
+    <div class="head"><span class="time">SCENE 3b · 11.5–13.5 s</span><h2>Meet us here: clinic photo <span class="chip keep">as now</span></h2></div>
+    <table>
+      <tr><th>Link</th><td>The pin from 3a stays where it is while the page swipes in, so the eye goes from "here on the map" to "this is the room".</td></tr>
+      <tr><th>Otherwise</th><td>Same as round 3: the clinic room opens from a slit, Dental House is bold, the address is small.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="scene">
+  <div class="frames"><div><div class="ph"><div class="c">
+    <div class="safe"></div>
+    <div class="eb">Wedding season</div><div class="logo">DENTAL HOUSE</div>
+    <div class="small" style="top:380px;font-size:46px;font-weight:700">BOOK YOUR ASSESSMENT SLOT</div>
+    <div class="hl" style="top:480px;font-size:130px">WhatsApp</div>
+    <div class="hl" style="top:620px;font-size:200px;color:#7A1F2E">“WHITE”</div>
+    <div class="hl" style="top:950px;font-size:120px">0323 7560160</div>
+    <div class="small" style="top:1140px;font-size:46px;font-weight:900">Dental House</div>
+    <div class="small" style="top:1204px;font-size:30px;color:#6B736F">Ahsan Medical Centre, Commissioner Road, Sialkot</div>
+  </div></div><div class="cap">last frame</div></div></div>
+  <div class="sheet">
+    <div class="head"><span class="time">SCENE 4 · 13.5–17.5 s</span><h2>CTA <span class="chip keep">unchanged</span></h2></div>
+    <table><tr><th>As now</th><td>Book your assessment slot · WhatsApp “WHITE” typed in · chat bubble · 0323 7560160 · Dental House · address.</td></tr></table>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section style="display:flex;flex-direction:column;gap:14px">
+  <h3>Before I build: four answers</h3>
+  <div class="grid2">
+    <div class="note"><b>1. Clinic location</b><span>A Google Maps pin link or coordinates for the clinic.</span></div>
+    <div class="note"><b>2. Map source</b><span>A (free satellite imagery, done here, softer close-up) or B (Google Earth Studio on your computer, sharper, with a Google Earth credit)?</span></div>
+    <div class="note"><b>3. The word "Sale"</b><span>"Wedding Season Sale" is your wording, so I've used it as the headline. OK as shown?</span></div>
+    <div class="note"><b>4. Rounded corners</b><span>Fine that the device corners trim a few pixels of black retractor in the photo's corners (no teeth)?</span></div>
+  </div>
+  <p>Length goes from 15.5 s to about 17.5 s because of the new location zoom.</p>
+</section>
+
+</main>
+</body>
+</html>
