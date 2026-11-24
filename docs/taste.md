@@ -41,6 +41,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T17 | Clinical photos stay unedited in videos, even when camera colour differs; differences are explained by the on-screen note, not corrected. | lean | "Keep the photos uneditted." (2026-11-11) |
 | T18 | Offer/wedding music: happy and celebratory (major key, dhol, claps), not calm pads. | lean | "Music needs a happy/celebrating feel." (2026-11-12) |
 | T19 | Promo structure: results first (slider on the real before/after under the hook), then the offer on the wedding scene, then the clinic, then the CTA. Short (about 15 s). The opening must be directed, not a pasted photo. | firm | "results appear first then why and then offer" (2026-11-24) |
+| T20 | Key context words (e.g. "Wedding season") must be big, not small spaced labels; on-screen text sized for a phone. | lean | "wedding season in second frame is small!" (2026-11-24) |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -66,6 +67,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-24 | wedding whitening, on-screen text | "Improve captions like wedding season in second frame is small! Give your assessments first." | text-size audit done (phone view); fixes proposed, waiting for go-ahead | T20 |
 | 2026-11-24 | wedding whitening, page order | "At the very first scene with the same heading it should show reaukt change as a line traveling you just showed, second frame should show our original first scene with added caption about off, then meet here then cta." · "Thats a good start" | 4 pages: slider hook → wedding offer page → meet us here → CTA (15.5 s) | T19 |
 | 2026-11-24 | wedding whitening, structure | "Goal is to edit such that results appear first then why and then offer to boost engagement." · "Post op pic at start is a good idea but … just a pasted pic on first frame is present, it needs improvement." | results → why → offer; slider opening on the aligned pair; clinic moved before the price | T19 |
 | 2026-11-24 | hook recipe (pasted) | "Find whats usable and edit reel so that next round is prepared." | after-smile on frame 0, agitate line, Sialkot kicker; overseas-family draft variant; caption drafts; slots/date fields wait for real facts | (round 2) |
