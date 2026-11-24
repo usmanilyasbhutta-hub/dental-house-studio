@@ -365,6 +365,8 @@ export type SketchBrief = z.infer<typeof sketchBrief>;
  */
 const eyebrow = line(44);
 export const PROMO_ICONS = ["dentist", "shield", "polish", "tooth", "calendar"] as const;
+/** Pages a promo can play, in the order the brief lists them (hook first, end last). */
+export const PROMO_PAGES = ["hook", "proof", "value", "offer", "visit", "price", "end"] as const;
 export const promoBrief = base.extend({
   type: z.literal("promo"),
   season: z.enum(["none", "wedding"]).default("none"),
@@ -373,6 +375,10 @@ export const promoBrief = base.extend({
   /** What shows under the hook on frame 0: the decorative hero photo, or the real AFTER smile (proof first, before second). */
   /** slider = results first: the real after smile full width on frame 0, then a before/after slider sweep (needs an aligned pair). */
   hook_visual: z.enum(["hero", "after", "slider"]).default("hero"),
+  /** Page order. Default: hook → proof → value → visit → price → end. "offer" = the wedding hero page carrying the offer. */
+  sequence: z.array(z.enum(PROMO_PAGES)).min(2).default(["hook", "proof", "value", "visit", "price", "end"]),
+  /** Headline for the "offer" page, e.g. ["30% off", "teeth whitening."] with one accent word. */
+  offer_hook: z.object({ lines: z.array(line(22)).min(1).max(3), accent: z.string().optional() }).optional(),
   /** One small line that names the stake under the hook ("agitate"), e.g. "Your wedding photos stay with you for life." */
   hook_sub: line(60).optional(),
   /** Decorative photo under the hook (fabric, props: never a patient, never a "result"). Returns faintly on the end card. */

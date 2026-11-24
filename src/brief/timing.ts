@@ -7,7 +7,7 @@ export const scenes = {
   "talking-head": { end: 4.5 },
   case: { hook: 2.5, before: 2.5, wipe: 3, after: 2.5, notes: 3, disclaimer: 2.2, end: 4.5 },
   /** Promo reel (carousel look): pages push like a swipe; `push` frames of overlap are inside each scene's length. */
-  promo: { hook: 2.5, proof: 5, value: 3.5, price: 4, visit: 1.5, end: 3, push: 10 },
+  promo: { hook: 2.5, proof: 5, value: 3.5, offer: 4.5, price: 4, visit: 1.5, end: 3, push: 10 },
 } as const;
 
 /** Time lost to scene overlaps when a transition is used (n scenes → n−1 overlaps). */
@@ -53,10 +53,8 @@ function rawSeconds(b: Brief): number {
     }
     case "anatomy-map":
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
-    case "promo": {
-      const l = promoLens(b);
-      return l.hook + l.proof + l.value + l.price + l.visit + l.end;
-    }
+    case "promo":
+      return promoPages(b).reduce((n, p) => n + p.seconds, 0);
     case "sketch":
       return SKETCH_INTRO + b.scenes.length * b.seconds_per_scene + scenes.offer.end;
     case "receipt": {
@@ -107,9 +105,14 @@ export function receiptTimes(b: Extract<Brief, { type: "receipt" }>) {
 /** Sketch explainer: the handwritten title writes itself first, then one scene per seconds_per_scene. */
 export const SKETCH_INTRO = 1.6;
 
-/** Promo page lengths (s). Slider opening: results take longer up front (slider 4 s), the side-by-side hold is shorter (3 s). */
-export function promoLens(b: Extract<Brief, { type: "promo" }>) {
+/** Promo pages in play order with their lengths (s). A slider opening runs 4.5 s; short sequences give the clinic and CTA more time. */
+export function promoPages(b: Extract<Brief, { type: "promo" }>): { page: (typeof b.sequence)[number]; seconds: number }[] {
   const s = scenes.promo;
   const slider = b.hook_visual === "slider";
-  return { hook: slider ? 4 : s.hook, proof: slider ? 3 : s.proof, value: s.value, price: s.price, visit: b.visit ? s.visit : 0, end: s.end };
+  const short = b.sequence.length <= 4;
+  const len = {
+    hook: slider ? 4.5 : s.hook, proof: slider ? 3 : s.proof, value: s.value, offer: s.offer, price: s.price,
+    visit: short ? 2.5 : s.visit, end: short ? 4 : s.end,
+  };
+  return b.sequence.filter((p) => p !== "visit" || b.visit).map((page) => ({ page, seconds: len[page] }));
 }

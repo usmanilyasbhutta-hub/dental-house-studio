@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { clinic } from "../brand";
 import type { PromoBrief } from "../brief/schema";
-import { promoLens, scenes, sec } from "../brief/timing";
+import { promoPages, scenes, sec } from "../brief/timing";
 import { carousel as P, seasons } from "../theme";
 import { Sfx } from "../fx/effects";
 import { ease, easeInOut, prog } from "./shared/motion";
@@ -20,16 +20,20 @@ const W = 850; // text/photo column width (ends at 940, inside the right safe ma
 export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSafeZones }) => {
   const { fps } = useVideoConfig();
   const accent = seasons[brief.season].primary;
-  const l = promoLens(brief);
-  // results → why → offer (owner, Nov 2026): proof pages, then what's included and the clinic, then price and the WhatsApp ask
-  const pages: { len: number; node: React.ReactNode }[] = [
-    { len: sec(l.hook, fps), node: brief.hook_visual === "slider" ? <SliderHook brief={brief} /> : <Hook brief={brief} /> },
-    { len: sec(l.proof, fps), node: <Proof brief={brief} /> },
-    { len: sec(l.value, fps), node: <Value brief={brief} /> },
-    ...(brief.visit ? [{ len: sec(l.visit, fps), node: <Visit brief={brief} /> }] : []),
-    { len: sec(l.price, fps), node: <Price brief={brief} accent={accent} /> },
-    { len: sec(l.end, fps), node: <End brief={brief} accent={accent} /> },
-  ];
+  // page order comes from the brief (owner, Nov 2026: slider → wedding offer → meet us here → CTA)
+  const node = (page: string): React.ReactNode => {
+    switch (page) {
+      case "hook": return brief.hook_visual === "slider" ? <SliderHook brief={brief} /> : <Hook brief={brief} />;
+      case "proof": return <Proof brief={brief} />;
+      case "value": return <Value brief={brief} />;
+      case "offer": return <OfferHero brief={brief} accent={accent} />;
+      case "visit": return <Visit brief={brief} />;
+      case "price": return <Price brief={brief} accent={accent} />;
+      default: return <End brief={brief} accent={accent} />;
+    }
+  };
+  const pages = promoPages(brief).map((p) => ({ len: sec(p.seconds, fps), node: node(p.page) }));
+
   let from = 0;
   return (
     <Shell brief={brief} endSeconds={0} end={<></>} chrome="none" backdrop={false} showSafeZones={showSafeZones}>
@@ -163,7 +167,7 @@ const Hook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
 };
 
 /** Hook line with the accent word in bronze serif italic and a hand-drawn underline written under it. */
-const AccentLine: React.FC<{ line: string; accent?: string; size: number }> = ({ line, accent, size }) => {
+const AccentLine: React.FC<{ line: string; accent?: string; size: number; underline?: boolean }> = ({ line, accent, size, underline = true }) => {
   const frame = useCurrentFrame();
   const i = accent ? line.toLowerCase().indexOf(accent.toLowerCase()) : -1;
   if (!accent || i < 0) return <>{line}</>;
@@ -173,9 +177,9 @@ const AccentLine: React.FC<{ line: string; accent?: string; size: number }> = ({
       {line.slice(0, i)}
       <span style={{ position: "relative", ...italic(size * 1.18), letterSpacing: 0 }}>
         {line.slice(i, i + accent.length)}
-        <svg viewBox="0 0 300 30" preserveAspectRatio="none" style={{ position: "absolute", left: "-2%", bottom: -14, width: "104%", height: 28, overflow: "visible" }}>
+        {underline ? <svg viewBox="0 0 300 30" preserveAspectRatio="none" style={{ position: "absolute", left: "-2%", bottom: -14, width: "104%", height: 28, overflow: "visible" }}>
           <path d="M4 18 C 60 6, 140 26, 200 14 S 280 10, 296 16" fill="none" stroke={P.bronze} strokeWidth={5} strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - p} opacity={p > 0.01 ? 1 : 0} />
-        </svg>
+        </svg> : null}
       </span>
       {line.slice(i + accent.length)}
     </>
@@ -251,8 +255,59 @@ const SliderHook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
         </div>
       </div>
       <div style={{ ...at(BAND.top + h + 22), ...font(24, 500, P.soft), letterSpacing: "0.1em", textTransform: "uppercase" }}>
-        Real patient · same smile{p.interval ? ` · ${p.interval}` : ""} · lighting differs
+        Real patient · same smile{p.interval ? ` · ${p.interval}` : ""}
       </div>
+      <div style={{ ...at(BAND.top + h + 62), ...font(26, 400, P.soft), lineHeight: 1.3 }}>{p.note}</div>
+    </AbsoluteFill>
+  );
+};
+
+// ---- offer page: the original wedding scene (dupatta + sherwani) carrying the offer ------------------------------------
+const OfferHero: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const k = frame / durationInFrames;
+  const o = brief.offer_hook!;
+  const p = brief.price;
+  const until = new Date(`${p.valid_until}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const strike = prog(frame, 34, 10);
+  const size = 112;
+  const lh = 128;
+  const top = 400;
+  const below = top + o.lines.length * lh + 30;
+  return (
+    <AbsoluteFill>
+      {brief.hero ? (
+        <>
+          <div style={{ ...at(1060, -40), width: 1160, height: 900, transform: `translateY(${-24 * k}px) scale(${1 + 0.06 * k})`, transformOrigin: "50% 100%" }}>
+            <Img src={staticFile(brief.hero.src)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "22% 45%" }} />
+            <div style={{ position: "absolute", left: 0, right: 0, top: -2, height: 280, background: `linear-gradient(180deg, ${P.paper} 0%, ${P.paper}cc 35%, ${P.paper}00 100%)` }} />
+          </div>
+          <Bokeh />
+        </>
+      ) : null}
+      <Eyebrow text={p.eyebrow} delay={4} />
+      <Logo />
+      {o.lines.map((ln, i) => (
+        <Rise key={i} top={top + i * lh} delay={6 + i * 5} style={font(size)}>
+          <AccentLine line={ln} accent={o.accent} size={size} underline={false} />
+        </Rise>
+      ))}
+      <Fade top={below} delay={20} style={{ display: "flex", alignItems: "baseline", gap: 26, width: 880 }}>
+        <span style={font(84, 900)}>{p.now}</span>
+        {p.was ? (
+          <span style={font(36, 400, P.soft)}>
+            {p.was_label}{" "}
+            <span style={{ position: "relative" }}>
+              {p.was}
+              <span style={{ position: "absolute", left: -4, top: "52%", height: 4, width: `calc(${strike * 100}% + 8px)`, background: accent }} />
+            </span>
+          </span>
+        ) : null}
+      </Fade>
+      <Fade top={below + 108} delay={30} style={font(32, 400, P.soft)}>
+        {[p.extra, `${p.valid_label} ${until}`].filter(Boolean).join(" · ")}
+      </Fade>
     </AbsoluteFill>
   );
 };

@@ -54,3 +54,17 @@ good idea but for implementation it also requires expert direction decision, at 
 
 Rules kept: photos never zoomed, filtered or sparkled (the slider only clips them); "Real patient · same smile · lighting differs" under the band.
 The "agitate" line was dropped from the hook so frame 0 is just question + result.
+
+## Round 3: owner's page order (2026-11-24)
+
+Owner: "At the very first scene with the same heading it should show result change as a line traveling you just showed, second
+frame should show our original first scene with added caption about off, then meet here then cta."
+
+| # | Page | Time | What's on it |
+|---|---|---|---|
+| 1 | Slider (hook) | 0–4.5 s | hook heading + after smile full width, slider sweeps to before and back; "Real patient · same smile" + "Lighting differs. Results vary. Subject to assessment." |
+| 2 | Offer | 4.5–9 s | the original wedding scene (dupatta, jasmine, sherwani) with "30% *off* teeth whitening.", PKR 21,000, Regular ~~PKR 30,000~~, "Scaling + polish included · Valid until 15 Dec 2026" |
+| 3 | Meet us here | 9–11.5 s | clinic room, Dental House bold, address small |
+| 4 | CTA | 11.5–15.5 s | Book your assessment slot · WhatsApp "WHITE" · 0323 7560160 |
+
+Dropped at the owner's direction: the side-by-side page, "What's included" and the price-roll page (the honesty note moved onto page 1).

@@ -17,6 +17,10 @@ hook:
   lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
   accent: perfect
 hook_visual: slider     # results first (owner): after smile full width on frame 0, then a before/after slider sweep
+sequence: [hook, offer, visit, end]   # owner, 2026-11-24: slider → wedding scene with the offer → meet us here → CTA
+offer_hook:
+  lines: ["30% off", "teeth whitening."]
+  accent: "off"
 hero:
   src: cases/whitening-2026-11/fabric.jpg
   source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
@@ -55,7 +59,7 @@ prices_confirmed_on: 2026-11-11   # given by the owner in chat
 visit:
   photo: cases/whitening-2026-11/clinic.jpg
   eyebrow: "Your visit · Sialkot"
-  title: See you here.
+  title: Meet us here.
 end:
   eyebrow: Wedding season
   disclaimer: "Subject to assessment. Results vary."

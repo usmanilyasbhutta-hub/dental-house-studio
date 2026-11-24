@@ -40,7 +40,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T16 | Before/after pairs: the owner shoots them with the same light and angle; crop both identically (same framing on the teeth). | lean | "crop them identical" (2026-11-11) |
 | T17 | Clinical photos stay unedited in videos, even when camera colour differs; differences are explained by the on-screen note, not corrected. | lean | "Keep the photos uneditted." (2026-11-11) |
 | T18 | Offer/wedding music: happy and celebratory (major key, dhol, claps), not calm pads. | lean | "Music needs a happy/celebrating feel." (2026-11-12) |
-| T19 | Promo structure: results first (real after → before/after), then why (what's included, clinic), then the offer. The opening must be directed, not a pasted photo. | lean | "results appear first then why and then offer" (2026-11-24) |
+| T19 | Promo structure: results first (slider on the real before/after under the hook), then the offer on the wedding scene, then the clinic, then the CTA. Short (about 15 s). The opening must be directed, not a pasted photo. | firm | "results appear first then why and then offer" (2026-11-24) |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -66,6 +66,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-24 | wedding whitening, page order | "At the very first scene with the same heading it should show reaukt change as a line traveling you just showed, second frame should show our original first scene with added caption about off, then meet here then cta." · "Thats a good start" | 4 pages: slider hook → wedding offer page → meet us here → CTA (15.5 s) | T19 |
 | 2026-11-24 | wedding whitening, structure | "Goal is to edit such that results appear first then why and then offer to boost engagement." · "Post op pic at start is a good idea but … just a pasted pic on first frame is present, it needs improvement." | results → why → offer; slider opening on the aligned pair; clinic moved before the price | T19 |
 | 2026-11-24 | hook recipe (pasted) | "Find whats usable and edit reel so that next round is prepared." | after-smile on frame 0, agitate line, Sialkot kicker; overseas-family draft variant; caption drafts; slots/date fields wait for real facts | (round 2) |
 | 2026-11-12 | wedding whitening music | "Music needs a happy/celebrating feel. No operation theater sound." | new original track: D major, dhol + claps + accordion + shehnai, 116 bpm; all sound effects off (ticks/clicks/thuds) | T18, N07 |
