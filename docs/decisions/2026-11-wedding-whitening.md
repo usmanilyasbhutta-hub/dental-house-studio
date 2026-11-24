@@ -40,3 +40,17 @@ Owner pasted a hook recipe for a 30%-off whitening package ("Find whats usable a
 | "Ten years of coffee staining reversed in one session" | not usable | result + speed promise (owner rule, compliance.ts) |
 | Reach/save-rate numbers (5–15×, 4–9%) | not on screen | unverified benchmarks; use as targets only, measure our own via Instagram insights |
 | Measure: 3-second skip rate, saves, sends | used | compare the two variants by 3 s hold, saves, sends and WhatsApp "WHITE" messages |
+
+## Round 2b: results → why → offer (2026-11-24)
+
+Owner: "Goal is to edit such that results appear first then why and then offer to boost engagement. Post op pic at start is a
+good idea but for implementation it also requires expert direction decision, at the moment just a pasted pic on first frame is present."
+
+| Act | Time | Pages | Direction |
+|---|---|---|---|
+| Results | 0–7 s | slider opening (4 s), side-by-side hold (3 s) | frame 0: the real AFTER smile as a full-width band (1080 wide, whole photo, contain) under the hook, "After" chip. 0.9 s: a white slider line with a round handle sweeps left→right revealing the BEFORE (the aligned pair means only colour changes under the line), holds 0.4 s, sweeps back and lands on AFTER. Then both photos side by side with the honesty note: the screenshot frame. |
+| Why | 7–12 s | what's included (3.5 s), clinic (1.5 s) | dentist-led, gum protection, scaling + polish; the real room with Dental House bold |
+| Offer | 12–19 s | price (4 s), WhatsApp end card (3 s) | 30,000 rolls to 21,000, save stamp; WHITE typed; number and address hold |
+
+Rules kept: photos never zoomed, filtered or sparkled (the slider only clips them); "Real patient · same smile · lighting differs" under the band.
+The "agitate" line was dropped from the hook so frame 0 is just question + result.

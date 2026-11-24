@@ -54,8 +54,8 @@ function rawSeconds(b: Brief): number {
     case "anatomy-map":
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
     case "promo": {
-      const s = scenes.promo;
-      return s.hook + s.proof + s.value + s.price + (b.visit ? s.visit : 0) + s.end;
+      const l = promoLens(b);
+      return l.hook + l.proof + l.value + l.price + l.visit + l.end;
     }
     case "sketch":
       return SKETCH_INTRO + b.scenes.length * b.seconds_per_scene + scenes.offer.end;
@@ -106,3 +106,10 @@ export function receiptTimes(b: Extract<Brief, { type: "receipt" }>) {
 
 /** Sketch explainer: the handwritten title writes itself first, then one scene per seconds_per_scene. */
 export const SKETCH_INTRO = 1.6;
+
+/** Promo page lengths (s). Slider opening: results take longer up front (slider 4 s), the side-by-side hold is shorter (3 s). */
+export function promoLens(b: Extract<Brief, { type: "promo" }>) {
+  const s = scenes.promo;
+  const slider = b.hook_visual === "slider";
+  return { hook: slider ? 4 : s.hook, proof: slider ? 3 : s.proof, value: s.value, price: s.price, visit: b.visit ? s.visit : 0, end: s.end };
+}

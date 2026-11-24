@@ -2,7 +2,7 @@ import React from "react";
 import { AbsoluteFill, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { clinic } from "../brand";
 import type { PromoBrief } from "../brief/schema";
-import { scenes, sec } from "../brief/timing";
+import { promoLens, scenes, sec } from "../brief/timing";
 import { carousel as P, seasons } from "../theme";
 import { Sfx } from "../fx/effects";
 import { ease, easeInOut, prog } from "./shared/motion";
@@ -20,13 +20,15 @@ const W = 850; // text/photo column width (ends at 940, inside the right safe ma
 export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSafeZones }) => {
   const { fps } = useVideoConfig();
   const accent = seasons[brief.season].primary;
+  const l = promoLens(brief);
+  // results → why → offer (owner, Nov 2026): proof pages, then what's included and the clinic, then price and the WhatsApp ask
   const pages: { len: number; node: React.ReactNode }[] = [
-    { len: sec(s.hook, fps), node: <Hook brief={brief} /> },
-    { len: sec(s.proof, fps), node: <Proof brief={brief} /> },
-    { len: sec(s.value, fps), node: <Value brief={brief} /> },
-    { len: sec(s.price, fps), node: <Price brief={brief} accent={accent} /> },
-    ...(brief.visit ? [{ len: sec(s.visit, fps), node: <Visit brief={brief} /> }] : []),
-    { len: sec(s.end, fps), node: <End brief={brief} accent={accent} /> },
+    { len: sec(l.hook, fps), node: brief.hook_visual === "slider" ? <SliderHook brief={brief} /> : <Hook brief={brief} /> },
+    { len: sec(l.proof, fps), node: <Proof brief={brief} /> },
+    { len: sec(l.value, fps), node: <Value brief={brief} /> },
+    ...(brief.visit ? [{ len: sec(l.visit, fps), node: <Visit brief={brief} /> }] : []),
+    { len: sec(l.price, fps), node: <Price brief={brief} accent={accent} /> },
+    { len: sec(l.end, fps), node: <End brief={brief} accent={accent} /> },
   ];
   let from = 0;
   return (
@@ -202,6 +204,59 @@ const Bokeh: React.FC<{ minY?: number }> = ({ minY = 0 }) => {
   );
 };
 
+// ---- 1b. results-first opening: full-width after smile, then a before/after slider sweep ------------------------------------
+/**
+ * Direction (owner: "results appear first"): frame 0 = the real AFTER smile as a full-width band under the hook, labelled.
+ * At 0.9 s a slider line sweeps across and reveals the BEFORE (same aligned box, so only the colour changes), holds for a
+ * beat, then sweeps back and lands on the AFTER. Photos are never zoomed, filtered or sparkled; the line only clips them.
+ */
+const BAND = { top: 724, w: 1080 };
+const SliderHook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
+  const frame = useCurrentFrame();
+  const p = brief.proof;
+  const h = Math.round(BAND.w * 472 / 880); // aligned pair ratio (scripts/align_pair.py)
+  // pos = share of the width showing BEFORE, from the left
+  const pos = interpolate(frame, [27, 57, 69, 99], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
+  const handle = interpolate(frame, [20, 27, 99, 108], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const lines = brief.hook.lines;
+  const size = 100;
+  const lh = 112;
+  const top = 330;
+  const chip = (text: string, side: "left" | "right", o: number, dark: boolean): React.ReactNode => (
+    <div style={{ position: "absolute", top: 22, [side]: side === "left" ? 82 : 158, opacity: o, background: dark ? P.ink : P.paper,
+      color: dark ? P.paper : P.ink, padding: "10px 20px", borderRadius: 999, ...font(26, 700, dark ? P.paper : P.ink), letterSpacing: "0.12em", textTransform: "uppercase" }}>
+      {text}
+    </div>
+  );
+  return (
+    <AbsoluteFill>
+      <Eyebrow text={brief.kicker} />
+      <Logo />
+      {lines.map((ln, i) => (
+        <div key={i} style={{ ...at(top + i * lh), ...font(size) }}>
+          <AccentLine line={ln} accent={brief.hook.accent} size={size} />
+        </div>
+      ))}
+      <Hair top={top + lines.length * lh + 12} width={300} delay={18} color={P.bronze} thick={4} />
+      <div style={{ ...at(BAND.top, 0), width: BAND.w, height: h, overflow: "hidden", background: P.photoBg }}>
+        <Img src={staticFile(p.after)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+        <Img src={staticFile(p.before)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", clipPath: `inset(0 ${(1 - pos) * 100}% 0 0)` }} />
+        {chip(p.labels.before, "left", interpolate(pos, [0.05, 0.25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), true)}
+        {chip(p.labels.after, "right", interpolate(pos, [0.75, 0.95], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), false)}
+        <div style={{ position: "absolute", top: 0, bottom: 0, left: pos * BAND.w - 2, width: 4, background: "#FFFFFF", opacity: handle, boxShadow: "0 0 12px rgba(0,0,0,0.25)" }} />
+        <div style={{ position: "absolute", top: h / 2 - 34, left: pos * BAND.w - 34, width: 68, height: 68, borderRadius: "50%", background: "#FFFFFF",
+          border: `3px solid ${P.bronze}`, opacity: handle, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, ...font(30, 700, P.bronze),
+          boxShadow: "0 6px 18px rgba(0,0,0,0.25)" }}>
+          <span>‹</span><span>›</span>
+        </div>
+      </div>
+      <div style={{ ...at(BAND.top + h + 22), ...font(24, 500, P.soft), letterSpacing: "0.1em", textTransform: "uppercase" }}>
+        Real patient · same smile{p.interval ? ` · ${p.interval}` : ""} · lighting differs
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 // ---- 2. real case ------------------------------------------------------------------------------------------------------
 const BOX = { w: 850, h: 456, top1: 510, top2: 1034 };
 const label = (text: string, top: number, opacity: number) => (
@@ -211,19 +266,20 @@ const label = (text: string, top: number, opacity: number) => (
 const Proof: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
   const frame = useCurrentFrame();
   const p = brief.proof;
-  const before = prog(frame, 15, 14);
-  const wipe = interpolate(frame, [51, 76], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
+  const quick = brief.hook_visual === "slider";
+  const before = quick ? prog(frame, 8, 10) : prog(frame, 15, 14);
+  const wipe = quick ? prog(frame, 14, 10) : interpolate(frame, [51, 76], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
   return (
     <AbsoluteFill>
-      <Sfx name="whoosh" at={51} volume={0.25} />
+      {quick ? null : <Sfx name="whoosh" at={51} volume={0.25} />}
       <Eyebrow text={p.eyebrow} delay={4} />
       <Rise top={310} delay={6} style={font(120)}>{p.title}</Rise>
       {label(p.labels.before, BOX.top1 - 38, before)}
       <PhotoBox src={p.before} top={BOX.top1} pending={p.pending} style={{ opacity: before }} />
-      {label(p.interval ? `${p.labels.after} · ${p.interval}` : p.labels.after, BOX.top2 - 38, prog(frame, 60, 10))}
+      {label(p.interval ? `${p.labels.after} · ${p.interval}` : p.labels.after, BOX.top2 - 38, quick ? prog(frame, 16, 10) : prog(frame, 60, 10))}
       <PhotoBox src={p.after} top={BOX.top2} pending={p.pending} style={{ clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0)` }} />
       {wipe > 0 && wipe < 1 ? <div style={{ ...at(BOX.top2, L + BOX.w * wipe - 2), width: 4, height: BOX.h, background: P.bronze }} /> : null}
-      <div style={{ ...at(BOX.top2 + BOX.h + 16), ...font(24, 400, P.soft), lineHeight: 1.3, opacity: prog(frame, 76, 12) }}>{p.note}</div>
+      <div style={{ ...at(BOX.top2 + BOX.h + 16), ...font(24, 400, P.soft), lineHeight: 1.3, opacity: quick ? prog(frame, 24, 10) : prog(frame, 76, 12) }}>{p.note}</div>
     </AbsoluteFill>
   );
 };

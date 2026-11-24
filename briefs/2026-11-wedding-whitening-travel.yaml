@@ -16,8 +16,7 @@ kicker: "Overseas families · Sialkot"
 hook:
   lines: ["Shaadi ke liye", "Pakistan aa", "rahe hain?"]
   accent: Shaadi
-hook_visual: after
-hook_sub: Plan your smile before you fly in.
+hook_visual: slider
 hero:
   src: cases/whitening-2026-11/fabric.jpg
   source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"

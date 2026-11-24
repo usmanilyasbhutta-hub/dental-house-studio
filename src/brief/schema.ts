@@ -371,7 +371,8 @@ export const promoBrief = base.extend({
   /** Small spaced label above the hook, e.g. "Brides · Grooms · Families". */
   kicker: eyebrow.optional(),
   /** What shows under the hook on frame 0: the decorative hero photo, or the real AFTER smile (proof first, before second). */
-  hook_visual: z.enum(["hero", "after"]).default("hero"),
+  /** slider = results first: the real after smile full width on frame 0, then a before/after slider sweep (needs an aligned pair). */
+  hook_visual: z.enum(["hero", "after", "slider"]).default("hero"),
   /** One small line that names the stake under the hook ("agitate"), e.g. "Your wedding photos stay with you for life." */
   hook_sub: line(60).optional(),
   /** Decorative photo under the hook (fabric, props: never a patient, never a "result"). Returns faintly on the end card. */

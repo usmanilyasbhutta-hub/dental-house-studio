@@ -16,8 +16,7 @@ kicker: "Sialkot · Brides · Grooms"  # local signal (hook recipe, round 2)
 hook:
   lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
   accent: perfect
-hook_visual: after                                # proof first: the real after smile is on frame 0, before comes on page 2
-hook_sub: Your wedding photos stay with you for life.
+hook_visual: slider     # results first (owner): after smile full width on frame 0, then a before/after slider sweep
 hero:
   src: cases/whitening-2026-11/fabric.jpg
   source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
