@@ -17,10 +17,18 @@ hook:
   lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
   accent: perfect
 hook_visual: slider     # results first (owner): after smile full width on frame 0, then a before/after slider sweep
-sequence: [hook, offer, visit, end]   # owner, 2026-11-24: slider → wedding scene with the offer → meet us here → CTA
-offer_hook:
-  lines: ["30% off", "teeth whitening."]
-  accent: "off"
+sequence: [hook, offer, map, visit, end]   # v4 (owner, 2026-11-24): slider → Wedding Season Offer → Google Earth zoom → meet us here → CTA
+offer_hook:                 # "Offer", not "Sale": keeps the clinic's tone, matches the carousel/captions (owner: "you tell me whats best")
+  style: stack
+  lines: ["Wedding season", "OFFER"]
+  tag: 30% OFF
+  sub: teeth whitening
+map_zoom:                   # Google Earth Studio "Zoom To" render, 1080x1920, 30 fps (docs/google-earth-studio.md)
+  frames: footage/earth/2026-11-wedding-whitening
+  pattern: "dental-house_###.jpeg"
+  count: 120
+  credit: "Google Earth"
+  pending: true             # set false when the rendered frames are in public/footage/earth/2026-11-wedding-whitening/
 hero:
   src: cases/whitening-2026-11/fabric.jpg
   source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
@@ -31,6 +39,10 @@ proof:
   before: cases/whitening-2026-11/before.jpg
   after: cases/whitening-2026-11/after.jpg
   labels: { before: Before, after: After }
+  device:                   # same pair, black retractor trimmed identically (12 px left, 60 px right) for the Apple-style frame
+    before: cases/whitening-2026-11/before-trim.jpg
+    after: cases/whitening-2026-11/after-trim.jpg
+    aspect: 1.7119
   # interval: "6 days later"      # only the REAL time between the two photos (owner to confirm)
   note: "Lighting differs. Results vary. Subject to assessment."
   consent:

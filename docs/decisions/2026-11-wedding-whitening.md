@@ -68,3 +68,13 @@ frame should show our original first scene with added caption about off, then me
 | 4 | CTA | 11.5–15.5 s | Book your assessment slot · WhatsApp "WHITE" · 0323 7560160 |
 
 Dropped at the owner's direction: the side-by-side page, "What's included" and the price-roll page (the honesty note moved onto page 1).
+
+## Round 4 (v4 storyboard, built 2026-11-24)
+
+| Item | Decision | Source |
+|---|---|---|
+| Slider frame | Apple-hardware-inspired device: superellipse corners, titanium rim (edge line, brushed face, top highlight), black bezel, two-layer shadow; one glint on the rim only | owner |
+| Photo trim | black retractor only, identical on both: 12 px left, 60 px right (public/cases/.../alignment.json) | owner: "Trim some of Black retractor only." |
+| Offer page | lockup: *Wedding season* (serif italic 132) / OFFER (250, heaviest) / maroon 30% OFF tag + "teeth whitening" / PKR 21,000 with struck regular / scaling + validity; dupatta-sherwani photo larger | owner (typography); "Offer" chosen by Claude when asked |
+| Location | Google Earth Studio "Zoom To" on 32.5054616, 74.546536 (owner's Maps pin), 1080×1920 @ 30 fps, 4 s → played in 2.5 s; pin + tag + credit overlaid (docs/google-earth-studio.md) | owner: "Google earth studio." |
+| Order | slider → offer → map → meet us here → CTA (17.5 s) | owner |

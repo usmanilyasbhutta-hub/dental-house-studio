@@ -38,7 +38,7 @@ function allText(b: Brief): string[] {
     t.push(b.kicker ?? "", b.hook_sub ?? "", b.proof.interval ?? "", b.price.slots ?? "", b.proof.eyebrow, b.proof.title, b.proof.note, b.proof.labels.before, b.proof.labels.after,
       b.value.eyebrow ?? "", b.value.title, ...b.value.points.flatMap((p) => [p.title, p.sub ?? ""]),
       b.price.eyebrow, b.price.service, b.price.now, b.price.was ?? "", b.price.save ?? "", b.price.extra ?? "",
-      b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.offer_hook?.lines ?? []), b.end.eyebrow ?? "", b.end.disclaimer ?? "");
+      b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.offer_hook?.lines ?? []), b.offer_hook?.tag ?? "", b.offer_hook?.sub ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
@@ -241,6 +241,17 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       warn("licence", `hero photo source unclear ("${b.hero.source}"): a paid ad needs a licence that covers it`);
     if (b.sequence[0] !== "hook" || b.sequence[b.sequence.length - 1] !== "end") err("sequence", "sequence must start with hook and end with end");
     if (b.sequence.includes("offer") && !b.offer_hook) err("sequence", "the offer page needs offer_hook (its headline)");
+    if (b.sequence.includes("map")) {
+      if (!b.map_zoom) err("sequence", "the map page needs map_zoom (Google Earth Studio frames)");
+      else if (b.map_zoom.pending) warn("map", "Google Earth footage pending: the map page shows a placeholder");
+      else {
+        const first = b.map_zoom.pattern.replace(/#+/, (m) => "0".repeat(m.length));
+        if (!env.fileExists(`public/${b.map_zoom.frames}/${first}`)) err("map", `Google Earth frames not found: public/${b.map_zoom.frames}/${first}`);
+        if (!/google earth/i.test(b.map_zoom.credit)) err("map", 'Google Earth Studio footage must show the "Google Earth" attribution');
+      }
+    }
+    if (p.device)
+      for (const ph of [p.device.before, p.device.after]) if (!env.fileExists(`public/${ph}`)) err("assets", `missing image public/${ph}`);
     if (!b.sequence.includes("proof") && b.hook_visual !== "slider")
       err("proof", "without the proof page the before/after must be shown by the slider opening (hook_visual: slider)");
     if (!b.sequence.includes("price") && !b.sequence.includes("offer")) warn("sequence", "no page shows the price");

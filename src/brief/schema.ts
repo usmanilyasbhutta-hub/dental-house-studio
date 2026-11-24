@@ -366,7 +366,7 @@ export type SketchBrief = z.infer<typeof sketchBrief>;
 const eyebrow = line(44);
 export const PROMO_ICONS = ["dentist", "shield", "polish", "tooth", "calendar"] as const;
 /** Pages a promo can play, in the order the brief lists them (hook first, end last). */
-export const PROMO_PAGES = ["hook", "proof", "value", "offer", "visit", "price", "end"] as const;
+export const PROMO_PAGES = ["hook", "proof", "value", "offer", "map", "visit", "price", "end"] as const;
 export const promoBrief = base.extend({
   type: z.literal("promo"),
   season: z.enum(["none", "wedding"]).default("none"),
@@ -378,7 +378,32 @@ export const promoBrief = base.extend({
   /** Page order. Default: hook → proof → value → visit → price → end. "offer" = the wedding hero page carrying the offer. */
   sequence: z.array(z.enum(PROMO_PAGES)).min(2).default(["hook", "proof", "value", "visit", "price", "end"]),
   /** Headline for the "offer" page, e.g. ["30% off", "teeth whitening."] with one accent word. */
-  offer_hook: z.object({ lines: z.array(line(22)).min(1).max(3), accent: z.string().optional() }).optional(),
+  offer_hook: z
+    .object({
+      lines: z.array(line(22)).min(1).max(3),
+      accent: z.string().optional(),
+      /** stack = big typographic lockup: lines[0] in serif italic, lines[1] as the giant word, then the tag + sub. */
+      style: z.enum(["plain", "stack"]).default("plain"),
+      tag: line(14).optional(),
+      sub: line(24).optional(),
+    })
+    .optional(),
+  /**
+   * Google Earth Studio zoom (owner, Nov 2026): a rendered JPEG sequence in public/<frames>/ (gitignored footage folder),
+   * a pin dropped on the clinic at the end, and the attribution Google requires ("Google Earth" + data providers).
+   */
+  map_zoom: z
+    .object({
+      frames: z.string(),
+      /** File name pattern, # = frame number with zero padding, e.g. "dental-house_###.jpeg". */
+      pattern: z.string().default("frame_###.jpeg"),
+      count: z.number().int().positive(),
+      credit: z.string().min(5).default("Google Earth"),
+      /** Pin position at the last frame, % of the frame (Zoom To centres the target: 50/50). */
+      pin: z.object({ x: pct, y: pct }).default({ x: 50, y: 50 }),
+      pending: z.boolean().default(false),
+    })
+    .optional(),
   /** One small line that names the stake under the hook ("agitate"), e.g. "Your wedding photos stay with you for life." */
   hook_sub: line(60).optional(),
   /** Decorative photo under the hook (fabric, props: never a patient, never a "result"). Returns faintly on the end card. */
@@ -390,6 +415,8 @@ export const promoBrief = base.extend({
     before: publicAsset,
     after: publicAsset,
     labels: z.object({ before: line(16), after: line(16) }).default({ before: "Before", after: "After" }),
+    /** Device-framed slider: the same pair trimmed identically (black retractor only), and its aspect ratio. */
+    device: z.object({ before: publicAsset, after: publicAsset, aspect: z.number().positive() }).optional(),
     /** Real time between the two photos, owner-given only, e.g. "6 days later" (shown next to the After label). */
     interval: line(24).optional(),
     /** Small honesty line under the photos (required: lighting/results/assessment). */

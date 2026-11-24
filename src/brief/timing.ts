@@ -7,7 +7,7 @@ export const scenes = {
   "talking-head": { end: 4.5 },
   case: { hook: 2.5, before: 2.5, wipe: 3, after: 2.5, notes: 3, disclaimer: 2.2, end: 4.5 },
   /** Promo reel (carousel look): pages push like a swipe; `push` frames of overlap are inside each scene's length. */
-  promo: { hook: 2.5, proof: 5, value: 3.5, offer: 4.5, price: 4, visit: 1.5, end: 3, push: 10 },
+  promo: { hook: 2.5, proof: 5, value: 3.5, offer: 4.5, map: 2.5, price: 4, visit: 1.5, end: 3, push: 10 },
 } as const;
 
 /** Time lost to scene overlaps when a transition is used (n scenes → n−1 overlaps). */
@@ -110,9 +110,12 @@ export function promoPages(b: Extract<Brief, { type: "promo" }>): { page: (typeo
   const s = scenes.promo;
   const slider = b.hook_visual === "slider";
   const short = b.sequence.length <= 4;
+  const withMap = b.sequence.includes("map");
   const len = {
-    hook: slider ? 4.5 : s.hook, proof: slider ? 3 : s.proof, value: s.value, offer: s.offer, price: s.price,
-    visit: short ? 2.5 : s.visit, end: short ? 4 : s.end,
+    hook: slider ? 4.5 : s.hook, proof: slider ? 3 : s.proof, value: s.value, offer: s.offer, map: s.map, price: s.price,
+    visit: withMap ? 2 : short ? 2.5 : s.visit, end: short || withMap ? 4 : s.end,
   };
-  return b.sequence.filter((p) => p !== "visit" || b.visit).map((page) => ({ page, seconds: len[page] }));
+  return b.sequence
+    .filter((p) => (p !== "visit" || b.visit) && (p !== "map" || b.map_zoom))
+    .map((page) => ({ page, seconds: len[page] }));
 }

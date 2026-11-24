@@ -44,6 +44,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T20 | Key context words (e.g. "Wedding season") must be big, not small spaced labels; on-screen text sized for a phone. | lean | "wedding season in second frame is small!" (2026-11-24) |
 | T21 | Before/after comparison slider ("pre and post-op line") on an aligned pair: liked. | lean | "Pre and postop line … is good." (2026-11-24) |
 | T22 | The dupatta/sherwani wedding image performs in Meta ads (R2, R3): keep using it prominently in wedding-season content. | lean | 📈 owner: "getting attraction in R2 and R3 meta ads" |
+| T23 | Wording for promos: "Offer", not "Sale" (Claude's call when asked; keeps the clinic's tone and matches all campaign material). | lean | owner delegated: "you tell me whats best" (2026-11-24) |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -69,6 +70,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-24 | wedding whitening v4 | "You are expert marketer, linguist.you tell me whats best." · "Google earth studio." · "Trim some of Black retractor only." | "Wedding Season Offer" (not Sale); map zoom from Google Earth Studio (owner renders); retractor trimmed 12/60 px identically; Apple-style device frame; draft rendered with map placeholder | T23 |
 | 2026-11-24 | wedding whitening v4 brief | "No." (to the 5-point resize plan) · "2026-11-wedding whitening is good base line to improve on." · "Make edges of original pic inspired by apple hardware design." · "Pre and postop line … is good." · "On second frame change typography to make wedding season sale prominent." · "Our bride dupatta and groon sherwani is getting attraction in R2 and R3 meta ads, so we will use it." · "Meet us here can get a separate google earth zoom style location pin and then clinic pic." · "CTA is good." | storyboard v4 for confirmation; nothing built yet | T21, T22 |
 | 2026-11-24 | wedding whitening, on-screen text | "Improve captions like wedding season in second frame is small! Give your assessments first." | text-size audit done (phone view); fixes proposed, waiting for go-ahead | T20 |
 | 2026-11-24 | wedding whitening, page order | "At the very first scene with the same heading it should show reaukt change as a line traveling you just showed, second frame should show our original first scene with added caption about off, then meet here then cta." · "Thats a good start" | 4 pages: slider hook → wedding offer page → meet us here → CTA (15.5 s) | T19 |

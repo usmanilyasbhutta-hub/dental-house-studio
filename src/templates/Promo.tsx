@@ -27,6 +27,7 @@ export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSa
       case "proof": return <Proof brief={brief} />;
       case "value": return <Value brief={brief} />;
       case "offer": return <OfferHero brief={brief} accent={accent} />;
+      case "map": return <MapZoom brief={brief} accent={accent} />;
       case "visit": return <Visit brief={brief} />;
       case "price": return <Price brief={brief} accent={accent} />;
       default: return <End brief={brief} accent={accent} />;
@@ -218,7 +219,10 @@ const BAND = { top: 724, w: 1080 };
 const SliderHook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
   const frame = useCurrentFrame();
   const p = brief.proof;
+  const dev = p.device;
   const h = Math.round(BAND.w * 472 / 880); // aligned pair ratio (scripts/align_pair.py)
+  const dh = dev ? Math.round((DEVICE.w - 2 * DEVICE.inset) / dev.aspect) + 2 * DEVICE.inset : h;
+  const belowTop = dev ? DEVICE.top + dh : BAND.top + h;
   // pos = share of the width showing BEFORE, from the left
   const pos = interpolate(frame, [27, 57, 69, 99], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
   const handle = interpolate(frame, [20, 27, 99, 108], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
@@ -227,7 +231,7 @@ const SliderHook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
   const lh = 112;
   const top = 330;
   const chip = (text: string, side: "left" | "right", o: number, dark: boolean): React.ReactNode => (
-    <div style={{ position: "absolute", top: 22, [side]: side === "left" ? 82 : 158, opacity: o, background: dark ? P.ink : P.paper,
+    <div style={{ position: "absolute", top: dev ? 26 : 22, [side]: dev ? 30 : side === "left" ? 82 : 158, opacity: o, background: dark ? P.ink : P.paper,
       color: dark ? P.paper : P.ink, padding: "10px 20px", borderRadius: 999, ...font(26, 700, dark ? P.paper : P.ink), letterSpacing: "0.12em", textTransform: "uppercase" }}>
       {text}
     </div>
@@ -242,22 +246,127 @@ const SliderHook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
         </div>
       ))}
       <Hair top={top + lines.length * lh + 12} width={300} delay={18} color={P.bronze} thick={4} />
-      <div style={{ ...at(BAND.top, 0), width: BAND.w, height: h, overflow: "hidden", background: P.photoBg }}>
-        <Img src={staticFile(p.after)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
-        <Img src={staticFile(p.before)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", clipPath: `inset(0 ${(1 - pos) * 100}% 0 0)` }} />
-        {chip(p.labels.before, "left", interpolate(pos, [0.05, 0.25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), true)}
-        {chip(p.labels.after, "right", interpolate(pos, [0.75, 0.95], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), false)}
-        <div style={{ position: "absolute", top: 0, bottom: 0, left: pos * BAND.w - 2, width: 4, background: "#FFFFFF", opacity: handle, boxShadow: "0 0 12px rgba(0,0,0,0.25)" }} />
-        <div style={{ position: "absolute", top: h / 2 - 34, left: pos * BAND.w - 34, width: 68, height: 68, borderRadius: "50%", background: "#FFFFFF",
-          border: `3px solid ${P.bronze}`, opacity: handle, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, ...font(30, 700, P.bronze),
-          boxShadow: "0 6px 18px rgba(0,0,0,0.25)" }}>
-          <span>‹</span><span>›</span>
+      {dev ? (
+        <Device top={DEVICE.top} w={DEVICE.w} h={dh}>
+          <SliderView before={dev.before} after={dev.after} w={DEVICE.w - 2 * DEVICE.inset} h={dh - 2 * DEVICE.inset} pos={pos} handle={handle} chip={chip} labels={p.labels} />
+        </Device>
+      ) : (
+        <div style={{ ...at(BAND.top, 0), width: BAND.w, height: h, overflow: "hidden", background: P.photoBg }}>
+          <SliderView before={p.before} after={p.after} w={BAND.w} h={h} pos={pos} handle={handle} chip={chip} labels={p.labels} />
         </div>
-      </div>
-      <div style={{ ...at(BAND.top + h + 22), ...font(24, 500, P.soft), letterSpacing: "0.1em", textTransform: "uppercase" }}>
+      )}
+      <div style={{ ...at(belowTop + 28), ...font(24, 500, P.soft), letterSpacing: "0.1em", textTransform: "uppercase" }}>
         Real patient · same smile{p.interval ? ` · ${p.interval}` : ""}
       </div>
-      <div style={{ ...at(BAND.top + h + 62), ...font(26, 400, P.soft), lineHeight: 1.3 }}>{p.note}</div>
+      <div style={{ ...at(belowTop + 68), ...font(26, 400, P.soft), lineHeight: 1.3 }}>{p.note}</div>
+    </AbsoluteFill>
+  );
+};
+
+/** Before/after comparison slider: after underneath, before clipped from the left up to the line. Photos are only clipped. */
+const SliderView: React.FC<{
+  before: string; after: string; w: number; h: number; pos: number; handle: number;
+  chip: (t: string, side: "left" | "right", o: number, dark: boolean) => React.ReactNode; labels: { before: string; after: string };
+}> = ({ before, after, w, h, pos, handle, chip, labels }) => (
+  <>
+    <Img src={staticFile(after)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+    <Img src={staticFile(before)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", clipPath: `inset(0 ${(1 - pos) * 100}% 0 0)` }} />
+    {chip(labels.before, "left", interpolate(pos, [0.05, 0.25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), true)}
+    {chip(labels.after, "right", interpolate(pos, [0.75, 0.95], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), false)}
+    <div style={{ position: "absolute", top: 0, bottom: 0, left: pos * w - 2, width: 4, background: "#FFFFFF", opacity: handle, boxShadow: "0 0 12px rgba(0,0,0,0.25)" }} />
+    <div style={{ position: "absolute", top: h / 2 - 34, left: pos * w - 34, width: 68, height: 68, borderRadius: "50%", background: "#FFFFFF",
+      border: `3px solid ${P.bronze}`, opacity: handle, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, ...font(30, 700, P.bronze),
+      boxShadow: "0 6px 18px rgba(0,0,0,0.25)" }}>
+      <span>‹</span><span>›</span>
+    </div>
+  </>
+);
+
+/**
+ * Apple-hardware-inspired frame (owner, Nov 2026): continuous-curvature ("squircle") corners, a thin titanium rim with a top
+ * highlight and darker lower edge, a black bezel, and a soft two-layer shadow. One light glint crosses the RIM only (never the photo).
+ */
+const DEVICE = { top: 712, left: 56, w: 968, rim: 10, inset: 24, r: 86 };
+function squircle(w: number, h: number, r: number, n = 4, steps = 16): string {
+  // superellipse corners |x|^n + |y|^n = 1 (continuous curvature), as a CSS polygon in px
+  const pts: string[] = [];
+  const corner = (cx: number, cy: number, a0: number) => {
+    for (let i = 0; i <= steps; i++) {
+      const t = a0 + (Math.PI / 2) * (i / steps);
+      const c = Math.cos(t), sn = Math.sin(t);
+      const x = cx + r * Math.sign(c) * Math.abs(c) ** (2 / n);
+      const y = cy + r * Math.sign(sn) * Math.abs(sn) ** (2 / n);
+      pts.push(`${x.toFixed(1)}px ${y.toFixed(1)}px`);
+    }
+  };
+  corner(w - r, h - r, 0);
+  corner(r, h - r, Math.PI / 2);
+  corner(r, r, Math.PI);
+  corner(w - r, r, (3 * Math.PI) / 2);
+  return `polygon(${pts.join(",")})`;
+}
+const Device: React.FC<{ top: number; w: number; h: number; children: React.ReactNode }> = ({ top, w, h, children }) => {
+  const frame = useCurrentFrame();
+  const glint = interpolate(frame, [6, 30], [-0.3, 1.3], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
+  const D = DEVICE;
+  const sw = w - 2 * D.inset, sh = h - 2 * D.inset;
+  return (
+    <div style={{ ...at(top, D.left), width: w, height: h, filter: "drop-shadow(0 34px 40px rgba(28,34,32,0.26)) drop-shadow(0 6px 10px rgba(28,34,32,0.18))" }}>
+      {/* titanium rim: dark outer edge line, brushed face with top highlight and darker lower edge, one glint */}
+      <div style={{ position: "absolute", inset: 0, clipPath: squircle(w, h, D.r), background: "#5F5A53" }} />
+      <div style={{ position: "absolute", left: 2, top: 2, width: w - 4, height: h - 4, clipPath: squircle(w - 4, h - 4, D.r - 2),
+        background: "linear-gradient(180deg, #F4F1EC 0%, #D3CDC4 14%, #B4ADA2 50%, #9A938A 82%, #847E75 100%)" }}>
+        <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 2px, rgba(0,0,0,0.04) 2px 4px)" }} />
+        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(115deg, transparent ${glint * 100 - 8}%, rgba(255,255,255,0.95) ${glint * 100}%, transparent ${glint * 100 + 8}%)` }} />
+      </div>
+      {/* black bezel */}
+      <div style={{ position: "absolute", left: D.rim, top: D.rim, width: w - 2 * D.rim, height: h - 2 * D.rim,
+        clipPath: squircle(w - 2 * D.rim, h - 2 * D.rim, D.r - D.rim), background: "#0B0C0C" }} />
+      {/* screen */}
+      <div style={{ position: "absolute", left: D.inset, top: D.inset, width: sw, height: sh, overflow: "hidden",
+        clipPath: squircle(sw, sh, D.r - D.inset), background: "#0B0C0C" }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// ---- map page: Google Earth Studio zoom to the clinic, then a pin --------------------------------------------------------
+const MapZoom: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames, fps } = useVideoConfig();
+  const m = brief.map_zoom!;
+  const pad = (m.pattern.match(/#+/) ?? ["###"])[0].length;
+  // play the whole rendered zoom inside the page (time-remapped), ending on the last frame
+  const playEnd = durationInFrames - 22;
+  const idx = Math.min(m.count - 1, Math.round(interpolate(frame, [0, playEnd], [0, m.count - 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })));
+  const file = m.pattern.replace(/#+/, String(idx).padStart(pad, "0"));
+  const pin = spring({ frame: frame - (playEnd - 6), fps, config: { damping: 9, stiffness: 200 } });
+  const tag = prog(frame, playEnd + 2, 8);
+  return (
+    <AbsoluteFill style={{ background: "#0B1622" }}>
+      {m.pending ? (
+        <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", gap: 20 }}>
+          <div style={{ width: 620, height: 620, borderRadius: "50%", background: "radial-gradient(circle at 35% 30%, #7FA6C9 0%, #2F5D86 45%, #122B45 80%)",
+            transform: `scale(${1 + 1.6 * (frame / durationInFrames)})`, opacity: 0.9 }} />
+          <div style={{ position: "absolute", top: 1180, ...font(34, 700, "#F1E7D6") }}>Google Earth zoom · footage pending</div>
+        </AbsoluteFill>
+      ) : (
+        <Img src={staticFile(`${m.frames}/${file}`)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      )}
+      <div style={{ position: "absolute", left: `${m.pin.x}%`, top: `${m.pin.y}%`, transform: `translate(-50%, -100%) translateY(${(1 - pin) * -120}px)`, opacity: Math.min(1, pin * 3) }}>
+        <svg viewBox="0 0 24 32" style={{ width: 96, height: 128, filter: "drop-shadow(0 8px 10px rgba(0,0,0,0.4))" }}>
+          <path d="M12 31s10-11 10-19A10 10 0 0 0 2 12c0 8 10 19 10 19z" fill={accent} />
+          <circle cx="12" cy="12" r="4" fill={P.paper} />
+        </svg>
+      </div>
+      <div style={{ position: "absolute", left: `${m.pin.x}%`, top: `calc(${m.pin.y}% - 230px)`, transform: `translateX(-50%) scale(${0.9 + 0.1 * tag})`, opacity: tag,
+        background: "#FFFFFF", borderRadius: 18, padding: "14px 26px", boxShadow: "0 10px 24px rgba(0,0,0,0.3)", whiteSpace: "nowrap" }}>
+        <div style={font(40, 900)}>{clinic.name}</div>
+        <div style={{ ...font(24, 400, P.soft), marginTop: 4 }}>{clinic.addressShort}</div>
+      </div>
+      {/* attribution required by Google Earth Studio: keep it visible for the whole shot */}
+      <div style={{ position: "absolute", left: L, top: 1484, ...font(24, 500, "#FFFFFF"), textShadow: "0 2px 8px rgba(0,0,0,0.7)", opacity: 0.92 }}>{m.credit}</div>
     </AbsoluteFill>
   );
 };
@@ -275,6 +384,7 @@ const OfferHero: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, acc
   const lh = 128;
   const top = 400;
   const below = top + o.lines.length * lh + 30;
+  if (o.style === "stack") return <OfferStack brief={brief} accent={accent} />;
   return (
     <AbsoluteFill>
       {brief.hero ? (
@@ -308,6 +418,58 @@ const OfferHero: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, acc
       <Fade top={below + 108} delay={30} style={font(32, 400, P.soft)}>
         {[p.extra, `${p.valid_label} ${until}`].filter(Boolean).join(" · ")}
       </Fade>
+    </AbsoluteFill>
+  );
+};
+
+/** "Wedding season / OFFER" lockup: serif italic kicker, one giant word, a stamped tag, then price + validity over the wedding photo. */
+const OfferStack: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames, fps } = useVideoConfig();
+  const k = frame / durationInFrames;
+  const o = brief.offer_hook!;
+  const p = brief.price;
+  const until = new Date(`${p.valid_until}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const big = spring({ frame: frame - 14, fps, config: { damping: 14, stiffness: 170 } });
+  const stamp = spring({ frame: frame - 26, fps, config: { damping: 12, stiffness: 200 } });
+  const strike = prog(frame, 44, 10);
+  return (
+    <AbsoluteFill>
+      {brief.hero ? (
+        <>
+          <div style={{ ...at(980, -40), width: 1160, height: 1000, transform: `translateY(${-24 * k}px) scale(${1 + 0.05 * k})`, transformOrigin: "50% 100%" }}>
+            <Img src={staticFile(brief.hero.src)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "22% 45%" }} />
+            <div style={{ position: "absolute", left: 0, right: 0, top: -2, height: 240, background: `linear-gradient(180deg, ${P.paper} 0%, ${P.paper}d9 35%, ${P.paper}00 100%)` }} />
+          </div>
+          <Bokeh minY={1300} />
+        </>
+      ) : null}
+      <Logo />
+      <Rise top={330} left={L - 6} delay={4} style={{ ...italic(132), lineHeight: 1.02 }}>{o.lines[0]}</Rise>
+      <div style={{ ...at(470), ...font(250, 900), letterSpacing: "-0.045em", lineHeight: 0.92, transform: `scale(${1.12 - 0.12 * big})`,
+        transformOrigin: "left center", opacity: Math.min(1, big * 2) }}>
+        {o.lines[1] ?? ""}
+      </div>
+      <div style={{ ...at(728), display: "flex", alignItems: "center", gap: 26 }}>
+        {o.tag ? (
+          <div style={{ background: accent, ...font(60, 900, P.paper), letterSpacing: "0.02em", padding: "14px 30px", borderRadius: 8,
+            transform: `scale(${1.3 - 0.3 * stamp})`, opacity: Math.min(1, stamp * 2), transformOrigin: "left center" }}>{o.tag}</div>
+        ) : null}
+        {o.sub ? <div style={{ ...font(54, 900), letterSpacing: "-0.01em", lineHeight: 1.02, opacity: prog(frame, 30, 10), maxWidth: 420 }}>{o.sub}</div> : null}
+      </div>
+      <Fade top={878} delay={36} style={{ display: "flex", alignItems: "baseline", gap: 24, width: 880 }}>
+        <span style={font(76, 900)}>{p.now}</span>
+        {p.was ? (
+          <span style={font(36, 400, P.soft)}>
+            {p.was_label}{" "}
+            <span style={{ position: "relative" }}>
+              {p.was}
+              <span style={{ position: "absolute", left: -4, top: "52%", height: 4, width: `calc(${strike * 100}% + 8px)`, background: accent }} />
+            </span>
+          </span>
+        ) : null}
+      </Fade>
+      <Fade top={970} delay={46} style={font(32, 500)}>{[p.extra, `${p.valid_label} ${until}`].filter(Boolean).join(" · ")}</Fade>
     </AbsoluteFill>
   );
 };
