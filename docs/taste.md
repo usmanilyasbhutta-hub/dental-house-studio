@@ -65,6 +65,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-24 | hook recipe (pasted) | "Find whats usable and edit reel so that next round is prepared." | after-smile on frame 0, agitate line, Sialkot kicker; overseas-family draft variant; caption drafts; slots/date fields wait for real facts | (round 2) |
 | 2026-11-12 | wedding whitening music | "Music needs a happy/celebrating feel. No operation theater sound." | new original track: D major, dhol + claps + accordion + shehnai, 116 bpm; all sound effects off (ticks/clicks/thuds) | T18, N07 |
 | 2026-11-11 | before/after colour test | "Keep the photos uneditted." | ad keeps the unedited pair; whole-photo colour matching stays a test tool only (no-retouching rule unchanged) | T17 |
 | 2026-11-11 | approvals | "Remember i am the dentist, i use things after approval." | owner = approving dentist; recorded in CLAUDE.md | (process) |

@@ -256,4 +256,11 @@ describe("promo brief", () => {
     b.proof.consent = undefined;
     expect(errors(b).map((f) => f.rule)).toContain("consent");
   });
+  it("blocks a scarcity line without the owner's confirmed number", () => {
+    const b = clone(promo()) as Extract<Brief, { type: "promo" }>;
+    b.price.slots = "4 slots left this month";
+    expect(errors(b).map((f) => f.rule)).toContain("scarcity");
+    b.slots_confirmed_on = "2026-11-09";
+    expect(errors(b).map((f) => f.rule)).not.toContain("scarcity");
+  });
 });

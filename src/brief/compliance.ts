@@ -35,7 +35,7 @@ function allText(b: Brief): string[] {
   if (b.type === "map-route")
     t.push(b.chip, b.start?.label ?? "", b.destination.label ?? "", ...b.streets.map((x) => x.text));
   if (b.type === "promo")
-    t.push(b.kicker ?? "", b.proof.eyebrow, b.proof.title, b.proof.note, b.proof.labels.before, b.proof.labels.after,
+    t.push(b.kicker ?? "", b.hook_sub ?? "", b.proof.interval ?? "", b.price.slots ?? "", b.proof.eyebrow, b.proof.title, b.proof.note, b.proof.labels.before, b.proof.labels.after,
       b.value.eyebrow ?? "", b.value.title, ...b.value.points.flatMap((p) => [p.title, p.sub ?? ""]),
       b.price.eyebrow, b.price.service, b.price.now, b.price.was ?? "", b.price.save ?? "", b.price.extra ?? "",
       b.visit?.eyebrow ?? "", b.visit?.title ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
@@ -239,6 +239,11 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
     if (/\d/.test(b.price.now) && !b.prices_confirmed_on) (b.demo ? warn : err)("prices", "prices are clinic facts: set prices_confirmed_on");
     if (b.hero && /unknown|\?/i.test(b.hero.source))
       warn("licence", `hero photo source unclear ("${b.hero.source}"): a paid ad needs a licence that covers it`);
+    if (b.price.slots && !b.slots_confirmed_on)
+      (b.demo ? warn : err)("scarcity", `"${b.price.slots}": slot counts are clinic facts; set slots_confirmed_on with the owner's real number`);
+    if (b.slots_confirmed_on && (Date.parse(env.today) - Date.parse(b.slots_confirmed_on)) / 86400000 > 3)
+      warn("scarcity", "slot count confirmed more than 3 days ago: check it is still true before posting");
+    if (p.interval && !/\d/.test(p.interval)) warn("proof", `interval "${p.interval}" should be the real time between the photos (e.g. "6 days later")`);
     if (b.visit && !env.fileExists(`public/${b.visit.photo}`)) err("assets", `missing image public/${b.visit.photo}`);
     if (b.hero && !env.fileExists(`public/${b.hero.src}`)) err("assets", `missing image public/${b.hero.src}`);
   }

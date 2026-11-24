@@ -12,10 +12,12 @@ language: en
 fx: { transition: none, sfx: none }      # owner: "No operation theater sound."
 music: audio/wedding-celebration.mp3    # original, synthesised by scripts/make_celebration_music.py
 label: Wedding season
-kicker: "Brides · Grooms · Families"
+kicker: "Sialkot · Brides · Grooms"  # local signal (hook recipe, round 2)
 hook:
   lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
   accent: perfect
+hook_visual: after                                # proof first: the real after smile is on frame 0, before comes on page 2
+hook_sub: Your wedding photos stay with you for life.
 hero:
   src: cases/whitening-2026-11/fabric.jpg
   source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
@@ -26,6 +28,7 @@ proof:
   before: cases/whitening-2026-11/before.jpg
   after: cases/whitening-2026-11/after.jpg
   labels: { before: Before, after: After }
+  # interval: "6 days later"      # only the REAL time between the two photos (owner to confirm)
   note: "Lighting differs. Results vary. Subject to assessment."
   consent:
     method: verbal
@@ -48,6 +51,7 @@ price:
   save: Save 30%
   valid_until: 2026-12-15
   extra: Scaling + polish included
+  # slots: "4 slots left this month"   # only a real number, then set slots_confirmed_on
 prices_confirmed_on: 2026-11-11   # given by the owner in chat
 visit:
   photo: cases/whitening-2026-11/clinic.jpg

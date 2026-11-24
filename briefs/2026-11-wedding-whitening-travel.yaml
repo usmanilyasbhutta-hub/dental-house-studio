@@ -1,0 +1,63 @@
+# DRAFT variant for overseas families flying home for December weddings (hook recipe, "distant" audience).
+# demo: true (watermarked) until the owner confirms: the offer applies to them, the WhatsApp keyword, and what fits a short trip.
+# Same real case and photos as briefs/2026-11-wedding-whitening.yaml. English on screen; only the hook is Roman Urdu.
+id: 2026-11-wedding-whitening-travel
+type: promo
+title: Wedding-season whitening, overseas families (Reel ad, draft)
+demo: true
+theme: brand
+season: wedding
+tone: contemporary
+language: en
+fx: { transition: none, sfx: none }      # owner: "No operation theater sound."
+music: audio/wedding-celebration.mp3
+label: Wedding season
+kicker: "Overseas families · Sialkot"
+hook:
+  lines: ["Shaadi ke liye", "Pakistan aa", "rahe hain?"]
+  accent: Shaadi
+hook_visual: after
+hook_sub: Plan your smile before you fly in.
+hero:
+  src: cases/whitening-2026-11/fabric.jpg
+  source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
+proof:
+  eyebrow: "Dental House whitening · actual case"
+  title: Real care.
+  case_id: whitening-2026-11
+  before: cases/whitening-2026-11/before.jpg
+  after: cases/whitening-2026-11/after.jpg
+  labels: { before: Before, after: After }
+  note: "Lighting differs. Results vary. Subject to assessment."
+  consent:
+    method: verbal
+    taken_on: 2026-11-11
+    taken_by: "Dental House team (confirmed by the owner)"
+    scope: [social-media, ads]
+    identity_hidden: true
+value:
+  eyebrow: Before you book anywhere
+  title: Check 3 things.
+  points:
+    - { title: Who treats you, sub: "BDS, RDS dentists, not a salon", icon: dentist }
+    - { title: Gum protection, sub: Your gums are shielded during treatment, icon: shield }
+    - { title: Assessment first, sub: We check if whitening suits you, icon: tooth }
+price:
+  eyebrow: Wedding season offer
+  service: Teeth whitening.
+  now: "PKR 21,000"
+  was: "PKR 30,000"
+  save: Save 30%
+  valid_until: 2026-12-15
+  extra: Scaling + polish included
+prices_confirmed_on: 2026-11-11
+visit:
+  photo: cases/whitening-2026-11/clinic.jpg
+  eyebrow: "Your visit · Sialkot"
+  title: See you here.
+end:
+  eyebrow: Coming home for a wedding?
+  disclaimer: "Subject to assessment. Results vary."
+whatsapp_keyword: WHITE                  # owner to decide: keep WHITE, or a separate keyword such as TRAVEL
+cta: Book before you fly in
+address: short

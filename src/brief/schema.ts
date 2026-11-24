@@ -370,6 +370,10 @@ export const promoBrief = base.extend({
   season: z.enum(["none", "wedding"]).default("none"),
   /** Small spaced label above the hook, e.g. "Brides · Grooms · Families". */
   kicker: eyebrow.optional(),
+  /** What shows under the hook on frame 0: the decorative hero photo, or the real AFTER smile (proof first, before second). */
+  hook_visual: z.enum(["hero", "after"]).default("hero"),
+  /** One small line that names the stake under the hook ("agitate"), e.g. "Your wedding photos stay with you for life." */
+  hook_sub: line(60).optional(),
   /** Decorative photo under the hook (fabric, props: never a patient, never a "result"). Returns faintly on the end card. */
   hero: z.object({ src: publicAsset, source: z.string().min(3) }).optional(),
   proof: z.object({
@@ -379,6 +383,8 @@ export const promoBrief = base.extend({
     before: publicAsset,
     after: publicAsset,
     labels: z.object({ before: line(16), after: line(16) }).default({ before: "Before", after: "After" }),
+    /** Real time between the two photos, owner-given only, e.g. "6 days later" (shown next to the After label). */
+    interval: line(24).optional(),
     /** Small honesty line under the photos (required: lighting/results/assessment). */
     note: line(70),
     /** Photos not received yet: draw labelled placeholders. Only allowed in demo briefs. */
@@ -412,7 +418,11 @@ export const promoBrief = base.extend({
     valid_label: line(16).default("Valid until"),
     /** One small line under the validity, e.g. "Scaling + polish included". */
     extra: line(40).optional(),
+    /** Real scarcity only, owner-given, e.g. "4 slots left this month" (needs slots_confirmed_on). */
+    slots: line(32).optional(),
   }),
+  /** Date the owner confirmed the slot count (scarcity is a clinic fact). */
+  slots_confirmed_on: isoDate.optional(),
   /** Owner confirmed these prices on this date (prices are clinic facts). */
   prices_confirmed_on: isoDate.optional(),
   /** Optional clinic photo beat before the end card (the clinic's own room, never stock). */

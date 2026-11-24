@@ -122,16 +122,29 @@ const Hook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
   const size = 112;
   const lh = 128;
   const top = 400;
+  const afterFirst = brief.hook_visual === "after";
   return (
     <AbsoluteFill>
       {brief.hero ? (
         <>
-          <div style={{ ...at(1060, -40), width: 1160, height: 900, transform: `translateY(${-24 * k}px) scale(${1 + 0.06 * k})`, transformOrigin: "50% 100%" }}>
+          <div style={{ ...at(afterFirst ? 1300 : 1060, -40), width: 1160, height: 900, transform: `translateY(${-24 * k}px) scale(${1 + 0.06 * k})`, transformOrigin: "50% 100%" }}>
             <Img src={staticFile(brief.hero.src)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "22% 45%" }} />
             <div style={{ position: "absolute", left: 0, right: 0, top: -2, height: 280, background: `linear-gradient(180deg, ${P.paper} 0%, ${P.paper}cc 35%, ${P.paper}00 100%)` }} />
           </div>
-          <Bokeh />
+          <Bokeh minY={afterFirst ? 1460 : 0} />
         </>
+      ) : null}
+      {afterFirst ? (
+        // proof first: the real AFTER photo is on screen from frame 0; static (no zoom, flash or sparkle on clinical photos)
+        <>
+          <div style={{ ...at(924), ...font(24, 500, P.soft), letterSpacing: "0.14em", textTransform: "uppercase" }}>
+            {brief.proof.labels.after} · real patient{brief.proof.interval ? ` · ${brief.proof.interval}` : ""}
+          </div>
+          <PhotoBox src={brief.proof.after} top={962} pending={brief.proof.pending} />
+        </>
+      ) : null}
+      {brief.hook_sub ? (
+        <Fade top={top + lines.length * lh + 40} delay={14} style={{ ...font(36, 400, P.soft), lineHeight: 1.25 }}>{brief.hook_sub}</Fade>
       ) : null}
       <Sfx name="click" at={8} volume={0.55} />
       <Eyebrow text={brief.kicker} />
@@ -142,7 +155,7 @@ const Hook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
         </div>
       ))}
       <Hair top={top + lines.length * lh + 14} width={330} delay={18} color={P.bronze} thick={4} />
-      <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
+      {afterFirst ? null : <AbsoluteFill style={{ background: "#fff", opacity: flash }} />}
     </AbsoluteFill>
   );
 };
@@ -170,12 +183,12 @@ const AccentLine: React.FC<{ line: string; accent?: string; size: number }> = ({
 const BOKEH = [
   [140, 1300, 70], [330, 1520, 46], [520, 1260, 58], [700, 1600, 80], [880, 1380, 52], [980, 1700, 40], [260, 1760, 64],
 ] as const;
-const Bokeh: React.FC = () => {
+const Bokeh: React.FC<{ minY?: number }> = ({ minY = 0 }) => {
   const frame = useCurrentFrame();
   const a = prog(frame, 4, 26);
   return (
     <AbsoluteFill style={{ pointerEvents: "none", mixBlendMode: "screen" }}>
-      {BOKEH.map(([x, y, r], i) => (
+      {BOKEH.filter(([, y]) => y >= minY).map(([x, y, r], i) => (
         <div
           key={i}
           style={{
@@ -207,7 +220,7 @@ const Proof: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
       <Rise top={310} delay={6} style={font(120)}>{p.title}</Rise>
       {label(p.labels.before, BOX.top1 - 38, before)}
       <PhotoBox src={p.before} top={BOX.top1} pending={p.pending} style={{ opacity: before }} />
-      {label(p.labels.after, BOX.top2 - 38, prog(frame, 60, 10))}
+      {label(p.interval ? `${p.labels.after} · ${p.interval}` : p.labels.after, BOX.top2 - 38, prog(frame, 60, 10))}
       <PhotoBox src={p.after} top={BOX.top2} pending={p.pending} style={{ clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0)` }} />
       {wipe > 0 && wipe < 1 ? <div style={{ ...at(BOX.top2, L + BOX.w * wipe - 2), width: 4, height: BOX.h, background: P.bronze }} /> : null}
       <div style={{ ...at(BOX.top2 + BOX.h + 16), ...font(24, 400, P.soft), lineHeight: 1.3, opacity: prog(frame, 76, 12) }}>{p.note}</div>
@@ -319,6 +332,7 @@ const Price: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent 
           {p.save.toUpperCase()}
         </div>
       ) : null}
+      {p.slots ? <Fade top={1076} left={L + 330} delay={62} style={{ ...font(34, 700, accent), width: 520 }}>{p.slots}</Fade> : null}
       <Hair top={1200} delay={70} />
       <Fade top={1236} delay={70} style={font(40, 700)}>{p.valid_label} {until}</Fade>
       {p.extra ? <Fade top={1306} delay={76} style={font(32, 400, P.soft)}>{p.extra}</Fade> : null}
