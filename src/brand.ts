@@ -29,10 +29,13 @@ export const clinic = {
     "Dr. Usman Ilyas Bhutta (BDS, RDS, C. Implant)",
     "Dr. Ayesha Sarfraz (BDS, RDS)",
   ],
+  /** Owner's wording, 2026-11-24. */
   address:
-    "Ahsan Medical Centre, Opp. Trauma Centre Allama Iqbal Memorial Hospital, Commissioner Road, Sialkot",
+    "Ahsan Medical Centre, Opposite Trauma Centre, Allama Iqbal Memorial Teaching Hospital, Commissioner Road, Sialkot",
   /** Short form for tight end cards (owner's wording, Nov 2026). */
   addressShort: "Ahsan Medical Centre, Commissioner Road, Sialkot",
+  /** Google Maps pin given by the owner (2026-11-24): "Dental House Sialkot" listing. Used for location animations. */
+  location: { lat: 32.5054616, lng: 74.546536, maps: "https://maps.app.goo.gl/y763urRHxyerFtR29" },
 } as const;
 
 export const video = {
