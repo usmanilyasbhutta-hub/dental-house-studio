@@ -42,6 +42,8 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T18 | Offer/wedding music: happy and celebratory (major key, dhol, claps), not calm pads. | lean | "Music needs a happy/celebrating feel." (2026-11-12) |
 | T19 | Promo structure: results first (slider on the real before/after under the hook), then the offer on the wedding scene, then the clinic, then the CTA. Short (about 15 s). The opening must be directed, not a pasted photo. | firm | "results appear first then why and then offer" (2026-11-24) |
 | T20 | Key context words (e.g. "Wedding season") must be big, not small spaced labels; on-screen text sized for a phone. | lean | "wedding season in second frame is small!" (2026-11-24) |
+| T21 | Before/after comparison slider ("pre and post-op line") on an aligned pair: liked. | lean | "Pre and postop line … is good." (2026-11-24) |
+| T22 | The dupatta/sherwani wedding image performs in Meta ads (R2, R3): keep using it prominently in wedding-season content. | lean | 📈 owner: "getting attraction in R2 and R3 meta ads" |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
 ## Not wanted
@@ -67,6 +69,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-24 | wedding whitening v4 brief | "No." (to the 5-point resize plan) · "2026-11-wedding whitening is good base line to improve on." · "Make edges of original pic inspired by apple hardware design." · "Pre and postop line … is good." · "On second frame change typography to make wedding season sale prominent." · "Our bride dupatta and groon sherwani is getting attraction in R2 and R3 meta ads, so we will use it." · "Meet us here can get a separate google earth zoom style location pin and then clinic pic." · "CTA is good." | storyboard v4 for confirmation; nothing built yet | T21, T22 |
 | 2026-11-24 | wedding whitening, on-screen text | "Improve captions like wedding season in second frame is small! Give your assessments first." | text-size audit done (phone view); fixes proposed, waiting for go-ahead | T20 |
 | 2026-11-24 | wedding whitening, page order | "At the very first scene with the same heading it should show reaukt change as a line traveling you just showed, second frame should show our original first scene with added caption about off, then meet here then cta." · "Thats a good start" | 4 pages: slider hook → wedding offer page → meet us here → CTA (15.5 s) | T19 |
 | 2026-11-24 | wedding whitening, structure | "Goal is to edit such that results appear first then why and then offer to boost engagement." · "Post op pic at start is a good idea but … just a pasted pic on first frame is present, it needs improvement." | results → why → offer; slider opening on the aligned pair; clinic moved before the price | T19 |
