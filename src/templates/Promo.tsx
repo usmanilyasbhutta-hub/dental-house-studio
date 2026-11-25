@@ -21,19 +21,19 @@ export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSa
   const { fps } = useVideoConfig();
   const accent = seasons[brief.season].primary;
   // page order comes from the brief (owner, Nov 2026: slider → wedding offer → meet us here → CTA)
-  const node = (page: string): React.ReactNode => {
+  const node = (page: string, len: number): React.ReactNode => {
     switch (page) {
       case "hook": return brief.hook_visual === "slider" ? <SliderHook brief={brief} /> : <Hook brief={brief} />;
       case "proof": return <Proof brief={brief} />;
       case "value": return <Value brief={brief} />;
       case "offer": return <OfferHero brief={brief} accent={accent} />;
-      case "map": return <MapZoom brief={brief} accent={accent} />;
+      case "map": return <MapZoom brief={brief} accent={accent} len={len} />;
       case "visit": return <Visit brief={brief} />;
       case "price": return <Price brief={brief} accent={accent} />;
       default: return <End brief={brief} accent={accent} />;
     }
   };
-  const pages = promoPages(brief).map((p) => ({ len: sec(p.seconds, fps), node: node(p.page) }));
+  const pages = promoPages(brief).map((p) => ({ len: sec(p.seconds, fps), node: node(p.page, sec(p.seconds, fps)) }));
 
   let from = 0;
   return (
@@ -332,19 +332,30 @@ const Device: React.FC<{ top: number; w: number; h: number; children: React.Reac
 };
 
 // ---- map page: Google Earth Studio zoom to the clinic, then a pin --------------------------------------------------------
-const MapZoom: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
+const MapZoom: React.FC<{ brief: PromoBrief; accent: string; len: number }> = ({ brief, accent, len }) => {
   const frame = useCurrentFrame();
-  const { durationInFrames, fps } = useVideoConfig();
+  const { fps } = useVideoConfig();
+  const durationInFrames = len; // the page's own length (the Sequence also holds the next page's swipe overlap)
   const m = brief.map_zoom!;
   const pad = (m.pattern.match(/#+/) ?? ["###"])[0].length;
-  // play the whole rendered zoom inside the page (time-remapped), ending on the last frame
+  // the whole Earth Studio render plays inside the page (time-remapped), then holds on the last frame for the pin
   const playEnd = durationInFrames - 22;
-  const idx = Math.min(m.count - 1, Math.round(interpolate(frame, [0, playEnd], [0, m.count - 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })));
+  const f = interpolate(frame, [0, playEnd], [0, m.count - 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const idx = Math.min(m.count - 1, Math.round(f));
   const file = m.pattern.replace(/#+/, String(idx).padStart(pad, "0"));
-  const pin = spring({ frame: frame - (playEnd - 6), fps, config: { damping: 9, stiffness: 200 } });
-  const tag = prog(frame, playEnd + 2, 8);
+  const pin = spring({ frame: frame - (playEnd - 4), fps, config: { damping: 9, stiffness: 200 } });
+  const tag = prog(frame, playEnd + 4, 8);
+  // diorama: ground plane tilts back and a tilt-shift blur frames the city, easing in and out around the miniature stop
+  const mini = m.miniature;
+  const amt = mini
+    ? interpolate(f, [mini.from - 12, mini.from, mini.to, mini.to + 14], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut })
+    : 0;
+  const tilt = (mini?.tilt ?? 0) * amt;
+  const src = staticFile(`${m.frames}/${file}`);
+  const plane: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" };
+  const fade = "linear-gradient(180deg, black 0%, black 18%, transparent 40%, transparent 62%, black 84%, black 100%)";
   return (
-    <AbsoluteFill style={{ background: "#0B1622" }}>
+    <AbsoluteFill style={{ background: "#0B1622", overflow: "hidden" }}>
       {m.pending ? (
         <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", gap: 20 }}>
           <div style={{ width: 620, height: 620, borderRadius: "50%", background: "radial-gradient(circle at 35% 30%, #7FA6C9 0%, #2F5D86 45%, #122B45 80%)",
@@ -352,20 +363,42 @@ const MapZoom: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accen
           <div style={{ position: "absolute", top: 1180, ...font(34, 700, "#F1E7D6") }}>Google Earth zoom · footage pending</div>
         </AbsoluteFill>
       ) : (
-        <Img src={staticFile(`${m.frames}/${file}`)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        <AbsoluteFill style={{ perspective: 1400, perspectiveOrigin: "50% 40%" }}>
+          <AbsoluteFill style={{ transform: `rotateX(${tilt}deg) scale(${1 + 0.62 * amt})`, transformOrigin: "50% 68%",
+            filter: amt > 0 ? `saturate(${1 + 0.35 * amt}) contrast(${1 + 0.06 * amt})` : undefined }}>
+            <Img src={src} style={plane} />
+            {amt > 0.02 ? (
+              <Img src={src} style={{ ...plane, filter: `blur(${10 * amt}px)`, WebkitMaskImage: fade, maskImage: fade }} />
+            ) : null}
+          </AbsoluteFill>
+        </AbsoluteFill>
       )}
+      {/* soft shade behind the stop labels so they read on bright roofs */}
+      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 640, background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0) 100%)",
+        opacity: interpolate(f, [8, 14, 104, 112], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }} />
+      {/* stop labels: Pakistan → Sialkot → Commissioner Road */}
+      {m.stops.map((st, i) => {
+        const o = interpolate(f, [st.from, st.from + 5, st.to - 5, st.to], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+        if (o <= 0) return null;
+        return (
+          <div key={i} style={{ position: "absolute", left: L, top: 300, opacity: o, transform: `translateY(${(1 - o) * 18}px)` }}>
+            <div style={{ ...font(26, 500, "#F1E7D6"), letterSpacing: "0.2em", textTransform: "uppercase", textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}>{String(i + 1).padStart(2, "0")}</div>
+            <div style={{ ...font(96, 900, "#FFFFFF"), textShadow: "0 6px 24px rgba(0,0,0,0.55)", marginTop: 6 }}>{st.label}</div>
+          </div>
+        );
+      })}
       <div style={{ position: "absolute", left: `${m.pin.x}%`, top: `${m.pin.y}%`, transform: `translate(-50%, -100%) translateY(${(1 - pin) * -120}px)`, opacity: Math.min(1, pin * 3) }}>
         <svg viewBox="0 0 24 32" style={{ width: 96, height: 128, filter: "drop-shadow(0 8px 10px rgba(0,0,0,0.4))" }}>
           <path d="M12 31s10-11 10-19A10 10 0 0 0 2 12c0 8 10 19 10 19z" fill={accent} />
           <circle cx="12" cy="12" r="4" fill={P.paper} />
         </svg>
       </div>
-      <div style={{ position: "absolute", left: `${m.pin.x}%`, top: `calc(${m.pin.y}% - 230px)`, transform: `translateX(-50%) scale(${0.9 + 0.1 * tag})`, opacity: tag,
-        background: "#FFFFFF", borderRadius: 18, padding: "14px 26px", boxShadow: "0 10px 24px rgba(0,0,0,0.3)", whiteSpace: "nowrap" }}>
-        <div style={font(40, 900)}>{clinic.name}</div>
-        <div style={{ ...font(24, 400, P.soft), marginTop: 4 }}>{clinic.addressShort}</div>
+      <div style={{ position: "absolute", left: `${m.pin.x}%`, top: `calc(${m.pin.y}% - 250px)`, transform: `translateX(-50%) scale(${0.9 + 0.1 * tag})`, opacity: tag,
+        background: "#FFFFFF", borderRadius: 18, padding: "16px 28px", boxShadow: "0 10px 24px rgba(0,0,0,0.3)", whiteSpace: "nowrap" }}>
+        <div style={font(44, 900)}>{clinic.name}</div>
+        <div style={{ ...font(26, 400, P.soft), marginTop: 6 }}>Ahsan Medical Centre · Commissioner Road</div>
       </div>
-      {/* attribution required by Google Earth Studio: keep it visible for the whole shot */}
+      {/* attribution required by Google Earth Studio: readable inside the safe area for the whole shot */}
       <div style={{ position: "absolute", left: L, top: 1484, ...font(24, 500, "#FFFFFF"), textShadow: "0 2px 8px rgba(0,0,0,0.7)", opacity: 0.92 }}>{m.credit}</div>
     </AbsoluteFill>
   );

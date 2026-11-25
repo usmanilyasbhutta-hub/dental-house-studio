@@ -23,12 +23,18 @@ offer_hook:                 # "Offer", not "Sale": keeps the clinic's tone, matc
   lines: ["Wedding season", "OFFER"]
   tag: 30% OFF
   sub: teeth whitening
-map_zoom:                   # Google Earth Studio "Zoom To" render, 1080x1920, 30 fps (docs/google-earth-studio.md)
+map_zoom:                   # Google Earth Studio render by the owner (2026-11-25): 1080x1920, 30 fps, 121 frames
   frames: footage/earth/2026-11-wedding-whitening
   pattern: "dental-house_###.jpeg"
-  count: 120
-  credit: "Google Earth"
-  pending: true             # set false when the rendered frames are in public/footage/earth/2026-11-wedding-whitening/
+  count: 121
+  credit: "Imagery: Google Earth"
+  seconds: 4.5
+  pin: { x: 50, y: 50 }     # Zoom To centres the target: lands on the grey roof beside the road (checked against the owner's pin)
+  stops:                    # owner: "zoom from pakistan to miniature sialkot in 3d then zoom to commissioner road and then Dental house"
+    - { from: 12, to: 44, label: Pakistan }
+    - { from: 50, to: 82, label: Sialkot }
+    - { from: 86, to: 108, label: Commissioner Road }
+  miniature: { from: 56, to: 80, tilt: 26 }
 hero:
   src: cases/whitening-2026-11/fabric.jpg
   source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
