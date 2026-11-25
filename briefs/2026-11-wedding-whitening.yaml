@@ -28,7 +28,7 @@ map_zoom:                   # Google Earth Studio render by the owner (2026-11-2
   pattern: "dental-house_###.jpeg"
   count: 121
   credit: "Imagery: Google Earth"
-  seconds: 5.8
+  seconds: 5.0               # keeps the Reel at 20 s (owner spec 15–20 s); landmark still holds ~1.5 s
   pin: { x: 50, y: 50 }     # Zoom To centres the target: lands on the grey roof beside the road (checked against the owner's pin)
   stops:                    # owner: "zoom from pakistan to miniature sialkot in 3d then zoom to commissioner road and then Dental house"
     - { from: 12, to: 44, label: Pakistan }
