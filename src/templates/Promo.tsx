@@ -339,7 +339,7 @@ const MapZoom: React.FC<{ brief: PromoBrief; accent: string; len: number }> = ({
   const m = brief.map_zoom!;
   const pad = (m.pattern.match(/#+/) ?? ["###"])[0].length;
   // the whole Earth Studio render plays inside the page (time-remapped), then holds on the last frame for the pin
-  const playEnd = durationInFrames - 22;
+  const playEnd = durationInFrames - (m.landmark ? 44 : 22);
   const f = interpolate(frame, [0, playEnd], [0, m.count - 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const idx = Math.min(m.count - 1, Math.round(f));
   const file = m.pattern.replace(/#+/, String(idx).padStart(pad, "0"));
@@ -398,8 +398,47 @@ const MapZoom: React.FC<{ brief: PromoBrief; accent: string; len: number }> = ({
         <div style={font(44, 900)}>{clinic.name}</div>
         <div style={{ ...font(26, 400, P.soft), marginTop: 6 }}>Ahsan Medical Centre · Commissioner Road</div>
       </div>
+      {m.landmark ? <Landmark m={m} frame={frame} at={playEnd + 14} accent={accent} /> : null}
       {/* attribution required by Google Earth Studio: readable inside the safe area for the whole shot */}
       <div style={{ position: "absolute", left: L, top: 1484, ...font(24, 500, "#FFFFFF"), textShadow: "0 2px 8px rgba(0,0,0,0.7)", opacity: 0.92 }}>{m.credit}</div>
+    </AbsoluteFill>
+  );
+};
+
+/** Landmark across the road: hospital marker, a dashed "opposite" link from the clinic pin, and a label card. */
+const Landmark: React.FC<{ m: NonNullable<PromoBrief["map_zoom"]>; frame: number; at: number; accent: string }> = ({ m, frame, at, accent }) => {
+  const { fps } = useVideoConfig();
+  const lm = m.landmark!;
+  const W0 = 1080, H0 = 1920;
+  const ax = (m.pin.x / 100) * W0, ay = (m.pin.y / 100) * H0;
+  const bx = (lm.x / 100) * W0, by = (lm.y / 100) * H0;
+  const link = prog(frame, at, 12, easeInOut);
+  const mark = spring({ frame: frame - at - 6, fps, config: { damping: 10, stiffness: 200 } });
+  const card = prog(frame, at + 12, 10);
+  const mx = (ax + bx) / 2, my = Math.min(ay, by) - 70;
+  return (
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      <svg width={W0} height={H0} style={{ position: "absolute", inset: 0 }}>
+        <path d={`M ${ax} ${ay - 20} Q ${mx} ${my} ${bx} ${by - 20}`} fill="none" stroke="#FFFFFF" strokeWidth={6} strokeDasharray="14 12"
+          pathLength={1} style={{ strokeDasharray: `${link} 1` }} opacity={0.95} />
+      </svg>
+      {/* hospital marker */}
+      <div style={{ position: "absolute", left: bx - 38, top: by - 38, width: 76, height: 76, borderRadius: "50%", background: "#FFFFFF",
+        border: `5px solid ${accent}`, transform: `scale(${mark})`, display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 8px 18px rgba(0,0,0,0.35)" }}>
+        <div style={{ position: "relative", width: 34, height: 34 }}>
+          <div style={{ position: "absolute", left: 12, top: 0, width: 10, height: 34, background: accent }} />
+          <div style={{ position: "absolute", left: 0, top: 12, width: 34, height: 10, background: accent }} />
+        </div>
+      </div>
+      <div style={{ position: "absolute", left: mx - 90, top: my - 6, width: 180, textAlign: "center", opacity: link, ...font(26, 700, "#FFFFFF"),
+        letterSpacing: "0.12em", textTransform: "uppercase", textShadow: "0 2px 8px rgba(0,0,0,0.7)" }}>{lm.relation}</div>
+      {/* label card, inside the safe area */}
+      <div style={{ position: "absolute", left: L, top: by + 120, width: 940 - L, opacity: card, transform: `translateY(${(1 - card) * 16}px)`,
+        background: "rgba(255,255,255,0.96)", borderRadius: 18, padding: "18px 26px", boxShadow: "0 10px 24px rgba(0,0,0,0.3)" }}>
+        <div style={font(44, 900)}>{lm.title}</div>
+        {lm.sub ? <div style={{ ...font(28, 400, P.soft), marginTop: 6 }}>{lm.sub}</div> : null}
+      </div>
     </AbsoluteFill>
   );
 };

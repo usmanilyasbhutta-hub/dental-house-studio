@@ -405,6 +405,10 @@ export const promoBrief = base.extend({
       seconds: z.number().min(2).max(8).default(2.5),
       /** Labels shown from footage frame `from` to `to` (footage frame numbers). */
       stops: z.array(z.object({ from: z.number().int().min(0), to: z.number().int().min(0), label: line(28) })).max(5).default([]),
+      /** A landmark everyone knows, marked on the last frame with its relation to the clinic (owner-confirmed only). */
+      landmark: z
+        .object({ x: pct, y: pct, relation: line(16), title: line(28), sub: line(44).optional() })
+        .optional(),
       /** Diorama look over the city: tilt the ground plane and add a tilt-shift blur, between these footage frames. */
       miniature: z.object({ from: z.number().int(), to: z.number().int(), tilt: z.number().min(0).max(40).default(26) }).optional(),
       pending: z.boolean().default(false),

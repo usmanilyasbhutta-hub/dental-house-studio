@@ -28,13 +28,19 @@ map_zoom:                   # Google Earth Studio render by the owner (2026-11-2
   pattern: "dental-house_###.jpeg"
   count: 121
   credit: "Imagery: Google Earth"
-  seconds: 4.5
+  seconds: 5.8
   pin: { x: 50, y: 50 }     # Zoom To centres the target: lands on the grey roof beside the road (checked against the owner's pin)
   stops:                    # owner: "zoom from pakistan to miniature sialkot in 3d then zoom to commissioner road and then Dental house"
     - { from: 12, to: 44, label: Pakistan }
     - { from: 50, to: 82, label: Sialkot }
     - { from: 86, to: 108, label: Commissioner Road }
   miniature: { from: 56, to: 80, tilt: 26 }
+  landmark:                 # owner, 2026-11-25: "Directly across trauma centre." Across Commissioner Road = east side of the road in the frame
+    x: 78
+    y: 50
+    relation: Opposite
+    title: Trauma Centre
+    sub: Allama Iqbal Memorial Teaching Hospital
 hero:
   src: cases/whitening-2026-11/fabric.jpg
   source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"

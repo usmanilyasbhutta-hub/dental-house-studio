@@ -38,7 +38,7 @@ function allText(b: Brief): string[] {
     t.push(b.kicker ?? "", b.hook_sub ?? "", b.proof.interval ?? "", b.price.slots ?? "", b.proof.eyebrow, b.proof.title, b.proof.note, b.proof.labels.before, b.proof.labels.after,
       b.value.eyebrow ?? "", b.value.title, ...b.value.points.flatMap((p) => [p.title, p.sub ?? ""]),
       b.price.eyebrow, b.price.service, b.price.now, b.price.was ?? "", b.price.save ?? "", b.price.extra ?? "",
-      b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.map_zoom?.stops.map((x) => x.label) ?? []), ...(b.offer_hook?.lines ?? []), b.offer_hook?.tag ?? "", b.offer_hook?.sub ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
+      b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.map_zoom?.stops.map((x) => x.label) ?? []), b.map_zoom?.landmark?.title ?? "", b.map_zoom?.landmark?.sub ?? "", ...(b.offer_hook?.lines ?? []), b.offer_hook?.tag ?? "", b.offer_hook?.sub ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
