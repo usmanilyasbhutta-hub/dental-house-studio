@@ -17,7 +17,7 @@ hook:
   lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
   accent: perfect
 hook_visual: slider     # results first (owner): after smile full width on frame 0, then a before/after slider sweep
-sequence: [hook, offer, map, visit, end]   # v4 (owner, 2026-11-24): slider → Wedding Season Offer → Google Earth zoom → meet us here → CTA
+sequence: [hook, offer, map, arrival, visit, end]   # v4 (owner, 2026-11-24): slider → Wedding Season Offer → Google Earth zoom → meet us here → CTA
 offer_hook:                 # "Offer", not "Sale": keeps the clinic's tone, matches the carousel/captions (owner: "you tell me whats best")
   style: stack
   lines: ["Wedding season", "OFFER"]
@@ -28,7 +28,7 @@ map_zoom:                   # Google Earth Studio render by the owner (2026-11-2
   pattern: "dental-house_###.jpeg"
   count: 121
   credit: "Imagery: Google Earth"
-  seconds: 5.0               # keeps the Reel at 20 s (owner spec 15–20 s); landmark still holds ~1.5 s
+  seconds: 4.3               # with the arrival shot the Reel still fits 20 s (owner spec 15–20 s)
   pin: { x: 50, y: 50 }     # Zoom To centres the target: lands on the grey roof beside the road (checked against the owner's pin)
   stops:                    # owner: "zoom from pakistan to miniature sialkot in 3d then zoom to commissioner road and then Dental house"
     - { from: 12, to: 44, label: Pakistan }
@@ -80,6 +80,14 @@ price:
   extra: Scaling + polish included
   # slots: "4 slots left this month"   # only a real number, then set slots_confirmed_on
 prices_confirmed_on: 2026-11-11   # given by the owner in chat
+arrival:                    # owner's drive-by clip (iPhone, 26 Nov 2026), 50.5–54.0 s, HDR→SDR, 1.17x; only the building in frame
+  video: footage/arrival/arrival.mp4
+  step: "04"
+  title: Look for this sign.
+  place: Ahsan Medical Centre
+  sub: Opposite Trauma Centre · Commissioner Road
+  bystanders_checked: true    # checked frame by frame: no people, no number plates in the used part
+page_seconds: { offer: 4.0, arrival: 2.7, visit: 1.5, end: 3.0 }
 visit:
   photo: cases/whitening-2026-11/clinic.jpg
   eyebrow: "Your visit · Sialkot"

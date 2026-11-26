@@ -113,9 +113,10 @@ export function promoPages(b: Extract<Brief, { type: "promo" }>): { page: (typeo
   const withMap = b.sequence.includes("map");
   const len = {
     hook: slider ? 4.5 : s.hook, proof: slider ? 3 : s.proof, value: s.value, offer: s.offer, map: b.map_zoom?.seconds ?? s.map, price: s.price,
-    visit: withMap ? 2 : short ? 2.5 : s.visit, end: short || withMap ? 4 : s.end,
+    visit: withMap ? 2 : short ? 2.5 : s.visit, end: short || withMap ? 4 : s.end, arrival: 3,
+    ...b.page_seconds,
   };
   return b.sequence
-    .filter((p) => (p !== "visit" || b.visit) && (p !== "map" || b.map_zoom))
+    .filter((p) => (p !== "visit" || b.visit) && (p !== "map" || b.map_zoom) && (p !== "arrival" || b.arrival))
     .map((page) => ({ page, seconds: len[page] }));
 }

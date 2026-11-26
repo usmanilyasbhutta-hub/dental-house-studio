@@ -366,7 +366,7 @@ export type SketchBrief = z.infer<typeof sketchBrief>;
 const eyebrow = line(44);
 export const PROMO_ICONS = ["dentist", "shield", "polish", "tooth", "calendar"] as const;
 /** Pages a promo can play, in the order the brief lists them (hook first, end last). */
-export const PROMO_PAGES = ["hook", "proof", "value", "offer", "map", "visit", "price", "end"] as const;
+export const PROMO_PAGES = ["hook", "proof", "value", "offer", "map", "arrival", "visit", "price", "end"] as const;
 export const promoBrief = base.extend({
   type: z.literal("promo"),
   season: z.enum(["none", "wedding"]).default("none"),
@@ -469,6 +469,22 @@ export const promoBrief = base.extend({
   slots_confirmed_on: isoDate.optional(),
   /** Owner confirmed these prices on this date (prices are clinic facts). */
   prices_confirmed_on: isoDate.optional(),
+  /**
+   * Street-level arrival shot (owner's own phone clip, prepared to 1080x1920 SDR): what a driver sees on the road.
+   * Faces and number plates must be blurred or absent (`bystanders_checked`).
+   */
+  arrival: z
+    .object({
+      video: publicAsset,
+      step: line(8).optional(),
+      title: line(28),
+      place: line(36),
+      sub: line(48).optional(),
+      bystanders_checked: z.boolean().default(false),
+    })
+    .optional(),
+  /** Per-page length overrides (s), e.g. { offer: 4, visit: 1.5, end: 3 } to keep the Reel inside its length. */
+  page_seconds: z.record(z.enum(PROMO_PAGES), z.number().min(1).max(10)).default({}),
   /** Optional clinic photo beat before the end card (the clinic's own room, never stock). */
   visit: z.object({ photo: publicAsset, eyebrow: eyebrow.default("Your visit"), title: line(24).default("See you here.") }).optional(),
   end: z.object({ eyebrow: eyebrow.optional(), disclaimer: line(70).optional() }).default({}),

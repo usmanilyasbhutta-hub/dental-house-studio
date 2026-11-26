@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Img, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { clinic } from "../brand";
 import type { PromoBrief } from "../brief/schema";
 import { promoPages, scenes, sec } from "../brief/timing";
@@ -28,6 +28,7 @@ export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSa
       case "value": return <Value brief={brief} />;
       case "offer": return <OfferHero brief={brief} accent={accent} />;
       case "map": return <MapZoom brief={brief} accent={accent} len={len} />;
+      case "arrival": return <Arrival brief={brief} accent={accent} />;
       case "visit": return <Visit brief={brief} />;
       case "price": return <Price brief={brief} accent={accent} />;
       default: return <End brief={brief} accent={accent} />;
@@ -438,6 +439,29 @@ const Landmark: React.FC<{ m: NonNullable<PromoBrief["map_zoom"]>; frame: number
         background: "rgba(255,255,255,0.96)", borderRadius: 18, padding: "18px 26px", boxShadow: "0 10px 24px rgba(0,0,0,0.3)" }}>
         <div style={font(44, 900)}>{lm.title}</div>
         {lm.sub ? <div style={{ ...font(28, 400, P.soft), marginTop: 6 }}>{lm.sub}</div> : null}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/** Street-level arrival: the owner's drive-by clip with the map's numbering continued ("04 · Look for this sign"). */
+const Arrival: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent }) => {
+  const frame = useCurrentFrame();
+  const a = brief.arrival!;
+  const t = prog(frame, 6, 10);
+  const c = prog(frame, 16, 10);
+  return (
+    <AbsoluteFill style={{ background: "#000" }}>
+      <OffthreadVideo src={staticFile(a.video)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 620, background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0) 100%)" }} />
+      <div style={{ position: "absolute", left: L, top: 300, opacity: t, transform: `translateY(${(1 - t) * 18}px)` }}>
+        {a.step ? <div style={{ ...font(26, 500, "#F1E7D6"), letterSpacing: "0.2em", textTransform: "uppercase", textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}>{a.step}</div> : null}
+        <div style={{ ...font(96, 900, "#FFFFFF"), textShadow: "0 6px 24px rgba(0,0,0,0.55)", marginTop: 6 }}>{a.title}</div>
+      </div>
+      <div style={{ position: "absolute", left: L, top: 1300, width: 940 - L, opacity: c, transform: `translateY(${(1 - c) * 16}px)`,
+        background: "rgba(255,255,255,0.96)", borderRadius: 18, padding: "18px 26px", boxShadow: "0 10px 24px rgba(0,0,0,0.3)", borderLeft: `10px solid ${accent}` }}>
+        <div style={font(46, 900)}>{a.place}</div>
+        {a.sub ? <div style={{ ...font(28, 400, P.soft), marginTop: 6 }}>{a.sub}</div> : null}
       </div>
     </AbsoluteFill>
   );

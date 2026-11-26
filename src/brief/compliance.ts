@@ -38,7 +38,7 @@ function allText(b: Brief): string[] {
     t.push(b.kicker ?? "", b.hook_sub ?? "", b.proof.interval ?? "", b.price.slots ?? "", b.proof.eyebrow, b.proof.title, b.proof.note, b.proof.labels.before, b.proof.labels.after,
       b.value.eyebrow ?? "", b.value.title, ...b.value.points.flatMap((p) => [p.title, p.sub ?? ""]),
       b.price.eyebrow, b.price.service, b.price.now, b.price.was ?? "", b.price.save ?? "", b.price.extra ?? "",
-      b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.map_zoom?.stops.map((x) => x.label) ?? []), b.map_zoom?.landmark?.title ?? "", b.map_zoom?.landmark?.sub ?? "", ...(b.offer_hook?.lines ?? []), b.offer_hook?.tag ?? "", b.offer_hook?.sub ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
+      b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.map_zoom?.stops.map((x) => x.label) ?? []), b.arrival?.title ?? "", b.arrival?.place ?? "", b.arrival?.sub ?? "", b.map_zoom?.landmark?.title ?? "", b.map_zoom?.landmark?.sub ?? "", ...(b.offer_hook?.lines ?? []), b.offer_hook?.tag ?? "", b.offer_hook?.sub ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
@@ -249,6 +249,10 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
         if (!env.fileExists(`public/${b.map_zoom.frames}/${first}`)) err("map", `Google Earth frames not found: public/${b.map_zoom.frames}/${first}`);
         if (!/google earth/i.test(b.map_zoom.credit)) err("map", 'Google Earth Studio footage must show the "Google Earth" attribution');
       }
+    }
+    if (b.arrival) {
+      if (!env.fileExists(`public/${b.arrival.video}`)) err("assets", `missing video public/${b.arrival.video}`);
+      if (!b.arrival.bystanders_checked) err("privacy", "arrival clip: check that no faces or number plates are readable (bystanders_checked)");
     }
     if (p.device)
       for (const ph of [p.device.before, p.device.after]) if (!env.fileExists(`public/${ph}`)) err("assets", `missing image public/${ph}`);

@@ -72,6 +72,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-26 | arrival clip | (owner's iPhone drive-by clip via Google Drive) | "04 · Look for this sign." street-level shot of Ahsan Medical Centre (50.5–54 s of the clip, no bystanders), between the map and "Meet us here"; Reel kept at 20 s | T25 |
 | 2026-11-25 | location, recognisability | "it is still unidentifiable for pt who is in their car at the road?" · "Directly across trauma centre. I wil make phone clip from slowly moving car later." | landmark added on the map: "Opposite · Trauma Centre, Allama Iqbal Memorial Teaching Hospital"; street-level arrival clip to follow | T25 |
 | 2026-11-25 | location zoom | "what i want is to show zoom from pakistan to miniature sialkot in 3d then zoom to commissioner road and then Dental house at Ahsan medical center." · (owner rendered Google Earth Studio, sent earth.mp4) | 4-stop zoom on the owner's footage: Pakistan → Sialkot (tilt + tilt-shift miniature) → Commissioner Road → pin on Dental House; labels numbered 01–03; Google Earth credit kept | T24 |
 | 2026-11-24 | wedding whitening v4 | "You are expert marketer, linguist.you tell me whats best." · "Google earth studio." · "Trim some of Black retractor only." | "Wedding Season Offer" (not Sale); map zoom from Google Earth Studio (owner renders); retractor trimmed 12/60 px identically; Apple-style device frame; draft rendered with map placeholder | T23 |
