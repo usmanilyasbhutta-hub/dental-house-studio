@@ -98,3 +98,11 @@ basic idea in latest version." Review: qc/2026-11-wedding-whitening/review.md.
 | CTA hold | Faster typing; number on screen ~2.8 s; cursor hidden after typing. |
 | Patient questions | FAQ + pinned comment + paid-boost notes in docs/captions. |
 | Not done (needs the owner) | Written/recorded consent before paid boosting; a doctor clip on camera (no footage yet). |
+
+## Round 6 (2026-11-26): real open-data map
+- Owner: "Whats alternative of google maps?" → "Yes allow data sites".
+- Map page now `own_map.style: real` (scripts/make_realmap.py → src/templates/promo/RealMap.tsx): NASA Blue Marble (Pakistan, public domain)
+  → Copernicus Sentinel-2 L2A true colour, 22 Nov 2026 pass (Sialkot) → OpenStreetMap streets restyled in carousel colours (ODbL).
+- Credits on screen the whole page: "NASA Blue Marble · Contains modified Copernicus Sentinel data (2026) · © OpenStreetMap contributors".
+- OSM leaves the road in front of the clinic unnamed; "Commissioner Road" and the Trauma Centre directly opposite (east side) are the owner's facts.
+  Pin from the owner's Google Maps link coordinates (coordinates only, no Google imagery). Owner to confirm the highlighted road is right.

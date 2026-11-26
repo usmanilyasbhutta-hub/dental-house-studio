@@ -23,7 +23,8 @@ offer_hook:                 # "Offer", not "Sale": keeps the clinic's tone, matc
   lines: ["Wedding season", "OFFER"]
   tag: 30% OFF
   sub: teeth whitening
-own_map:                    # own, ad-safe map: Natural Earth outline (public domain) + our clay-city miniature; owner-given names only
+own_map:                    # real open data (owner 2026-11-26 "Yes allow data sites"): NASA Blue Marble → Sentinel-2 → OpenStreetMap, credits on screen
+  style: real
   city: Sialkot
   road: Commissioner Road
   landmark: { relation: Opposite, title: Trauma Centre, sub: Allama Iqbal Memorial Teaching Hospital }

@@ -486,9 +486,12 @@ export const promoBrief = base.extend({
   /**
    * Own, ad-safe location map: Pakistan outline (Natural Earth, public domain) → our clay-city miniature → highlighted road →
    * clinic pin with a landmark opposite. Labels are owner-given place names only; the chip must say it is illustrative.
+   * `style: real` uses open map data instead (scripts/make_realmap.py): NASA Blue Marble → Copernicus Sentinel-2 → OpenStreetMap
+   * restyled in brand colours, with the data credits on screen (required by their licences).
    */
   own_map: z
     .object({
+      style: z.enum(["illustrated", "real"]).default("illustrated"),
       country: line(20).default("Pakistan"),
       city: line(20),
       road: line(28),
