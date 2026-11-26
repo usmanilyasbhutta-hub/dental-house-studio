@@ -23,8 +23,9 @@ offer_hook:                 # "Offer", not "Sale": keeps the clinic's tone, matc
   lines: ["Wedding season", "OFFER"]
   tag: 30% OFF
   sub: teeth whitening
-own_map:                    # real open data (owner 2026-11-26 "Yes allow data sites"): NASA Blue Marble → Sentinel-2 → OpenStreetMap, credits on screen
-  style: real
+own_map:                    # v7 (owner 2026-11-26): "3d drone view leading to Dental house" on the real OSM street plan; flat real map was "not yummy"
+  style: drone
+  chip: "Illustrative 3D · street plan © OpenStreetMap contributors"
   city: Sialkot
   road: Commissioner Road
   landmark: { relation: Opposite, title: Trauma Centre, sub: Allama Iqbal Memorial Teaching Hospital }

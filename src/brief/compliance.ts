@@ -245,8 +245,10 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       err("licence", 'Google Earth / Earth Studio content "may not be used for any commercial or promotional purposes" (Google geo guidelines): use own_map instead');
     if (b.sequence.includes("ownmap")) {
       if (!b.own_map) err("sequence", "the ownmap page needs own_map");
-      else if (b.own_map.style === "illustrated" && !/illustrat|not to scale/i.test(b.own_map.chip))
+      else if (b.own_map.style !== "real" && !/illustrat|not to scale/i.test(b.own_map.chip))
         err("map", 'own map: keep "Illustrative map · not to scale" in the chip');
+      else if (b.own_map.style === "drone" && !/openstreetmap/i.test(b.own_map.chip))
+        err("map", 'drone map: the chip must credit "© OpenStreetMap contributors" (street plan, ODbL)');
       else if (b.own_map.style === "real")
         warn("map", "real map: the road name and the landmark position are owner-given (OSM leaves the road unnamed); data credits stay on screen");
     }

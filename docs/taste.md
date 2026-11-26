@@ -47,6 +47,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 | T23 | Wording for promos: "Offer", not "Sale" (Claude's call when asked; keeps the clinic's tone and matches all campaign material). | lean | owner delegated: "you tell me whats best" (2026-11-24) |
 | T24 | Location beats: Google-Earth-style zoom with named stops (country → city as a miniature → road → building pin), then the clinic photo. | lean | owner, 2026-11-25 |
 | T25 | Location content must be recognisable from the road: a known landmark ("opposite Trauma Centre") and the building front/signboard, not only a roof-top view. | lean | owner, 2026-11-25 |
+| T27 | Location beat: a 3D drone-style flight down the actual road (Commissioner Road) that ends at the Dental House building. Flat real maps (satellite/street map) don't appeal. | lean | "No its not yummy. Cant you make commissioner road video as 3d drone view leading to Dental house?" (2026-11-26) |
 | T26 | Location maps in ads: only own/illustrative or properly licensed maps (never Google Earth/Maps imagery in promotion). | firm | Google geo guidelines + owner: "Use own map that can be used" |
 | T12 | Keeps trying new styles; does not want every video to look the same. | lean | "continuously to improve and try new" |
 
@@ -73,6 +74,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-26 | real-data map (v6) | "No its not yummy. Cant you make commissioner road video as 3d drone view leading to Dental house? Understand??" | v7: 3D drone flight along the real road layout, ending at the Dental House building | T27 |
 | 2026-11-26 | review → remake | "It was same day before and after treatment pic, pt had implant surgery from somone else,i removed suture after taking preop pic. Use own map that can be used. It is allowed to advertise. Use agents recommendations and remake the video keeping basic idea in latest version." | v5: own map, identical crop without the suture, honest same-day note, "brighter", readability/CTA fixes, doctors' names | T26 |
 | 2026-11-26 | arrival clip | (owner's iPhone drive-by clip via Google Drive) | "04 · Look for this sign." street-level shot of Ahsan Medical Centre (50.5–54 s of the clip, no bystanders), between the map and "Meet us here"; Reel kept at 20 s | T25 |
 | 2026-11-25 | location, recognisability | "it is still unidentifiable for pt who is in their car at the road?" · "Directly across trauma centre. I wil make phone clip from slowly moving car later." | landmark added on the map: "Opposite · Trauma Centre, Allama Iqbal Memorial Teaching Hospital"; street-level arrival clip to follow | T25 |

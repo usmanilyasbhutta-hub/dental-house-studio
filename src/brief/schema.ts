@@ -491,12 +491,12 @@ export const promoBrief = base.extend({
    */
   own_map: z
     .object({
-      style: z.enum(["illustrated", "real"]).default("illustrated"),
+      style: z.enum(["illustrated", "real", "drone"]).default("illustrated"), // drone: 3D flight on the OSM street plan (DroneMap)
       country: line(20).default("Pakistan"),
       city: line(20),
       road: line(28),
       landmark: z.object({ relation: line(16), title: line(28), sub: line(48).optional() }),
-      chip: line(44).default("Illustrative map · not to scale"),
+      chip: line(64).default("Illustrative map · not to scale"),
       seed: z.number().int().min(1).default(7),
       seconds: z.number().min(3).max(8).default(4.6),
     })

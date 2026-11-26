@@ -139,6 +139,14 @@ def streets(ppm: float = 3.0):
     # road x at the pin's latitude -> which side the clinic is on
     a = max((p for p in seg if p[1] >= 0), key=lambda p: -p[1]); b = max((p for p in seg if p[1] < 0), key=lambda p: p[1])
     near = (round(a[0] + (b[0] - a[0]) * (0 - a[1]) / (b[1] - a[1]), 1), 0.0)
+    # road network for the 3D drone scene (src/three/realcity.ts): every highway within 900 m, metres, 1 decimal
+    net = []
+    for tags, pts in roads:
+        xy = [[round(v, 1) for v in m(*p)] for p in pts]
+        if min(math.hypot(x, y) for x, y in xy) < 900:
+            net.append({"hw": tags["highway"], "pts": xy})
+    (ROOT / "src/data/realroads.json").write_text(json.dumps({"source": "© OpenStreetMap contributors (ODbL)", "ways": net}, separators=(",", ":")))
+    print("3D road ways:", len(net))
     return {"src": "footage/realmap/streets.png", "bounds": [x0, y0, x1, y1]}, seg, near
 
 

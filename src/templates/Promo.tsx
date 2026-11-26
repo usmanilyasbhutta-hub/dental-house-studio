@@ -7,6 +7,7 @@ import { carousel as P, seasons } from "../theme";
 import { Sfx } from "../fx/effects";
 import { OwnMap } from "./promo/OwnMap";
 import { RealMap } from "./promo/RealMap";
+import { DroneMap } from "./promo/DroneMap";
 import { ease, easeInOut, prog } from "./shared/motion";
 import { Shell, type QcProps } from "./shared/Shell";
 
@@ -30,7 +31,10 @@ export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSa
       case "value": return <Value brief={brief} />;
       case "offer": return <OfferHero brief={brief} accent={accent} />;
       case "map": return <MapZoom brief={brief} accent={accent} len={len} />;
-      case "ownmap": return brief.own_map?.style === "real" ? <RealMap brief={brief} accent={accent} len={len} /> : <OwnMap brief={brief} accent={accent} len={len} />;
+      case "ownmap": {
+        const Map = brief.own_map?.style === "drone" ? DroneMap : brief.own_map?.style === "real" ? RealMap : OwnMap;
+        return <Map brief={brief} accent={accent} len={len} />;
+      }
       case "arrival": return <Arrival brief={brief} accent={accent} />;
       case "visit": return <Visit brief={brief} />;
       case "price": return <Price brief={brief} accent={accent} />;

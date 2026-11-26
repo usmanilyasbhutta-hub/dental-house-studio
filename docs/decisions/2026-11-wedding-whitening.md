@@ -106,3 +106,11 @@ basic idea in latest version." Review: qc/2026-11-wedding-whitening/review.md.
 - Credits on screen the whole page: "NASA Blue Marble · Contains modified Copernicus Sentinel data (2026) · © OpenStreetMap contributors".
 - OSM leaves the road in front of the clinic unnamed; "Commissioner Road" and the Trauma Centre directly opposite (east side) are the owner's facts.
   Pin from the owner's Google Maps link coordinates (coordinates only, no Google imagery). Owner to confirm the highlighted road is right.
+
+## Round 7 (2026-11-26): 3D drone flight
+- Owner on the v6 real map: "No its not yummy. Cant you make commissioner road video as 3d drone view leading to Dental house?" (T27).
+- `own_map.style: drone` (src/templates/promo/DroneMap.tsx + src/three/realcity.ts): drone flies north up the real Commissioner Road
+  layout (OpenStreetMap street plan) from high above to rooftop height. Clay buildings, trees and rooftop water tanks are procedural.
+  It ends with the Dental House building on the west side ("DENTAL HOUSE" rooftop and facade signs) and the Trauma Centre with a red cross
+  directly opposite, then pin → "Opposite" arc → Trauma Centre card.
+- Chip: "Illustrative 3D · street plan © OpenStreetMap contributors" (buildings are not real models; OSM credit required).
