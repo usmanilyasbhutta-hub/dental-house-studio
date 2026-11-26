@@ -5,6 +5,7 @@ import type { PromoBrief } from "../brief/schema";
 import { promoPages, scenes, sec } from "../brief/timing";
 import { carousel as P, seasons } from "../theme";
 import { Sfx } from "../fx/effects";
+import { OwnMap } from "./promo/OwnMap";
 import { ease, easeInOut, prog } from "./shared/motion";
 import { Shell, type QcProps } from "./shared/Shell";
 
@@ -28,6 +29,7 @@ export const Promo: React.FC<{ brief: PromoBrief } & QcProps> = ({ brief, showSa
       case "value": return <Value brief={brief} />;
       case "offer": return <OfferHero brief={brief} accent={accent} />;
       case "map": return <MapZoom brief={brief} accent={accent} len={len} />;
+      case "ownmap": return <OwnMap brief={brief} accent={accent} len={len} />;
       case "arrival": return <Arrival brief={brief} accent={accent} />;
       case "visit": return <Visit brief={brief} />;
       case "price": return <Price brief={brief} accent={accent} />;
@@ -225,8 +227,8 @@ const SliderHook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
   const dh = dev ? Math.round((DEVICE.w - 2 * DEVICE.inset) / dev.aspect) + 2 * DEVICE.inset : h;
   const belowTop = dev ? DEVICE.top + dh : BAND.top + h;
   // pos = share of the width showing BEFORE, from the left
-  const pos = interpolate(frame, [27, 57, 69, 99], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
-  const handle = interpolate(frame, [20, 27, 99, 108], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const pos = interpolate(frame, [9, 36, 48, 75], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut });
+  const handle = interpolate(frame, [3, 9, 75, 84], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const lines = brief.hook.lines;
   const size = 100;
   const lh = 112;
@@ -256,10 +258,10 @@ const SliderHook: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
           <SliderView before={p.before} after={p.after} w={BAND.w} h={h} pos={pos} handle={handle} chip={chip} labels={p.labels} />
         </div>
       )}
-      <div style={{ ...at(belowTop + 28), ...font(24, 500, P.soft), letterSpacing: "0.1em", textTransform: "uppercase" }}>
-        Real patient · same smile{p.interval ? ` · ${p.interval}` : ""}
+      <div style={{ ...at(belowTop + 30), ...font(30, 700, P.ink), letterSpacing: "0.04em" }}>
+        Real patient{p.interval ? ` · ${p.interval}` : ""}
       </div>
-      <div style={{ ...at(belowTop + 68), ...font(26, 400, P.soft), lineHeight: 1.3 }}>{p.note}</div>
+      <div style={{ ...at(belowTop + 76), width: 850, ...font(30, 400, "#4E5551"), lineHeight: 1.3 }}>{p.note}</div>
     </AbsoluteFill>
   );
 };
@@ -287,7 +289,7 @@ const SliderView: React.FC<{
  * Apple-hardware-inspired frame (owner, Nov 2026): continuous-curvature ("squircle") corners, a thin titanium rim with a top
  * highlight and darker lower edge, a black bezel, and a soft two-layer shadow. One light glint crosses the RIM only (never the photo).
  */
-const DEVICE = { top: 712, left: 56, w: 968, rim: 10, inset: 24, r: 86 };
+const DEVICE = { top: 690, left: 90, w: 850, rim: 10, inset: 24, r: 80 };
 function squircle(w: number, h: number, r: number, n = 4, steps = 16): string {
   // superellipse corners |x|^n + |y|^n = 1 (continuous curvature), as a CSS polygon in px
   const pts: string[] = [];
@@ -453,7 +455,7 @@ const Arrival: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accen
   return (
     <AbsoluteFill style={{ background: "#000" }}>
       <OffthreadVideo src={staticFile(a.video)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 620, background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0) 100%)" }} />
+      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 620, background: "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0) 100%)" }} />
       <div style={{ position: "absolute", left: L, top: 300, opacity: t, transform: `translateY(${(1 - t) * 18}px)` }}>
         {a.step ? <div style={{ ...font(26, 500, "#F1E7D6"), letterSpacing: "0.2em", textTransform: "uppercase", textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}>{a.step}</div> : null}
         <div style={{ ...font(96, 900, "#FFFFFF"), textShadow: "0 6px 24px rgba(0,0,0,0.55)", marginTop: 6 }}>{a.title}</div>
@@ -461,7 +463,7 @@ const Arrival: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accen
       <div style={{ position: "absolute", left: L, top: 1300, width: 940 - L, opacity: c, transform: `translateY(${(1 - c) * 16}px)`,
         background: "rgba(255,255,255,0.96)", borderRadius: 18, padding: "18px 26px", boxShadow: "0 10px 24px rgba(0,0,0,0.3)", borderLeft: `10px solid ${accent}` }}>
         <div style={font(46, 900)}>{a.place}</div>
-        {a.sub ? <div style={{ ...font(28, 400, P.soft), marginTop: 6 }}>{a.sub}</div> : null}
+        {a.sub ? <div style={{ ...font(32, 500, "#4E5551"), marginTop: 6 }}>{a.sub}</div> : null}
       </div>
     </AbsoluteFill>
   );
@@ -502,7 +504,7 @@ const OfferHero: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, acc
       <Fade top={below} delay={20} style={{ display: "flex", alignItems: "baseline", gap: 26, width: 880 }}>
         <span style={font(84, 900)}>{p.now}</span>
         {p.was ? (
-          <span style={font(36, 400, P.soft)}>
+          <span style={font(40, 400, "#4E5551")}>
             {p.was_label}{" "}
             <span style={{ position: "relative" }}>
               {p.was}
@@ -556,7 +558,7 @@ const OfferStack: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, ac
       <Fade top={878} delay={36} style={{ display: "flex", alignItems: "baseline", gap: 24, width: 880 }}>
         <span style={font(76, 900)}>{p.now}</span>
         {p.was ? (
-          <span style={font(36, 400, P.soft)}>
+          <span style={font(40, 400, "#4E5551")}>
             {p.was_label}{" "}
             <span style={{ position: "relative" }}>
               {p.was}
@@ -565,7 +567,7 @@ const OfferStack: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, ac
           </span>
         ) : null}
       </Fade>
-      <Fade top={970} delay={46} style={font(32, 500)}>{[p.extra, `${p.valid_label} ${until}`].filter(Boolean).join(" · ")}</Fade>
+      <Fade top={968} delay={46} style={font(38, 500, P.ink)}>{[p.extra, `${p.valid_label} ${until}`].filter(Boolean).join(" · ")}</Fade>
     </AbsoluteFill>
   );
 };
@@ -767,7 +769,12 @@ const Visit: React.FC<{ brief: PromoBrief }> = ({ brief }) => {
           <circle cx="12" cy="12" r="4" fill={P.paper} />
         </svg>
       </div>
-      <Fade top={1290} delay={22} style={font(32, 400, P.soft)}>{address}</Fade>
+      <Fade top={1290} delay={14} style={font(32, 400, "#4E5551")}>{address}</Fade>
+      {/* who treats you (patient panel: "Doctor kaun hai?"): names and degrees from src/brand.ts */}
+      <Fade top={1350} delay={20} style={{ ...font(30, 700, P.ink), lineHeight: 1.3 }}>
+        {clinic.doctors.map((d) => d.replace(/\s*\(.*\)$/, "")).join(" · ")}
+        <span style={font(30, 400, "#4E5551")}> · BDS, RDS</span>
+      </Fade>
     </AbsoluteFill>
   );
 };
@@ -778,17 +785,17 @@ const End: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent })
   const { fps } = useVideoConfig();
   const kw = brief.whatsapp_keyword;
   const typed = kw ? `“${kw}”` : "";
-  const shown = Math.max(0, Math.min(typed.length, Math.floor((frame - 12) / 3) + 1));
-  const typingDone = frame >= 12 + typed.length * 3;
-  const cursor = !typingDone || Math.floor(frame / 8) % 2 === 0;
-  const bubble = spring({ frame: frame - 36, fps, config: { damping: 11, stiffness: 190 } });
+  const shown = Math.max(0, Math.min(typed.length, Math.floor((frame - 10) / 2) + 1));
+  const typingDone = frame >= 10 + typed.length * 2;
+  const cursor = !typingDone;
+  const bubble = spring({ frame: frame - 26, fps, config: { damping: 11, stiffness: 190 } });
   const address = brief.address === "short" ? clinic.addressShort : clinic.address;
   return (
     <AbsoluteFill>
       {brief.hero ? (
         <Img src={staticFile(brief.hero.src)} style={{ ...at(1380, -40), width: 1160, height: 600, objectFit: "cover", objectPosition: "50% 30%", opacity: 0.18 }} />
       ) : null}
-      {typed.split("").map((_, i) => <Sfx key={i} name="tick" at={12 + i * 3} volume={0.18} />)}
+      {typed.split("").map((_, i) => <Sfx key={i} name="tick" at={10 + i * 2} volume={0.18} />)}
       <Sfx name="pop" at={36} volume={0.4} />
       <Eyebrow text={brief.end.eyebrow} delay={2} />
       <Logo />
@@ -800,7 +807,7 @@ const End: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent })
             {typed.slice(0, shown)}
             {cursor && frame >= 10 ? <span style={{ display: "inline-block", width: 10, height: 170, background: accent, marginLeft: 10, verticalAlign: "-6%" }} /> : null}
           </div>
-          <Hair top={850} width={560} delay={32} color={accent} thick={8} />
+          <Hair top={850} width={560} delay={24} color={accent} thick={8} />
           <div style={{ ...at(500, 720), transform: `scale(${bubble})`, transformOrigin: "0% 100%", background: "#FFFFFF", border: `2px solid ${P.line}`,
             borderRadius: "22px 22px 22px 6px", padding: "14px 22px", boxShadow: "0 10px 24px rgba(51,60,57,0.12)", display: "flex", gap: 12, alignItems: "baseline" }}>
             <span style={font(34, 700)}>{kw}</span>
@@ -808,11 +815,11 @@ const End: React.FC<{ brief: PromoBrief; accent: string }> = ({ brief, accent })
           </div>
         </>
       ) : null}
-      <Fade top={950} delay={42} style={{ ...font(120), letterSpacing: "-0.01em" }}>{clinic.phone.replace("-", " ")}</Fade>
-      <Hair top={1110} delay={46} />
-      <Fade top={1140} delay={48} style={font(46, 900)}>{clinic.name}</Fade>
-      <Fade top={1204} delay={50} style={font(30, 400, P.soft)}>{address}</Fade>
-      {brief.end.disclaimer ? <Fade top={1310} delay={54} style={font(24, 400, P.soft)}>{brief.end.disclaimer}</Fade> : null}
+      <Fade top={950} delay={28} style={{ ...font(120), letterSpacing: "-0.01em" }}>{clinic.phone.replace("-", " ")}</Fade>
+      <Hair top={1110} delay={32} />
+      <Fade top={1140} delay={34} style={font(46, 900)}>{clinic.name}</Fade>
+      <Fade top={1204} delay={36} style={font(32, 400, "#4E5551")}>{address}</Fade>
+      {brief.end.disclaimer ? <Fade top={1300} delay={40} style={font(30, 400, "#4E5551")}>{brief.end.disclaimer}</Fade> : null}
     </AbsoluteFill>
   );
 };

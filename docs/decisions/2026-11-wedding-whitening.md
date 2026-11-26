@@ -78,3 +78,23 @@ Dropped at the owner's direction: the side-by-side page, "What's included" and t
 | Offer page | lockup: *Wedding season* (serif italic 132) / OFFER (250, heaviest) / maroon 30% OFF tag + "teeth whitening" / PKR 21,000 with struck regular / scaling + validity; dupatta-sherwani photo larger | owner (typography); "Offer" chosen by Claude when asked |
 | Location | Google Earth Studio "Zoom To" on 32.5054616, 74.546536 (owner's Maps pin), 1080×1920 @ 30 fps, 4 s → played in 2.5 s; pin + tag + credit overlaid (docs/google-earth-studio.md) | owner: "Google earth studio." |
 | Order | slider → offer → map → meet us here → CTA (17.5 s) | owner |
+
+## Round 5: remake after the 5-agent review (2026-11-26)
+
+Owner: "It was same day before and after treatment pic, pt had implant surgery from somone else, i removed suture after taking
+preop pic. Use own map that can be used. It is allowed to advertise. Use agents recommendations and remake the video keeping
+basic idea in latest version." Review: qc/2026-11-wedding-whitening/review.md.
+
+| Review item | Change |
+|---|---|
+| Google Earth not allowed for promotion (verified on Google's geo guidelines) | Own map: Natural Earth outline (public domain) → our clay-city miniature → Commissioner Road highlighted → pin + Trauma Centre opposite; "Illustrative map · not to scale" chip. Compliance now blocks Google Earth footage in non-demo promos. |
+| Before/after overstated; suture; interval | "Real patient · same day, before & after" + "Camera & light differ · Results vary · Subject to assessment" at 30 px; both photos cropped identically to exclude the suture (another clinic's implant surgery). |
+| "perfect" reads as a promise | Hook: "Shaadi ki photos mein — *brighter* smile?" |
+| Static first second; device under the Reels buttons | Slider starts at 0.3 s; device inside the safe band (x 90–940). |
+| Small text | Notes, offer small print, end disclaimer, card sublines ≥ 30 px, darker. |
+| Map labels/landmark | Labels held ≥ 1 s; steep final camera so the road runs visibly between the clinic pin and the hospital marker; card anchored on the hospital side. |
+| Arrival shot | Slight zoom drops the competitor's sign; "Look for this building." · card "Dental House · in Ahsan Medical Centre · opposite Trauma Centre"; stronger scrim. |
+| "Doctor kaun hai?" | Clinic page shows the doctors' names + BDS, RDS (src/brand.ts). |
+| CTA hold | Faster typing; number on screen ~2.8 s; cursor hidden after typing. |
+| Patient questions | FAQ + pinned comment + paid-boost notes in docs/captions. |
+| Not done (needs the owner) | Written/recorded consent before paid boosting; a doctor clip on camera (no footage yet). |

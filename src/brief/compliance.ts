@@ -38,7 +38,7 @@ function allText(b: Brief): string[] {
     t.push(b.kicker ?? "", b.hook_sub ?? "", b.proof.interval ?? "", b.price.slots ?? "", b.proof.eyebrow, b.proof.title, b.proof.note, b.proof.labels.before, b.proof.labels.after,
       b.value.eyebrow ?? "", b.value.title, ...b.value.points.flatMap((p) => [p.title, p.sub ?? ""]),
       b.price.eyebrow, b.price.service, b.price.now, b.price.was ?? "", b.price.save ?? "", b.price.extra ?? "",
-      b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.map_zoom?.stops.map((x) => x.label) ?? []), b.arrival?.title ?? "", b.arrival?.place ?? "", b.arrival?.sub ?? "", b.map_zoom?.landmark?.title ?? "", b.map_zoom?.landmark?.sub ?? "", ...(b.offer_hook?.lines ?? []), b.offer_hook?.tag ?? "", b.offer_hook?.sub ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
+      b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.map_zoom?.stops.map((x) => x.label) ?? []), b.own_map?.road ?? "", b.own_map?.landmark.title ?? "", b.own_map?.landmark.sub ?? "", b.arrival?.title ?? "", b.arrival?.place ?? "", b.arrival?.sub ?? "", b.map_zoom?.landmark?.title ?? "", b.map_zoom?.landmark?.sub ?? "", ...(b.offer_hook?.lines ?? []), b.offer_hook?.tag ?? "", b.offer_hook?.sub ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
@@ -241,6 +241,12 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       warn("licence", `hero photo source unclear ("${b.hero.source}"): a paid ad needs a licence that covers it`);
     if (b.sequence[0] !== "hook" || b.sequence[b.sequence.length - 1] !== "end") err("sequence", "sequence must start with hook and end with end");
     if (b.sequence.includes("offer") && !b.offer_hook) err("sequence", "the offer page needs offer_hook (its headline)");
+    if (b.sequence.includes("map") && !b.demo)
+      err("licence", 'Google Earth / Earth Studio content "may not be used for any commercial or promotional purposes" (Google geo guidelines): use own_map instead');
+    if (b.sequence.includes("ownmap")) {
+      if (!b.own_map) err("sequence", "the ownmap page needs own_map");
+      else if (!/illustrat|not to scale/i.test(b.own_map.chip)) err("map", 'own map: keep "Illustrative map · not to scale" in the chip');
+    }
     if (b.sequence.includes("map")) {
       if (!b.map_zoom) err("sequence", "the map page needs map_zoom (Google Earth Studio frames)");
       else if (b.map_zoom.pending) warn("map", "Google Earth footage pending: the map page shows a placeholder");
@@ -263,7 +269,7 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       (b.demo ? warn : err)("scarcity", `"${b.price.slots}": slot counts are clinic facts; set slots_confirmed_on with the owner's real number`);
     if (b.slots_confirmed_on && (Date.parse(env.today) - Date.parse(b.slots_confirmed_on)) / 86400000 > 3)
       warn("scarcity", "slot count confirmed more than 3 days ago: check it is still true before posting");
-    if (p.interval && !/\d/.test(p.interval)) warn("proof", `interval "${p.interval}" should be the real time between the photos (e.g. "6 days later")`);
+    if (p.interval && !/\d|same day/i.test(p.interval)) warn("proof", `interval "${p.interval}" should be the real time between the photos (e.g. "6 days later")`);
     if (b.visit && !env.fileExists(`public/${b.visit.photo}`)) err("assets", `missing image public/${b.visit.photo}`);
     if (b.hero && !env.fileExists(`public/${b.hero.src}`)) err("assets", `missing image public/${b.hero.src}`);
   }

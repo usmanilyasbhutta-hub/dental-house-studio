@@ -366,7 +366,7 @@ export type SketchBrief = z.infer<typeof sketchBrief>;
 const eyebrow = line(44);
 export const PROMO_ICONS = ["dentist", "shield", "polish", "tooth", "calendar"] as const;
 /** Pages a promo can play, in the order the brief lists them (hook first, end last). */
-export const PROMO_PAGES = ["hook", "proof", "value", "offer", "map", "arrival", "visit", "price", "end"] as const;
+export const PROMO_PAGES = ["hook", "proof", "value", "offer", "map", "ownmap", "arrival", "visit", "price", "end"] as const;
 export const promoBrief = base.extend({
   type: z.literal("promo"),
   season: z.enum(["none", "wedding"]).default("none"),
@@ -481,6 +481,21 @@ export const promoBrief = base.extend({
       place: line(36),
       sub: line(48).optional(),
       bystanders_checked: z.boolean().default(false),
+    })
+    .optional(),
+  /**
+   * Own, ad-safe location map: Pakistan outline (Natural Earth, public domain) → our clay-city miniature → highlighted road →
+   * clinic pin with a landmark opposite. Labels are owner-given place names only; the chip must say it is illustrative.
+   */
+  own_map: z
+    .object({
+      country: line(20).default("Pakistan"),
+      city: line(20),
+      road: line(28),
+      landmark: z.object({ relation: line(16), title: line(28), sub: line(48).optional() }),
+      chip: line(44).default("Illustrative map · not to scale"),
+      seed: z.number().int().min(1).default(7),
+      seconds: z.number().min(3).max(8).default(4.6),
     })
     .optional(),
   /** Per-page length overrides (s), e.g. { offer: 4, visit: 1.5, end: 3 } to keep the Reel inside its length. */

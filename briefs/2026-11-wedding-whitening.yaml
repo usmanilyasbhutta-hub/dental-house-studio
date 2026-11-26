@@ -14,33 +14,20 @@ music: audio/wedding-celebration.mp3    # original, synthesised by scripts/make_
 label: Wedding season
 kicker: "Sialkot · Brides · Grooms"  # local signal (hook recipe, round 2)
 hook:
-  lines: ["Shaadi ki", "photos mein —", "perfect smile?"]
-  accent: perfect
+  lines: ["Shaadi ki", "photos mein —", "brighter smile?"]
+  accent: brighter            # review: "perfect" read as a promised outcome
 hook_visual: slider     # results first (owner): after smile full width on frame 0, then a before/after slider sweep
-sequence: [hook, offer, map, arrival, visit, end]   # v4 (owner, 2026-11-24): slider → Wedding Season Offer → Google Earth zoom → meet us here → CTA
+sequence: [hook, offer, ownmap, arrival, visit, end]   # v5 (owner 2026-11-26): own map replaces Google Earth (not allowed for promotion)
 offer_hook:                 # "Offer", not "Sale": keeps the clinic's tone, matches the carousel/captions (owner: "you tell me whats best")
   style: stack
   lines: ["Wedding season", "OFFER"]
   tag: 30% OFF
   sub: teeth whitening
-map_zoom:                   # Google Earth Studio render by the owner (2026-11-25): 1080x1920, 30 fps, 121 frames
-  frames: footage/earth/2026-11-wedding-whitening
-  pattern: "dental-house_###.jpeg"
-  count: 121
-  credit: "Imagery: Google Earth"
-  seconds: 4.3               # with the arrival shot the Reel still fits 20 s (owner spec 15–20 s)
-  pin: { x: 50, y: 50 }     # Zoom To centres the target: lands on the grey roof beside the road (checked against the owner's pin)
-  stops:                    # owner: "zoom from pakistan to miniature sialkot in 3d then zoom to commissioner road and then Dental house"
-    - { from: 12, to: 44, label: Pakistan }
-    - { from: 50, to: 82, label: Sialkot }
-    - { from: 86, to: 108, label: Commissioner Road }
-  miniature: { from: 56, to: 80, tilt: 26 }
-  landmark:                 # owner, 2026-11-25: "Directly across trauma centre." Across Commissioner Road = east side of the road in the frame
-    x: 78
-    y: 50
-    relation: Opposite
-    title: Trauma Centre
-    sub: Allama Iqbal Memorial Teaching Hospital
+own_map:                    # own, ad-safe map: Natural Earth outline (public domain) + our clay-city miniature; owner-given names only
+  city: Sialkot
+  road: Commissioner Road
+  landmark: { relation: Opposite, title: Trauma Centre, sub: Allama Iqbal Memorial Teaching Hospital }
+  seconds: 4.6
 hero:
   src: cases/whitening-2026-11/fabric.jpg
   source: "AI-generated in Canva / ChatGPT (owner, 2026-11-11): fabric and props only, no people, no teeth"
@@ -51,12 +38,12 @@ proof:
   before: cases/whitening-2026-11/before.jpg
   after: cases/whitening-2026-11/after.jpg
   labels: { before: Before, after: After }
-  device:                   # same pair, black retractor trimmed identically (12 px left, 60 px right) for the Apple-style frame
-    before: cases/whitening-2026-11/before-trim.jpg
-    after: cases/whitening-2026-11/after-trim.jpg
-    aspect: 1.7119
-  # interval: "6 days later"      # only the REAL time between the two photos (owner to confirm)
-  note: "Lighting differs. Results vary. Subject to assessment."
+  device:                   # same pair, identical crop: black retractor trimmed and the left edge cropped so the suture
+    before: cases/whitening-2026-11/before-crop.jpg   # (another clinic's implant surgery, removed after the pre-op photo) is out of frame
+    after: cases/whitening-2026-11/after-crop.jpg
+    aspect: 1.2564
+  interval: "same day, before & after"   # owner, 2026-11-26: both photos taken the same day, before and after treatment
+  note: "Camera & light differ · Results vary · Subject to assessment"
   consent:
     method: verbal
     taken_on: 2026-11-11          # date the owner confirmed it in chat
@@ -83,11 +70,11 @@ prices_confirmed_on: 2026-11-11   # given by the owner in chat
 arrival:                    # owner's drive-by clip (iPhone, 26 Nov 2026), 50.5–54.0 s, HDR→SDR, 1.17x; only the building in frame
   video: footage/arrival/arrival.mp4
   step: "04"
-  title: Look for this sign.
-  place: Ahsan Medical Centre
-  sub: Opposite Trauma Centre · Commissioner Road
+  title: Look for this building.
+  place: Dental House
+  sub: in Ahsan Medical Centre · opposite Trauma Centre
   bystanders_checked: true    # checked frame by frame: no people, no number plates in the used part
-page_seconds: { offer: 4.0, arrival: 2.7, visit: 1.5, end: 3.0 }
+page_seconds: { hook: 3.6, offer: 3.6, arrival: 2.4, visit: 2.0, end: 3.8 }   # 20 s total (owner spec 15–20 s)
 visit:
   photo: cases/whitening-2026-11/clinic.jpg
   eyebrow: "Your visit · Sialkot"

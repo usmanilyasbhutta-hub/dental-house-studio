@@ -231,7 +231,7 @@ describe("promo brief", () => {
     expect(b.type).toBe("promo");
     expect(errors(b)).toEqual([]);
     expect(durationSeconds(b)).toBeGreaterThanOrEqual(15);
-    expect(durationSeconds(b)).toBeLessThanOrEqual(20);
+    expect(durationSeconds(b)).toBeLessThanOrEqual(20.001); // float sums (e.g. 3.6 + 3.6 + …)
   });
   it("blocks publishing with placeholder photos", () => {
     const b = clone(promo()) as Extract<Brief, { type: "promo" }>;

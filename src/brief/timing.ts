@@ -110,13 +110,13 @@ export function promoPages(b: Extract<Brief, { type: "promo" }>): { page: (typeo
   const s = scenes.promo;
   const slider = b.hook_visual === "slider";
   const short = b.sequence.length <= 4;
-  const withMap = b.sequence.includes("map");
+  const withMap = b.sequence.includes("map") || b.sequence.includes("ownmap");
   const len = {
     hook: slider ? 4.5 : s.hook, proof: slider ? 3 : s.proof, value: s.value, offer: s.offer, map: b.map_zoom?.seconds ?? s.map, price: s.price,
-    visit: withMap ? 2 : short ? 2.5 : s.visit, end: short || withMap ? 4 : s.end, arrival: 3,
+    visit: withMap ? 2 : short ? 2.5 : s.visit, end: short || withMap ? 4 : s.end, arrival: 3, ownmap: b.own_map?.seconds ?? 4.6,
     ...b.page_seconds,
   };
   return b.sequence
-    .filter((p) => (p !== "visit" || b.visit) && (p !== "map" || b.map_zoom) && (p !== "arrival" || b.arrival))
+    .filter((p) => (p !== "visit" || b.visit) && (p !== "map" || b.map_zoom) && (p !== "arrival" || b.arrival) && (p !== "ownmap" || b.own_map))
     .map((page) => ({ page, seconds: len[page] }));
 }
