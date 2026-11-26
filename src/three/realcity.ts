@@ -21,14 +21,27 @@ export const SITE = {
 export const CITY_COLORS = {
   sky: "#EDE6DA", ground: "#E3DACB", road: "#B9B0A2", hero: "#6E6862", line: "#F8F4EC", tree: "#8FB59A", tank: "#3E4744",
 };
-const BUILDING = ["#F4EFE6", "#EDE3D3", "#E9DCC7", "#F1E6D6", "#E2D8CA", "#F6F2EC", "#E7D6C0"];
+const BUILDING = ["#F4EFE6", "#EDE3D3", "#E9DCC7", "#F1E6D6", "#E2D8CA", "#F6F2EC", "#E7D6C0", "#B86F52", "#A4614A", "#C9C6C0", "#DCCBB0"]; // plaster, stone, brick, grey
 
 type Seg = { ax: number; az: number; bx: number; bz: number; hw: number };
 const toXZ = ([x, y]: number[]) => [x, -y] as const;
 
-function colorBox(w: number, h: number, d: number, col: THREE.Color, shade = 0.78) {
+/**
+ * Box with vertex colours and facade UVs: side faces tile one window bay (4 m wide, 3.4 m storey) per texture repeat; the roof and
+ * floor point at the texture's plain wall corner, so a shared window texture only shows on walls.
+ */
+export function colorBox(w: number, h: number, d: number, col: THREE.Color, shade = 0.78, plainWalls = false) {
   const b = new THREE.BoxGeometry(w, h, d).toNonIndexed();
-  b.deleteAttribute("uv");
+  const uv = b.attributes.uv;
+  // BoxGeometry faces in order: +x, -x, +y, -y, +z, -z; 6 vertices each after toNonIndexed
+  for (let f = 0; f < 6; f++) {
+    const span = f < 2 ? d : w;
+    for (let k = 0; k < 6; k++) {
+      const i = f * 6 + k;
+      if (f === 2 || f === 3 || plainWalls) uv.setXY(i, 0.02, 0.02);
+      else uv.setXY(i, uv.getX(i) * Math.max(1, Math.round(span / 4)), uv.getY(i) * Math.max(1, Math.round(h / 3.4)));
+    }
+  }
   b.translate(0, h / 2, 0);
   const pos = b.attributes.position;
   const c = new Float32Array(pos.count * 3);
@@ -114,6 +127,9 @@ export function buildRealCity(seed = 11, radius = 1000) {
   const reserve = (x: number, z: number, w: number, d: number) => placed.push({ x, z, r: Math.hypot(w, d) / 2 });
   reserve(SITE.clinic.x, SITE.clinic.z, SITE.clinic.depth, SITE.clinic.len);
   reserve(SITE.landmark.x, SITE.landmark.z, SITE.landmark.depth, SITE.landmark.len);
+  // keep the view onto the clinic front open: low one-storey shops on the plots just south of it (added below)
+  const LOW = [22, 34, 46, 58].map((z) => ({ x: SITE.clinic.front - 7.5, z }));
+  for (const p of LOW) reserve(p.x, p.z, 14, 11);
   reserve(SITE.landmark.x + SITE.landmark.depth * 0.6, SITE.landmark.z - SITE.landmark.len * 0.5, SITE.landmark.depth * 0.7, SITE.landmark.len * 0.5);
 
   // spatial hash of road segments for the clearance test
@@ -143,14 +159,14 @@ export function buildRealCity(seed = 11, radius = 1000) {
     b.translate(x, 0, z);
     blocks.push(b);
     if (R() < 0.55) { // black rooftop water tank
-      const t = colorBox(1.4, 1.5, 1.4, new THREE.Color(CITY_COLORS.tank), 0.9);
+      const t = colorBox(1.4, 1.5, 1.4, new THREE.Color(CITY_COLORS.tank), 0.9, true);
       t.translate((R() - 0.5) * w * 0.5, h, (R() - 0.5) * d * 0.5);
       t.rotateY(ang);
       t.translate(x, 0, z);
       tanks.push(t);
     }
     if (R() < 0.35) { // parapet / stair room
-      const s = colorBox(w * 0.3, 2.6, d * 0.3, c, 0.85);
+      const s = colorBox(w * 0.3, 2.6, d * 0.3, c, 0.85, true);
       s.translate((R() - 0.5) * w * 0.3, h, (R() - 0.5) * d * 0.3);
       s.rotateY(ang);
       s.translate(x, 0, z);
@@ -158,6 +174,7 @@ export function buildRealCity(seed = 11, radius = 1000) {
     }
   };
 
+  for (const p of LOW) addBuilding(p.x, p.z, 14, 11, 4.2, 0);
   // frontage rows along every road (both sides), denser and taller along the bigger roads
   for (const s of segs) {
     const dx = s.bx - s.ax, dz = s.bz - s.az, L = Math.hypot(dx, dz);
@@ -204,12 +221,9 @@ export function buildRealCity(seed = 11, radius = 1000) {
     }
   }
 
-  // the two named buildings (fronts face the road)
+  // the hospital opposite (the clinic building is modelled in detail in DroneMap)
   const named: THREE.BufferGeometry[] = [];
-  const cl = SITE.clinic, lm = SITE.landmark;
-  const clinicB = colorBox(cl.depth, cl.h, cl.len, new THREE.Color("#F3E9D8"), 0.82); // long side along the road
-  clinicB.translate(cl.x, 0, cl.z);
-  named.push(clinicB);
+  const lm = SITE.landmark;
   const lmB = colorBox(lm.depth, lm.h, lm.len, new THREE.Color("#FBFAF7"), 0.84);
   lmB.translate(lm.x, 0, lm.z);
   named.push(lmB);
@@ -224,7 +238,7 @@ export function buildRealCity(seed = 11, radius = 1000) {
   };
   return {
     roads: mergeGeometries(roads), hero: mergeGeometries(hero), lines: mergeGeometries(lines),
-    blocks: merge([...blocks, ...named]), tanks: merge(tanks), trees: merge(trees),
+    blocks: merge(blocks), tanks: merge(tanks), trees: merge(trees), named: merge(named),
     count: placed.length,
   };
 }

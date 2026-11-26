@@ -114,3 +114,12 @@ basic idea in latest version." Review: qc/2026-11-wedding-whitening/review.md.
   It ends with the Dental House building on the west side ("DENTAL HOUSE" rooftop and facade signs) and the Trauma Centre with a red cross
   directly opposite, then pin → "Opposite" arc → Trauma Centre card.
 - Chip: "Illustrative 3D · street plan © OpenStreetMap contributors" (buildings are not real models; OSM credit required).
+
+## Round 8 (2026-11-26): Earth-to-door drone journey
+- Owner sent a Gemini drone clip: "This kind of drone view. Starting from earth to pakistan to sialkot to commisioner road to Dental house at ahsan medical centre."
+- Built in code, not AI video: correct names, no garbled signs, no Google-Maps-style pin, nothing to license.
+  Sequence: NASA Blue Marble globe with the Pakistan border traced (Natural Earth) → cloud dive → Sentinel-2 Sialkot → blocks rise on the
+  OSM street plan → glowing cyan route down Commissioner Road with cars and green rickshaws → Trauma Centre tagged on the right →
+  our model of the Ahsan Medical Centre front (cream stone, glass, sign band) with the DENTAL HOUSE rooftop sign and a pin at the steps.
+- Timing: map 6.2 s; hook 3.4, offer 3.0, arrival 2.0, visit 1.6, end 3.8 to stay at 20 s.
+- On screen: "Illustrative 3D · © OpenStreetMap contributors · NASA Blue Marble · Contains modified Copernicus Sentinel data (2026)".
