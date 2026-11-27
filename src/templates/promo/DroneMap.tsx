@@ -218,6 +218,26 @@ export function routeGeometry() {
   return { core: new THREE.TubeGeometry(curve, 700, 0.5, 8, false), glow: new THREE.TubeGeometry(curve, 700, 1.6, 8, false) };
 }
 
+/** Real front: the owner's drive-by frame, straightened (public/footage/arrival/facade-rect.jpg, 1160×1990 px). */
+const FACADE = { h: 14, w: 14 * (1160 / 1990) };
+
+/** The clinic building wearing the owner's real, straightened front photo (no invented details), with plain neighbours. */
+export const RealFacadeBuilding: React.FC<{ facade: THREE.Texture }> = ({ facade }) => {
+  const fx = cl.depth / 2;
+  return (
+    <group position={[cl.x, 0, cl.z]}>
+      <mesh castShadow receiveShadow position={[0, FACADE.h / 2 + 0.4, 0]}><boxGeometry args={[cl.depth, FACADE.h + 0.8, FACADE.w]} /><meshStandardMaterial color="#E9DDC4" roughness={0.85} /></mesh>
+      <mesh position={[fx + 0.02, FACADE.h / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[FACADE.w, FACADE.h]} />
+        <meshBasicMaterial map={facade} toneMapped={false} />
+      </mesh>
+      {/* neighbours: south (camera left) brick block, north plain plaster */}
+      <mesh castShadow receiveShadow position={[-0.5, 7.5, FACADE.w / 2 + 4.6]}><boxGeometry args={[cl.depth - 1, 15, 9]} /><meshStandardMaterial color="#9C6A55" roughness={0.9} /></mesh>
+      <mesh castShadow receiveShadow position={[-0.5, 6, -FACADE.w / 2 - 5.1]}><boxGeometry args={[cl.depth - 1, 12, 10]} /><meshStandardMaterial color="#DCCFB8" roughness={0.9} /></mesh>
+    </group>
+  );
+};
+
 export const ClinicModel: React.FC<{ accent: string; signs: boolean; dhSign?: boolean }> = ({ accent, signs, dhSign = true }) => {
   const tex = useMemo(() => signs ? {
     dh: canvasTex(1024, 160, (g) => {

@@ -91,3 +91,11 @@ Result (qc/earth-zoom/ai-test-compare.mp4): camera move, road and building posit
 green rickshaws, sunlight; "AHSAN MEDICAL CENTRE" readable. Problems: AI invented glass entrance doors and a small Urdu sign on the
 ground floor (real: pharmacy with grille + lattice shutter + stairs) → model the real ground floor before the full pass.
 Full 12 s pass needs a top-up: 45 credits at 1080p / 30 at 720p. If used: chip says "AI-assisted", Meta "AI info" label on.
+
+## Real front instead of AI (2026-11-27)
+Owner on the AI test: "No it changed all the buildings including ours, why cant it be same as video but made by code and presented as 3d??"
+(taste T31, firm). AI restyle dropped. The clinic building now wears the owner's own 4K drive-by frame, straightened
+(scripts/make_facade.py), so the 3D front IS the real front: AHSAN MEDICAL CENTRE sign, pharmacy, Urdu boards, shutter, stairs.
+The final camera pose matches the drive-by's first frame → the matched cut is near-invisible. Other buildings stay illustrative
+(no real 3D data for them without Google, which is banned); a phone 3D scan of the street could replace them later.
+Note: the real front includes a board listing other doctors (incl. a BDS); it is unedited, as in the drive-by clip. Owner may ask to blur it.

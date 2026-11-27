@@ -8,7 +8,7 @@ import { carousel as P } from "../theme";
 import type { EarthZoomBrief } from "../brief/schema";
 import { SITE, buildRealCity } from "../three/realcity";
 import geo from "../data/realmap.json";
-import { ClinicModel, Traffic, routeGeometry, useFontReady, useTex, windowTex } from "./promo/DroneMap";
+import { ClinicModel, RealFacadeBuilding, Traffic, routeGeometry, useFontReady, useTex, windowTex } from "./promo/DroneMap";
 import { Shell, type QcProps } from "./shared/Shell";
 
 /**
@@ -51,7 +51,7 @@ function mono(xs: number[], ys: number[]) {
 const smooth = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 // ---------- the one camera path (s = 0..1 over the zoom) -------------------------------------------------------------------------
-const END = { x: rx + 4.5, h: 1.5, z: 2 }; // the drive-by position: mid-road, eye level, moving north, facing the clinic (west)
+const END = { x: rx + 3, h: 1.5, z: 1 }; // the drive-by position: mid-road, eye level, moving north, facing the clinic (west)
 const S = [0, 0.12, 0.3, 0.45, 0.55, 0.64, 0.72, 0.8, 0.88, 0.95, 1];
 const logH = mono(S, [4.6e7, 1.1e7, 8e5, 12000, 1500, 380, 110, 35, 7, 2.4, END.h].map(Math.log10));
 // ground track: slides south while pitching up, then flies north up Commissioner Road and slows to the drive-by speed (~3 m/s)
@@ -180,7 +180,7 @@ function satSampler(tex: THREE.Texture | null, b: number[]) {
   };
 }
 
-const City: React.FC<{ h: number; s: number; time: number; route: number; routeColor: string; signs: boolean; satCity: THREE.Texture | null }> = ({ h, s, time, route, routeColor, signs, satCity }) => {
+const City: React.FC<{ h: number; s: number; time: number; route: number; routeColor: string; signs: boolean; satCity: THREE.Texture | null; facade: THREE.Texture | null }> = ({ h, s, time, route, routeColor, signs, satCity, facade }) => {
   const cityB = geo.pyramid[geo.pyramid.length - 1].bounds;
   const g = useMemo(() => buildRealCity(11, 1100, satSampler(satCity, cityB)), [satCity, cityB]);
   const win = useMemo(() => windowTex(), []);
@@ -207,7 +207,7 @@ const City: React.FC<{ h: number; s: number; time: number; route: number; routeC
         <mesh geometry={g.named} castShadow receiveShadow><meshStandardMaterial vertexColors map={win} roughness={0.85} /></mesh>
         <mesh geometry={g.tanks} castShadow><meshStandardMaterial vertexColors roughness={0.6} /></mesh>
         <mesh geometry={g.trees} castShadow><meshStandardMaterial vertexColors roughness={0.85} flatShading /></mesh>
-        <ClinicModel accent={P.ink} signs={signs} dhSign={false} />
+        {facade ? <RealFacadeBuilding facade={facade} /> : <ClinicModel accent={P.ink} signs={signs} dhSign={false} />}
       </group>
       {rise > 0.95 ? <Traffic time={time} hide={(x, z) => s > 0.82 && Math.abs(x - END.x) < 14 && z > -40 && z < 70} /> : null}
       {route > 0 && routeO > 0 ? (
@@ -234,6 +234,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
   const lv = geo.pyramid.map((l) => l.src);
   const t0 = useTex(lv[0]), t1 = useTex(lv[1]), t2 = useTex(lv[2]), t3 = useTex(lv[3]);
   const sat = [t0, t1, t2, t3];
+  const facade = useTex("footage/arrival/facade-rect.jpg");
 
   // sky: space → blue haze as we come down
   const lh = Math.log10(h);
@@ -269,7 +270,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
               shadow-camera-left={-260} shadow-camera-right={260} shadow-camera-top={260} shadow-camera-bottom={-260}
               shadow-camera-near={10} shadow-camera-far={2000} />
             <Ground h={h} sat={sat} world={world} />
-            <City h={h} s={s} time={frame / fps} route={brief.overlays ? route : 0} routeColor={brief.route_color} signs={signs} satCity={t3} />
+            <City h={h} s={s} time={frame / fps} route={brief.overlays ? route : 0} routeColor={brief.route_color} signs={signs} satCity={t3} facade={facade} />
           </ThreeCanvas>
         ) : null}
       </AbsoluteFill>
