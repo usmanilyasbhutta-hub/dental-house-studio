@@ -269,7 +269,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
               shadow-camera-left={-260} shadow-camera-right={260} shadow-camera-top={260} shadow-camera-bottom={-260}
               shadow-camera-near={10} shadow-camera-far={2000} />
             <Ground h={h} sat={sat} world={world} />
-            <City h={h} s={s} time={frame / fps} route={route} routeColor={brief.route_color} signs={signs} satCity={t3} />
+            <City h={h} s={s} time={frame / fps} route={brief.overlays ? route : 0} routeColor={brief.route_color} signs={signs} satCity={t3} />
           </ThreeCanvas>
         ) : null}
       </AbsoluteFill>
@@ -286,7 +286,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
       ) : null}
 
       {/* Dental House logo pin over Ahsan Medical Centre */}
-      {pinO > 0 && pinP.ok ? (
+      {brief.overlays && pinO > 0 && pinP.ok ? (
         <div style={{ position: "absolute", left: pinP.x, top: pinP.y, opacity: pinO, transform: `translate(-50%, -100%) translateY(${(1 - pinIn) * -140}px) scale(${0.85 + 0.15 * pinIn})`, transformOrigin: "bottom center" }}>
           <svg viewBox="0 0 120 160" style={{ width: 150, height: 200, filter: "drop-shadow(0 12px 14px rgba(0,0,0,0.4))" }}>
             <path d="M60 156 C60 156 112 96 112 56 A52 52 0 0 0 8 56 C8 96 60 156 60 156 Z" fill="#333C39" stroke="#C9AB86" strokeWidth={4} />
@@ -297,7 +297,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
       ) : null}
 
       {/* landmark opposite, small (compliance: landmark only) */}
-      {lmO > 0 && lmP.ok && brief.landmark ? (
+      {brief.overlays && lmO > 0 && lmP.ok && brief.landmark ? (
         <div style={{ position: "absolute", left: Math.min(Math.max(70, lmP.x - 60), 940 - 440), top: Math.max(300, lmP.y - 140), width: 440, opacity: lmO,
           background: "rgba(255,255,255,0.94)", borderRadius: 16, padding: "12px 20px", boxShadow: "0 8px 20px rgba(0,0,0,0.2)" }}>
           <div style={{ fontFamily: P.headline, fontWeight: 700, fontSize: 24, color: P.bronze, letterSpacing: "0.14em", textTransform: "uppercase" }}>{brief.landmark.relation}</div>
@@ -307,7 +307,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
       ) : null}
 
       {/* arrival card: stays through the matched cut */}
-      {cardO > 0 ? (
+      {brief.overlays && cardO > 0 ? (
         <div style={{ position: "absolute", left: 70, top: 300, width: 660, opacity: cardO, transform: `translateY(${(1 - cardO) * 18}px)`,
           background: "#FFFFFF", borderRadius: 20, padding: "20px 28px", boxShadow: "0 12px 28px rgba(0,0,0,0.25)", borderLeft: "12px solid #333C39" }}>
           <div style={{ fontFamily: P.headline, fontWeight: 900, fontSize: 62, color: P.ink, lineHeight: 1 }}>{clinic.name}</div>
@@ -316,11 +316,11 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
       ) : null}
 
       {/* licence credits + honesty chip */}
-      <div style={{ position: "absolute", left: 70, top: 1470, maxWidth: 840, fontFamily: P.headline, fontWeight: 600, fontSize: 24, lineHeight: 1.3,
+      {brief.overlays ? <div style={{ position: "absolute", left: 70, top: 1470, maxWidth: 840, fontFamily: P.headline, fontWeight: 600, fontSize: 24, lineHeight: 1.3,
         color: P.ink, background: "rgba(255,255,255,0.86)", padding: "8px 16px", borderRadius: 14 }}>
         {frame < clipStart ? brief.chip : "Real footage"}
         {creditO > 0 ? <span style={{ opacity: creditO }}> · NASA Blue Marble · Contains modified Copernicus Sentinel data (2026)</span> : null}
-      </div>
+      </div> : null}
     </Shell>
   );
 };

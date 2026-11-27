@@ -530,6 +530,8 @@ export const earthZoomBrief = base.extend({
   landmark: z.object({ relation: line(16), title: line(28), sub: line(48).optional() }).optional(),
   /** Honesty + licence chip (must credit OpenStreetMap). Data credits for NASA / Copernicus are drawn by the template. */
   chip: line(64).default("Illustrative 3D · © OpenStreetMap contributors"),
+  /** false = clean plate (no pin, cards, chips, route) for an AI restyle pass; overlays are added back on top afterwards. */
+  overlays: z.boolean().default(true),
 });
 export type EarthZoomBrief = z.infer<typeof earthZoomBrief>;
 

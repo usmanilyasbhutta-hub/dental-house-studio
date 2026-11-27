@@ -83,3 +83,11 @@ emeg ency and trauma centre."
 - Route: blue navigation-style glow (owner's call over the brand reviewer's bronze; no Google logos or pin shapes).
 - Sound: light (soft air + distant street ambience, generated).
 - Landmark: "Allama Iqbal Memorial Teaching Hospital Emergency and Trauma Centre". "C. Implant" removed from brand.ts.
+
+## Photoreal test (2026-11-27)
+Owner: "No i want it more photoreal form." → chose "Test first". Kling 4.0 video edit, 720p, 3 s of the clean code plate
+(street approach → Ahsan Medical Centre front) + the owner's drive-by frame as reference. Cost 9 credits (quoted; balance 17.5 → 8.5).
+Result (qc/earth-zoom/ai-test-compare.mp4): camera move, road and building positions kept; photoreal plaster/brick, trees, cars,
+green rickshaws, sunlight; "AHSAN MEDICAL CENTRE" readable. Problems: AI invented glass entrance doors and a small Urdu sign on the
+ground floor (real: pharmacy with grille + lattice shutter + stairs) → model the real ground floor before the full pass.
+Full 12 s pass needs a top-up: 45 credits at 1080p / 30 at 720p. If used: chip says "AI-assisted", Meta "AI info" label on.
