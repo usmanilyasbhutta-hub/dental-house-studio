@@ -280,7 +280,9 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const zoomFrames = Math.round(brief.seconds * fps);
-  const s = Math.min(1, frame / (zoomFrames - 1));
+  const s0 = Math.min(1, frame / (zoomFrames - 1));
+  // "sialkot" start = the same single camera path, entered at ~18 km straight above the city (satellite only)
+  const s = brief.start === "sialkot" ? 0.43 + 0.57 * s0 : s0;
   const { cam, h } = camAt(s);
   const signs = useFontReady();
   const world = useTex("footage/realmap/world.jpg");

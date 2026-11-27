@@ -521,7 +521,9 @@ export type PromoBrief = z.infer<typeof promoBrief>;
  */
 export const earthZoomBrief = base.extend({
   type: z.literal("earth-zoom"),
-  seconds: z.number().min(8).max(16).default(12),
+  seconds: z.number().min(5).max(16).default(12),
+  /** Where the move starts: the whole Earth, or high over Sialkot (owner: "Leave from earth, only sialkot would suffice"). */
+  start: z.enum(["earth", "sialkot"]).default("earth"),
   /** First frame of the owner's drive-by clip: the zoom lands exactly on it (matched cut). */
   end_frame: publicAsset.optional(),
   /** If end_frame is a video: how much of it plays after the cut (s). */
