@@ -40,9 +40,14 @@ export function useTex(src: string) {
       t.colorSpace = THREE.SRGBColorSpace;
       t.anisotropy = 8;
       setTex(t);
-      continueRender(h);
     }, undefined, () => continueRender(h));
   }, [src, h]);
+  // release the frame only after React has applied the texture and the 3D canvas has had two frames to draw it
+  useEffect(() => {
+    if (!tex) return;
+    let id = requestAnimationFrame(() => { id = requestAnimationFrame(() => continueRender(h)); });
+    return () => cancelAnimationFrame(id);
+  }, [tex, h]);
   return tex;
 }
 
@@ -219,7 +224,7 @@ export function routeGeometry() {
 }
 
 /** Real front: the owner's drive-by frame, straightened (public/footage/arrival/facade-rect.jpg, 1160×1990 px). */
-const FACADE = { h: 14, w: 14 * (1160 / 1990) };
+export const FACADE = { h: 14, w: 14 * (1160 / 1990) };
 
 /** The clinic building wearing the owner's real, straightened front photo (no invented details), with plain neighbours. */
 export const RealFacadeBuilding: React.FC<{ facade: THREE.Texture }> = ({ facade }) => {

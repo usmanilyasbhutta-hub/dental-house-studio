@@ -17,3 +17,6 @@ end_clip_seconds: 2.6
 route_color: "#3FA9FF"                    # owner: "As google navigation" (blue glow; no Google marks)
 landmark: { relation: Opposite, title: Emergency and Trauma Centre, sub: Allama Iqbal Memorial Teaching Hospital }
 chip: "Illustrative 3D · © OpenStreetMap contributors"
+highlight_doctors:                       # owner 2026-11-27: "Highlight me and dr ayesha usman" (their panels on the building's board)
+  - { panel: usman, name: Dr. Usman Ilyas Bhutta, role: Dental Surgeon }
+  - { panel: ayesha, name: Dr. Ayesha Usman, role: Dental Surgeon }

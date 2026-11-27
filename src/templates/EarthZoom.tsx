@@ -8,7 +8,8 @@ import { carousel as P } from "../theme";
 import type { EarthZoomBrief } from "../brief/schema";
 import { SITE, buildRealCity } from "../three/realcity";
 import geo from "../data/realmap.json";
-import { ClinicModel, RealFacadeBuilding, Traffic, routeGeometry, useFontReady, useTex, windowTex } from "./promo/DroneMap";
+import track from "../data/panels-track.json";
+import { ClinicModel, FACADE, RealFacadeBuilding, Traffic, routeGeometry, useFontReady, useTex, windowTex } from "./promo/DroneMap";
 import { Shell, type QcProps } from "./shared/Shell";
 
 /**
@@ -220,6 +221,58 @@ const City: React.FC<{ h: number; s: number; time: number; route: number; routeC
   );
 };
 
+// ---------- doctors' board highlight ------------------------------------------------------------------------------------------------
+/** panel corners on the straightened front (UV of facade-rect.jpg), see scripts/track_panels.py */
+const PANEL_UV: Record<"usman" | "ayesha", number[][]> = {
+  ayesha: [[0.0691, 0.5659], [0.1274, 0.5667], [0.132, 0.6066], [0.074, 0.6058]],
+  usman: [[0.1274, 0.5667], [0.1868, 0.5675], [0.1911, 0.6074], [0.132, 0.6066]],
+};
+const panelWorld = (u: number, v: number) => new THREE.Vector3(cl.front + 0.06, FACADE.h * (1 - v), cl.z + FACADE.w / 2 - u * FACADE.w);
+type Pt = { x: number; y: number };
+const GLOW = "#FFC94D";
+
+const Highlights: React.FC<{ docs: EarthZoomBrief["highlight_doctors"]; polys: Partial<Record<"usman" | "ayesha", Pt[]>>; o: number; lines: number; pulse: number }> = ({ docs, polys, o, lines, pulse }) => {
+  if (o <= 0 || !docs.length) return null;
+  // cards side by side above the board, ordered like the panels (left panel → left card) so the lines never cross
+  const order = [...docs].sort((a, b) => (polys[a.panel]?.[0].x ?? 0) - (polys[b.panel]?.[0].x ?? 0));
+  const cardW = 445, gap = 26, top = 600, cardH = 104;
+  const cardX = (i: number) => 70 + i * (cardW + gap);
+  return (
+    <AbsoluteFill style={{ opacity: o }}>
+      <svg width={W} height={H} style={{ position: "absolute", inset: 0 }}>
+        <defs><filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation={8 + 5 * pulse} /></filter></defs>
+        {order.map((d, i) => {
+          const p = polys[d.panel];
+          if (!p) return null;
+          const pts = p.map((q) => `${q.x},${q.y}`).join(" ");
+          const tip = { x: (p[0].x + p[1].x) / 2, y: Math.min(p[0].y, p[1].y) - 6 };
+          const visible = tip.x > -20 && tip.x < W + 20;
+          const from = { x: cardX(i) + cardW / 2, y: top + cardH };
+          return (
+            <g key={d.panel}>
+              <polygon points={pts} fill={`rgba(255,201,77,${0.22 + 0.12 * pulse})`} stroke={GLOW} strokeWidth={14} filter="url(#glow)" />
+              <polygon points={pts} fill="none" stroke={GLOW} strokeWidth={5} strokeLinejoin="round" />
+              {visible ? (
+                <g opacity={lines}>
+                  <path d={`M ${from.x} ${from.y} C ${from.x} ${from.y + 60}, ${tip.x} ${tip.y - 70}, ${tip.x} ${tip.y}`} fill="none" stroke={GLOW} strokeWidth={5} strokeLinecap="round" />
+                  <circle cx={tip.x} cy={tip.y} r={8} fill={GLOW} />
+                </g>
+              ) : null}
+            </g>
+          );
+        })}
+      </svg>
+      {order.map((d, i) => (
+        <div key={d.panel} style={{ position: "absolute", left: cardX(i), top, width: cardW, height: cardH, boxSizing: "border-box", background: "rgba(255,255,255,0.97)",
+          borderRadius: 18, padding: "14px 20px", boxShadow: "0 10px 24px rgba(0,0,0,0.25)", borderBottom: `8px solid ${GLOW}` }}>
+          <div style={{ fontFamily: P.headline, fontWeight: 900, fontSize: 34, color: P.ink, lineHeight: 1.05, whiteSpace: "nowrap" }}>{d.name}</div>
+          <div style={{ fontFamily: P.headline, fontWeight: 600, fontSize: 24, color: "#6B5A2A", marginTop: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>{d.role}</div>
+        </div>
+      ))}
+    </AbsoluteFill>
+  );
+};
+
 // ---------- page -------------------------------------------------------------------------------------------------------------------
 const lerpColor = (a: string, b: string, t: number) => "#" + new THREE.Color(a).lerp(new THREE.Color(b), t).getHexString();
 
@@ -253,6 +306,16 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
   const cardO = interpolate(frame, [Math.round(0.91 * zoomFrames), Math.round(0.95 * zoomFrames)], [0, 1], clamp);
   const creditO = interpolate(s, [0, 0.04, 0.7, 0.76], [0, 1, 1, 0], clamp);
   const clipStart = zoomFrames;
+  // doctors' panels: projected on the 3D front during the approach, tracked in the real clip after the cut
+  const polys: Partial<Record<"usman" | "ayesha", Pt[]>> = {};
+  if (frame < clipStart) {
+    for (const k of ["usman", "ayesha"] as const) polys[k] = PANEL_UV[k].map(([u, v]) => project(cam, panelWorld(u, v)));
+  } else {
+    const tf = track.frames[Math.min(track.frames.length - 1, frame - clipStart)] as Record<string, unknown>;
+    if (tf?.ok) for (const k of ["usman", "ayesha"] as const) polys[k] = (tf[k] as number[][]).map(([x, y]) => ({ x: (x / track.width) * W, y: (y / track.height) * H }));
+  }
+  const hlO = interpolate(s, [0.9, 0.95], [0, 1], clamp);
+  const hlLines = frame >= clipStart ? interpolate(frame - clipStart, [40, 60], [1, 0], clamp) : 1;
 
   return (
     <Shell brief={brief} endSeconds={0} chrome="none" backdrop={false} end={<></>} showSafeZones={showSafeZones}>
@@ -315,6 +378,8 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
           <div style={{ fontFamily: P.headline, fontWeight: 500, fontSize: 32, color: "#4E5551", marginTop: 10 }}>in {clinic.addressShort}</div>
         </div>
       ) : null}
+
+      {brief.overlays ? <Highlights docs={brief.highlight_doctors} polys={polys} o={hlO} lines={hlLines} pulse={0.5 + 0.5 * Math.sin(frame / 5)} /> : null}
 
       {/* licence credits + honesty chip */}
       {brief.overlays ? <div style={{ position: "absolute", left: 70, top: 1470, maxWidth: 840, fontFamily: P.headline, fontWeight: 600, fontSize: 24, lineHeight: 1.3,

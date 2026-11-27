@@ -530,6 +530,8 @@ export const earthZoomBrief = base.extend({
   landmark: z.object({ relation: line(16), title: line(28), sub: line(48).optional() }).optional(),
   /** Honesty + licence chip (must credit OpenStreetMap). Data credits for NASA / Copernicus are drawn by the template. */
   chip: line(64).default("Illustrative 3D · © OpenStreetMap contributors"),
+  /** Doctors to highlight on the building's doctors' board (panel ids from scripts/track_panels.py); names as the owner gives them. */
+  highlight_doctors: z.array(z.object({ panel: z.enum(["usman", "ayesha"]), name: line(32), role: line(24).default("Dental Surgeon") })).max(2).default([]),
   /** false = clean plate (no pin, cards, chips, route) for an AI restyle pass; overlays are added back on top afterwards. */
   overlays: z.boolean().default(true),
 });

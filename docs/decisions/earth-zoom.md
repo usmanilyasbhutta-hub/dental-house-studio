@@ -99,3 +99,10 @@ Owner on the AI test: "No it changed all the buildings including ours, why cant 
 The final camera pose matches the drive-by's first frame → the matched cut is near-invisible. Other buildings stay illustrative
 (no real 3D data for them without Google, which is banned); a phone 3D scan of the street could replace them later.
 Note: the real front includes a board listing other doctors (incl. a BDS); it is unedited, as in the drive-by clip. Owner may ask to blur it.
+
+## Doctors highlighted (2026-11-27)
+Owner: "Highlight me and dr ayesha usman". The building's board (Urdu) has four panels: cardiologist; Dental Surgeon Dr. Ayesha Usman;
+Dental Surgeon Dr. Usman Ilyas; aesthetic physician. Their two panels glow (warm gold, gentle pulse) and two name cards
+(Dr. Usman Ilyas Bhutta · Dr. Ayesha Usman, "Dental Surgeon") connect to them by lines: projected on the 3D front during the approach,
+then SIFT-tracked through the real drive-by (scripts/track_panels.py → src/data/panels-track.json, 80/80 frames).
+Open: src/brand.ts lists "Dr. Ayesha Sarfraz"; the board and the owner say "Dr. Ayesha Usman" → owner to confirm which name the brand uses.
