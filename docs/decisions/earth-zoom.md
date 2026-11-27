@@ -105,4 +105,5 @@ Owner: "Highlight me and dr ayesha usman". The building's board (Urdu) has four 
 Dental Surgeon Dr. Usman Ilyas; aesthetic physician. Their two panels glow (warm gold, gentle pulse) and two name cards
 (Dr. Usman Ilyas Bhutta · Dr. Ayesha Usman, "Dental Surgeon") connect to them by lines: projected on the 3D front during the approach,
 then SIFT-tracked through the real drive-by (scripts/track_panels.py → src/data/panels-track.json, 80/80 frames).
-Open: src/brand.ts lists "Dr. Ayesha Sarfraz"; the board and the owner say "Dr. Ayesha Usman" → owner to confirm which name the brand uses.
+Owner: "Use ayesha sarfraz every where but in this pic highlight the ayesha usman one" → all our text says "Dr. Ayesha Sarfraz" (brand.ts);
+the glow still marks her real board panel, which is painted "Ayesha Usman".

@@ -19,4 +19,4 @@ landmark: { relation: Opposite, title: Emergency and Trauma Centre, sub: Allama 
 chip: "Illustrative 3D · © OpenStreetMap contributors"
 highlight_doctors:                       # owner 2026-11-27: "Highlight me and dr ayesha usman" (their panels on the building's board)
   - { panel: usman, name: Dr. Usman Ilyas Bhutta, role: Dental Surgeon }
-  - { panel: ayesha, name: Dr. Ayesha Usman, role: Dental Surgeon }
+  - { panel: ayesha, name: Dr. Ayesha Sarfraz, role: Dental Surgeon }   # owner: name card says Sarfraz; the glow marks her board panel (painted "Ayesha Usman")
