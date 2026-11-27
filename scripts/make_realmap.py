@@ -177,5 +177,109 @@ def main():
     print("road points", len(road), "road x at pin", near)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and "--pyramid" not in sys.argv:
     main()
+
+
+# ---- earth zoom pyramid (owner T28: one continuous zoom; every level colour-matched into one family) -------------------------
+def stac_items(bbox, start="2026-10-01", end="2026-11-25", cloud=5):
+    import urllib.request
+    body = json.dumps({"collections": ["sentinel-2-l2a"], "bbox": bbox, "datetime": f"{start}T00:00:00Z/{end}T23:59:59Z",
+                       "query": {"eo:cloud_cover": {"lt": cloud}}, "limit": 200}).encode()
+    req = urllib.request.Request("https://earth-search.aws.element84.com/v1/search", data=body, headers={"Content-Type": "application/json"})
+    feats = json.load(urllib.request.urlopen(req))["features"]
+    # newest first, fuller tiles first
+    # the 22 Nov 2026 pass first (same pass as s2-wide/s2-city), then newest clear scenes to fill holes
+    feats.sort(key=lambda f: (f["properties"]["datetime"][:10] == S2_DATE, f["properties"]["datetime"][:10],
+                              -f["properties"].get("s2:nodata_pixel_percentage", 0)), reverse=True)
+    return feats
+
+
+def s2_mosaic(half_m: float, res: float, name: str, overview: int):
+    """Sentinel-2 true colour over a large square, read from COG overviews, holes filled by older clear scenes, each scene
+    colour-matched to what is already in the mosaic."""
+    import rasterio
+    from rasterio.warp import reproject, transform, Resampling
+    from rasterio.transform import from_origin
+    dlat, dlon = half_m / KY, half_m / KX
+    feats = stac_items([LON0 - dlon, LAT0 - dlat, LON0 + dlon, LAT0 + dlat])
+    n = int(round(2 * half_m / res))
+    dst = np.zeros((3, n, n), np.float32)
+    env = dict(GDAL_HTTP_MERGE_CONSECUTIVE_RANGES="YES", CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif", CURL_CA_BUNDLE="/root/.ccr/ca-bundle.crt",
+               GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR")
+    crs = "EPSG:32643"
+    xs, ys = transform("EPSG:4326", crs, [LON0], [LAT0])
+    dt = from_origin(xs[0] - half_m, ys[0] + half_m, res, res)
+    with rasterio.Env(**env):
+        for f in feats:
+            if (dst.sum(0) == 0).mean() < 0.002:
+                break
+            url = f["assets"]["visual"]["href"]
+            try:
+                src = rasterio.open("/vsicurl/" + url, overview_level=overview)
+            except Exception as e:  # noqa: BLE001
+                print("skip", f["id"], e); continue
+            with src:
+                part = np.zeros((3, n, n), np.float32)
+                for b in range(3):
+                    reproject(rasterio.band(src, b + 1), part[b], dst_transform=dt, dst_crs=crs, resampling=Resampling.average,
+                              src_nodata=0, dst_nodata=0)
+            have, new = dst.sum(0) > 0, part.sum(0) > 0
+            both = have & new
+            if both.sum() > 500:
+                for b in range(3):
+                    a, c = np.polyfit(part[b][both], dst[b][both], 1)
+                    part[b] = np.where(new, np.clip(a * part[b] + c, 1, 255), 0)
+            hole = ~have & new
+            dst[:, hole] = part[:, hole]
+            print(f["id"], "filled", int(hole.sum()), "left", int((dst.sum(0) == 0).sum()))
+    img = Image.fromarray(np.moveaxis(dst.clip(0, 255).astype(np.uint8), 0, -1))
+    img.save(OUT / name, quality=92)
+    return {"src": f"footage/realmap/{name}", "bounds": [-half_m, -half_m, half_m, half_m]}
+
+
+def match_to(img: Image.Image, ref: Image.Image, k: float = 0.6) -> Image.Image:
+    """Pull img's average colour part of the way (k) towards ref's over the same ground: per-channel gain in linear light.
+    (Gentle on purpose: full statistics transfer compounded into colour casts along the chain.)"""
+    a = (np.asarray(img.convert("RGB")).astype(np.float32) / 255) ** 2.2
+    r = (np.asarray(ref.convert("RGB").resize(img.size)).astype(np.float32) / 255) ** 2.2
+    gain = (r.reshape(-1, 3).mean(0) / np.maximum(a.reshape(-1, 3).mean(0), 1e-4)) ** k
+    out = np.clip(a * gain, 0, 1) ** (1 / 2.2) * 255
+    return Image.fromarray(out.astype(np.uint8))
+
+
+def crop_bounds(img: Image.Image, bounds, want):
+    """crop the part of img (covering `bounds` in local metres) that covers `want`"""
+    x0, y0, x1, y1 = bounds
+    W, H = img.size
+    px = lambda x: (x - x0) / (x1 - x0) * W
+    py = lambda y: (y1 - y) / (y1 - y0) * H
+    return img.crop((int(px(want[0])), int(py(want[3])), int(px(want[2])), int(py(want[1]))))
+
+
+def pyramid():
+    """earth-zoom levels: globe (world.jpg) → pakistan.jpg → s2-160 (160 km) → s2-wide (60 km) → s2-city (12.4 km), every finer level
+    Lab-matched to the coarser one over the same ground so the whole zoom reads as one picture."""
+    data = json.loads((ROOT / "src/data/realmap.json").read_text())
+    L = data["layers"]
+    L["s2_160"] = s2_mosaic(80000, 160, "s2-160.jpg", overview=2)
+    pk = Image.open(OUT / "pakistan.jpg")
+    chain = [("pakistan.jpg", L["bluemarble"]["bounds"]), ("s2-160.jpg", L["s2_160"]["bounds"]),
+             ("s2-wide.jpg", L["s2wide"]["bounds"]), ("s2-city.jpg", L["s2city"]["bounds"])]
+    (OUT / "matched").mkdir(exist_ok=True)
+    pk.save(OUT / "matched/pakistan.jpg", quality=92)
+    prev_img, prev_b = pk, chain[0][1]
+    for name, b in chain[1:]:
+        img = Image.open(OUT / name)
+        ref = crop_bounds(prev_img, prev_b, b)
+        m = match_to(img, ref)
+        m.save(OUT / f"matched/{name}", quality=92)
+        print("matched", name)
+        prev_img, prev_b = m, b
+    data["layers"] = L
+    data["pyramid"] = [{"src": f"footage/realmap/matched/{n}", "bounds": b} for n, b in chain]
+    (ROOT / "src/data/realmap.json").write_text(json.dumps(data, indent=1))
+
+
+if __name__ == "__main__" and "--pyramid" in sys.argv:
+    pyramid()

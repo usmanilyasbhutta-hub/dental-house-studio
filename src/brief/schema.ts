@@ -513,7 +513,27 @@ export const promoBrief = base.extend({
 });
 export type PromoBrief = z.infer<typeof promoBrief>;
 
-export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, promoBrief]);
+/**
+ * Earth → clinic: ONE continuous camera move from orbit to the clinic door in one 3D world built from open data
+ * (NASA Blue Marble, Copernicus Sentinel-2, OpenStreetMap street plan; scripts/make_realmap.py). Buildings are illustrative;
+ * the last frame is the owner's own drive-by frame (`end_frame`) so the Reel can match-cut into the real clip.
+ * Owner rules T28/T29: no place labels on the way down, logo pin at Ahsan Medical Centre, navigation-blue route, light sound.
+ */
+export const earthZoomBrief = base.extend({
+  type: z.literal("earth-zoom"),
+  seconds: z.number().min(8).max(16).default(12),
+  /** First frame of the owner's drive-by clip: the zoom lands exactly on it (matched cut). */
+  end_frame: publicAsset.optional(),
+  /** If end_frame is a video: how much of it plays after the cut (s). */
+  end_clip_seconds: z.number().min(0).max(6).default(2.6),
+  route_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default("#3FA9FF"),
+  landmark: z.object({ relation: line(16), title: line(28), sub: line(48).optional() }).optional(),
+  /** Honesty + licence chip (must credit OpenStreetMap). Data credits for NASA / Copernicus are drawn by the template. */
+  chip: line(64).default("Illustrative 3D · © OpenStreetMap contributors"),
+});
+export type EarthZoomBrief = z.infer<typeof earthZoomBrief>;
+
+export const brief = z.discriminatedUnion("type", [offerBrief, educationBrief, caseBrief, talkingHeadBrief, procedureBrief, photoLayoutBrief, anatomyMapBrief, mapRouteBrief, blueprintBrief, receiptBrief, sketchBrief, promoBrief, earthZoomBrief]);
 export type TalkingHeadBrief = z.infer<typeof talkingHeadBrief>;
 
 /** Kept source ranges, in order. */

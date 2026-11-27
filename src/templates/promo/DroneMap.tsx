@@ -32,7 +32,7 @@ const font = (size: number, weight = 900, color: string = P.ink): React.CSSPrope
 });
 
 /** texture that holds the render until it has loaded (Remotion must not capture a frame without it) */
-function useTex(src: string) {
+export function useTex(src: string) {
   const [tex, setTex] = useState<THREE.Texture | null>(null);
   const [h] = useState(() => delayRender(`texture ${src}`));
   useEffect(() => {
@@ -125,7 +125,7 @@ function project(c: THREE.Camera, p: THREE.Vector3) {
   return { x: ((q.x + 1) / 2) * W, y: ((1 - q.y) / 2) * H, behind: q.z > 1 };
 }
 
-function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void, repeat = false) {
+export function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void, repeat = false) {
   const cv = document.createElement("canvas");
   cv.width = w; cv.height = h;
   draw(cv.getContext("2d")!);
@@ -136,7 +136,7 @@ function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => 
   return t;
 }
 /** one window bay: plain wall around a glass pane (the texture's corner stays plain for roofs) */
-const windowTex = () => canvasTex(128, 128, (g) => {
+export const windowTex = () => canvasTex(128, 128, (g) => {
   g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, 128, 128);
   const gr = g.createLinearGradient(0, 30, 0, 98);
   gr.addColorStop(0, "#9DB3BF"); gr.addColorStop(0.45, "#5C717D"); gr.addColorStop(1, "#3D4D57");
@@ -147,7 +147,7 @@ const windowTex = () => canvasTex(128, 128, (g) => {
 }, true);
 
 type Lane = { pts: THREE.Vector2[]; cum: number[]; len: number; off: number };
-function lanes(): Lane[] {
+export function lanes(): Lane[] {
   const out: Lane[] = [];
   for (const w of net.ways) {
     if (!["primary", "secondary", "tertiary"].includes(w.hw)) continue;
@@ -159,7 +159,7 @@ function lanes(): Lane[] {
   }
   return out;
 }
-function along(l: Lane, s: number) {
+export function along(l: Lane, s: number) {
   s = ((s % l.len) + l.len) % l.len;
   let i = 1;
   while (i < l.cum.length - 1 && l.cum[i] < s) i++;
@@ -167,7 +167,7 @@ function along(l: Lane, s: number) {
   return { p: a.clone().lerp(b, k), d: b.clone().sub(a).normalize() };
 }
 
-const Traffic: React.FC<{ time: number }> = ({ time }) => {
+export const Traffic: React.FC<{ time: number; hide?: (x: number, z: number) => boolean }> = ({ time, hide }) => {
   const data = useMemo(() => {
     const L = lanes();
     let s = 3;
@@ -200,6 +200,7 @@ const Traffic: React.FC<{ time: number }> = ({ time }) => {
     const dir = d.clone().multiplyScalar(c.dir);
     const left = new THREE.Vector2(dir.y, -dir.x); // drive on the left
     o.position.set(p.x + left.x * c.lane.off, 0.05, p.y + left.y * c.lane.off);
+    o.scale.setScalar(hide && hide(o.position.x, o.position.z) ? 0.0001 : 1);
     o.rotation.set(0, -Math.atan2(dir.y, dir.x), 0);
     o.updateMatrix();
     data.meshes[c.kind].setMatrixAt(idx[c.kind]++, o.matrix);
@@ -209,7 +210,7 @@ const Traffic: React.FC<{ time: number }> = ({ time }) => {
 };
 
 /** route line: northbound lane of Commissioner Road, then into the clinic forecourt */
-function routeGeometry() {
+export function routeGeometry() {
   const road = heroRoad().filter((p) => p.z > 6 && p.z < 1150);
   const pts = road.map((p) => v(p.x - 3.4, 0.35, p.z));
   pts.push(v(rx - 3.4, 0.35, 6), v(rx - 7.5, 0.35, 2.5), v(cl.front + 2.2, 0.35, 1));
@@ -217,45 +218,53 @@ function routeGeometry() {
   return { core: new THREE.TubeGeometry(curve, 700, 0.5, 8, false), glow: new THREE.TubeGeometry(curve, 700, 1.6, 8, false) };
 }
 
-const ClinicModel: React.FC<{ accent: string; signs: boolean }> = ({ accent, signs }) => {
+export const ClinicModel: React.FC<{ accent: string; signs: boolean; dhSign?: boolean }> = ({ accent, signs, dhSign = true }) => {
   const tex = useMemo(() => signs ? {
     dh: canvasTex(1024, 160, (g) => {
       g.fillStyle = accent; g.fillRect(0, 0, 1024, 160);
       g.fillStyle = "#FFFFFF"; g.font = "900 110px Roboto"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("DENTAL HOUSE", 512, 86);
     }),
     amc: canvasTex(1024, 96, (g) => {
-      g.fillStyle = "#EFE6D4"; g.fillRect(0, 0, 1024, 96);
-      g.fillStyle = "#2B2A27"; g.font = "900 64px Roboto"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("AHSAN MEDICAL CENTRE", 512, 52);
+      g.fillStyle = "#E9D9B4"; g.fillRect(0, 0, 1024, 96);
+      g.fillStyle = "#2B2A27"; g.font = "900 70px Roboto"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("AHSAN MEDICAL CENTRE", 512, 52);
     }),
   } : null, [accent, signs]);
   const fx = cl.depth / 2; // local x of the front face
-  const cream = "#E7DCC6";
+  const cream = "#EAD7AE"; // sandstone, matched to the drive-by footage
+  const glass = useMemo(() => canvasTex(256, 512, (g) => {
+    const gr = g.createLinearGradient(0, 0, 256, 512);
+    gr.addColorStop(0, "#8FB5BC"); gr.addColorStop(0.5, "#5F8C95"); gr.addColorStop(1, "#4A7680");
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 512);
+    g.fillStyle = "#C9D3CF";
+    for (let x = 0; x <= 256; x += 64) g.fillRect(Math.min(x, 250), 0, 6, 512);
+    for (let y = 0; y <= 512; y += 85) g.fillRect(0, Math.min(y, 506), 256, 6);
+  }), []);
   return (
     <group position={[cl.x, 0, cl.z]}>
       <mesh castShadow receiveShadow position={[0, 8, 0]}><boxGeometry args={[cl.depth, 16, cl.len]} /><meshStandardMaterial color={cream} roughness={0.8} /></mesh>
       {/* ground floor: shutters, entrance, steps */}
-      <mesh position={[fx + 0.12, 1.7, -3]}><boxGeometry args={[0.24, 3.2, 17]} /><meshStandardMaterial color="#5A5E60" roughness={0.6} metalness={0.3} /></mesh>
+      <mesh position={[fx + 0.12, 1.7, -3]}><boxGeometry args={[0.24, 3.2, 17]} /><meshStandardMaterial color="#B9B3A6" roughness={0.6} metalness={0.2} /></mesh>
       <mesh position={[fx + 0.14, 1.6, 8]}><boxGeometry args={[0.26, 3.0, 4.4]} /><meshStandardMaterial color="#2A2C2D" /></mesh>
       {[0, 1, 2].map((i) => (
         <mesh key={i} receiveShadow position={[fx + 1.6 - i * 0.45, 0.18 + i * 0.3, 8]}><boxGeometry args={[0.9, 0.36 + i * 0.6, 5]} /><meshStandardMaterial color="#D8CFBE" /></mesh>
       ))}
       {/* pilasters, glass, cornice */}
       {[-12.4, -4.2, 4.2, 12.4].map((z) => (
-        <mesh key={z} castShadow position={[fx + 0.3, 10, z]}><boxGeometry args={[0.6, 12, 1.1]} /><meshStandardMaterial color="#F1E8D6" roughness={0.7} /></mesh>
+        <mesh key={z} castShadow position={[fx + 0.3, 11, z]}><boxGeometry args={[0.6, 10, 1.1]} /><meshStandardMaterial color="#F0DFBB" roughness={0.7} /></mesh>
       ))}
       {[-8.3, 0, 8.3].map((z) => (
-        <mesh key={z} position={[fx + 0.12, 10.4, z]}><boxGeometry args={[0.24, 9.6, 6.6]} /><meshStandardMaterial color="#6E93A3" roughness={0.18} metalness={0.15} /></mesh>
+        <mesh key={z} position={[fx + 0.12, 11, z]}><boxGeometry args={[0.24, 8.6, 6.6]} /><meshStandardMaterial map={glass} roughness={0.2} metalness={0.1} /></mesh>
       ))}
       <mesh castShadow position={[fx + 0.45, 16.2, 0]}><boxGeometry args={[0.9, 0.9, cl.len + 0.8]} /><meshStandardMaterial color="#F4ECDC" /></mesh>
       {tex ? (
         <>
-          <mesh position={[fx + 0.3, 4.3, 0]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[19, 19 * (96 / 1024) * 1.6]} /><meshBasicMaterial map={tex.amc} toneMapped={false} /></mesh>
+          <mesh position={[fx + 0.65, 4.4, 0]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[14, 14 * (96 / 1024) * 1.3]} /><meshBasicMaterial map={tex.amc} toneMapped={false} /></mesh>
           {/* Dental House rooftop sign, turned towards the road and the approach (south) */}
-          <group position={[2, 16.6, cl.len * 0.18]} rotation={[0, 0.6, 0]}>
+          {dhSign ? <group position={[2, 16.6, cl.len * 0.18]} rotation={[0, 0.6, 0]}>
             <mesh position={[0, 4.8, 0]}><planeGeometry args={[22, 22 * (160 / 1024)]} /><meshBasicMaterial map={tex.dh} toneMapped={false} side={THREE.DoubleSide} /></mesh>
             <mesh position={[-7.5, 1.6, -0.2]}><boxGeometry args={[0.4, 3.2, 0.4]} /><meshStandardMaterial color="#3E4744" /></mesh>
             <mesh position={[7.5, 1.6, -0.2]}><boxGeometry args={[0.4, 3.2, 0.4]} /><meshStandardMaterial color="#3E4744" /></mesh>
-          </group>
+          </group> : null}
         </>
       ) : null}
     </group>
@@ -307,7 +316,7 @@ const City: React.FC<{ accent: string; rise: number; satO: number; roadO: number
 };
 
 /** canvas signs need the brand font loaded first */
-function useFontReady() {
+export function useFontReady() {
   const [ready, setReady] = useState(false);
   const [h] = useState(() => delayRender("sign fonts"));
   useEffect(() => {

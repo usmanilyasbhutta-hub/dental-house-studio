@@ -90,7 +90,8 @@ export function heroRoad(): THREE.Vector3[] {
   return pts.filter((p, i) => i === 0 || Math.abs(p[1] - pts[i - 1][1]) > 0.5).map(([x, z]) => new THREE.Vector3(x, 0, z));
 }
 
-export function buildRealCity(seed = 11, radius = 1000) {
+/** colorAt(x, z): optional ground colour (e.g. sampled from satellite imagery) mixed into roofs so blocks grow out of the photo. */
+export function buildRealCity(seed = 11, radius = 1000, colorAt?: (x: number, z: number) => THREE.Color | null) {
   const R = rng(seed);
   const segs: Seg[] = [];
   const roads: THREE.BufferGeometry[] = [];
@@ -153,7 +154,9 @@ export function buildRealCity(seed = 11, radius = 1000) {
   const tanks: THREE.BufferGeometry[] = [];
   const trees: THREE.BufferGeometry[] = [];
   const addBuilding = (x: number, z: number, w: number, d: number, h: number, ang: number, col?: THREE.Color) => {
-    const c = col ?? new THREE.Color(BUILDING[Math.floor(R() * BUILDING.length)]);
+    const base = col ?? new THREE.Color(BUILDING[Math.floor(R() * BUILDING.length)]);
+    const sat = colorAt ? colorAt(x, z) : null;
+    const c = sat ? base.clone().lerp(sat, 0.55) : base;
     const b = colorBox(w, h, d, c);
     b.rotateY(ang);
     b.translate(x, 0, z);

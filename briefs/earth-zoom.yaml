@@ -1,0 +1,19 @@
+# Earth → Dental House: ONE continuous zoom, standalone (owner 2026-11-26/27, taste T28/T29; plan in docs/decisions/earth-zoom.md).
+# One 3D world from open data (NASA Blue Marble, Copernicus Sentinel-2 22 Nov 2026, OpenStreetMap); illustrative buildings;
+# ends at the owner's drive-by angle and match-cuts into the real clip.
+id: earth-zoom
+type: earth-zoom
+title: Earth to Dental House (continuous zoom)
+demo: false
+theme: brand
+tone: calm
+language: en
+hook: { lines: ["Earth to Dental House"] }
+fx: { transition: none, sfx: none }
+music: audio/earth-zoom-ambience.mp3     # original, scripts/make_zoom_ambience.py ("light sound")
+seconds: 12
+end_frame: footage/arrival/arrival.mp4   # owner's drive-by (bystanders checked); matched cut
+end_clip_seconds: 2.6
+route_color: "#3FA9FF"                    # owner: "As google navigation" (blue glow; no Google marks)
+landmark: { relation: Opposite, title: Emergency and Trauma Centre, sub: Allama Iqbal Memorial Teaching Hospital }
+chip: "Illustrative 3D · © OpenStreetMap contributors"

@@ -72,3 +72,14 @@ Labels: one at a time, appear only after their subject is centred, ≥ 1.2 s hol
    ends at the drive-by clip's angle and the Reel cuts to the real footage as a matched cut.
 3. Route colour: ivory/bronze (brand) or cyan (your reference)?
 4. Sound for the standalone clip: wind + light street sound (music added in the Reel), or the wedding dhol track underneath?
+
+## Owner's answers (2026-11-27)
+"Yeah remove c.implant. No need to labeling pak,sialkot its understood. Yeah a pin of dhs logo at ahsan medical centre. Yeah there is
+also a real sign, i will show you. Matched cut as ending. As google navigation.light sound. Allama iqbal memorial teaching hospital
+emeg ency and trauma centre."
+- No place labels on the way down; only the arrival pin + card. Pin = Dental House logo mark at Ahsan Medical Centre.
+- Real Dental House sign: waiting for the owner's photo; until then no sign is drawn on the model.
+- Ending: matched cut. The zoom ends at the drive-by clip's first-frame angle; the Reel cuts to the real footage.
+- Route: blue navigation-style glow (owner's call over the brand reviewer's bronze; no Google logos or pin shapes).
+- Sound: light (soft air + distant street ambience, generated).
+- Landmark: "Allama Iqbal Memorial Teaching Hospital Emergency and Trauma Centre". "C. Implant" removed from brand.ts.

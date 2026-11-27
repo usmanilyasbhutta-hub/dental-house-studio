@@ -28,7 +28,7 @@ own_map:                    # v7 (owner 2026-11-26): "3d drone view leading to D
   chip: "Illustrative 3D · © OpenStreetMap contributors"
   city: Sialkot
   road: Commissioner Road
-  landmark: { relation: Opposite, title: Trauma Centre, sub: Allama Iqbal Memorial Teaching Hospital }
+  landmark: { relation: Opposite, title: Emergency and Trauma Centre, sub: Allama Iqbal Memorial Teaching Hospital }   # owner 2026-11-27
   seconds: 6.2                # Earth → Pakistan → Sialkot → Commissioner Road → Dental House
 hero:
   src: cases/whitening-2026-11/fabric.jpg

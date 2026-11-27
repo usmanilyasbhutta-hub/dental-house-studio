@@ -39,6 +39,7 @@ function allText(b: Brief): string[] {
       b.value.eyebrow ?? "", b.value.title, ...b.value.points.flatMap((p) => [p.title, p.sub ?? ""]),
       b.price.eyebrow, b.price.service, b.price.now, b.price.was ?? "", b.price.save ?? "", b.price.extra ?? "",
       b.visit?.eyebrow ?? "", b.visit?.title ?? "", ...(b.map_zoom?.stops.map((x) => x.label) ?? []), b.own_map?.road ?? "", b.own_map?.landmark.title ?? "", b.own_map?.landmark.sub ?? "", b.arrival?.title ?? "", b.arrival?.place ?? "", b.arrival?.sub ?? "", b.map_zoom?.landmark?.title ?? "", b.map_zoom?.landmark?.sub ?? "", ...(b.offer_hook?.lines ?? []), b.offer_hook?.tag ?? "", b.offer_hook?.sub ?? "", b.end.eyebrow ?? "", b.end.disclaimer ?? "");
+  if (b.type === "earth-zoom") t.push(b.landmark?.title ?? "", b.landmark?.sub ?? "");
   if (b.type === "procedure") t.push(...b.steps.flatMap((x) => [x.title, x.subline]), b.takeaway ?? "");
   if (b.type === "talking-head")
     t.push(b.speaker.role, ...b.chapters.flatMap((c) => [c.label, c.title]), ...b.callouts.flatMap((c) => [c.big, c.small ?? ""]));
@@ -147,6 +148,11 @@ export function checkCompliance(b: Brief, env: ComplianceEnv): Finding[] {
       warn("dimensions", "dimensions are only drawn for the implant subject");
   }
 
+  if (b.type === "earth-zoom") {
+    if (!/openstreetmap/i.test(b.chip)) err("map", 'earth zoom: the chip must credit "© OpenStreetMap contributors" (street plan, ODbL)');
+    if (!/illustrat/i.test(b.chip)) err("map", 'earth zoom: keep "Illustrative" in the chip (buildings are drawn, not mapped)');
+    if (!b.end_frame) warn("map", "earth zoom: no end_frame yet; the zoom ends on the model instead of the real drive-by frame");
+  }
   if (b.type === "map-route") {
     const { cols, rows } = b.grid;
     const off = ([i, j]: [number, number]) => i > cols || j > rows;

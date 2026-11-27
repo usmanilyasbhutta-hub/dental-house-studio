@@ -191,11 +191,58 @@
     982.3669526018185,
     943.8347360006812
    ]
+  },
+  "s2_160": {
+   "src": "footage/realmap/s2-160.jpg",
+   "bounds": [
+    -80000,
+    -80000,
+    80000,
+    80000
+   ]
   }
  },
  "credits": [
   "NASA Blue Marble",
   "Contains modified Copernicus Sentinel data (2026)",
   "\u00a9 OpenStreetMap contributors"
+ ],
+ "pyramid": [
+  {
+   "src": "footage/realmap/matched/pakistan.jpg",
+   "bounds": [
+    -1553399.2876947597,
+    -1161273.7252639995,
+    699735.924694965,
+    717906.2747360003
+   ]
+  },
+  {
+   "src": "footage/realmap/matched/s2-160.jpg",
+   "bounds": [
+    -80000,
+    -80000,
+    80000,
+    80000
+   ]
+  },
+  {
+   "src": "footage/realmap/matched/s2-wide.jpg",
+   "bounds": [
+    -30000,
+    -30000,
+    30000,
+    30000
+   ]
+  },
+  {
+   "src": "footage/realmap/matched/s2-city.jpg",
+   "bounds": [
+    -6200,
+    -6200,
+    6200,
+    6200
+   ]
+  }
  ]
 }

@@ -12,6 +12,7 @@ import { ClinicalCase } from "./templates/ClinicalCase";
 import { Education } from "./templates/Education";
 import { Offer } from "./templates/Offer";
 import { Promo } from "./templates/Promo";
+import { EarthZoom } from "./templates/EarthZoom";
 import type { QcProps } from "./templates/shared/Shell";
 
 export type VideoProps = { brief: Brief; words?: Word[]; sizes?: PhotoSize[] } & QcProps;
@@ -21,6 +22,8 @@ export const Video: React.FC<VideoProps> = ({ brief, words, sizes, showSafeZones
   switch (brief.type) {
     case "promo":
       return <Promo brief={brief} showSafeZones={showSafeZones} />;
+    case "earth-zoom":
+      return <EarthZoom brief={brief} showSafeZones={showSafeZones} />;
     case "offer":
       return <Offer brief={brief} showSafeZones={showSafeZones} />;
     case "education":

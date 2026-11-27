@@ -33,6 +33,7 @@ export function sceneCount(b: Brief): number {
     case "receipt":
     case "sketch":
     case "promo":
+    case "earth-zoom":
       return 1;
   }
 }
@@ -55,6 +56,8 @@ function rawSeconds(b: Brief): number {
       return mapSceneSeconds(b).reduce((n, x) => n + x, 0) - MAP_XFADE * (b.scenes.length - 1) + scenes.offer.end;
     case "promo":
       return promoPages(b).reduce((n, p) => n + p.seconds, 0);
+    case "earth-zoom":
+      return b.seconds + (b.end_frame && /\.(mp4|mov|webm)$/i.test(b.end_frame) ? b.end_clip_seconds : 0);
     case "sketch":
       return SKETCH_INTRO + b.scenes.length * b.seconds_per_scene + scenes.offer.end;
     case "receipt": {
