@@ -82,6 +82,7 @@ Strength: **firm** = treat as a rule · **lean** = default, offer an alternative
 
 | Date | About | Owner said | What changed | Ledger |
 |---|---|---|---|---|
+| 2026-11-28 | corridor method | "I think easy is first one but better is scaniverse app!" | now: satellite descent → owner's real drive down Commissioner Road (hyperlapse) → arrival; later: Scaniverse scan for real 3D | T35 |
 | 2026-11-28 | Blender zoom v1 | "Well i need only commissioner road to ahsan medical centre in detail while other can be sattelite, do i conveyed clearly? What do you suggest," | plan: satellite everywhere, detailed 3D only for the Commissioner Road corridor to Ahsan Medical Centre | T35 |
 | 2026-11-28 | real 3D reference | "Look how he made real map" (Blender + Google 3D tiles) → "So use 3d data of sialkot from some source and make 3d blender" | Blender/Cycles city from open footprints (Overture), real roofs/trees from Sentinel; Google tiles not used (ads) | T34 |
 | 2026-11-27 | zoom start + tools | "Leave from earth, only sialkot would suffice. Get any animation skill that would be good for this work because its not working." | zoom starts ~18 km over Sialkot (8 s); no suitable skill exists in the catalogue; real 3D of the street needs a phone scan | T33 |

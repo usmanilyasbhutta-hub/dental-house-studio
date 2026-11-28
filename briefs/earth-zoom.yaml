@@ -11,14 +11,19 @@ language: en
 hook: { lines: ["Earth to Dental House"] }
 fx: { transition: none, sfx: none }
 music: audio/earth-zoom-ambience.mp3     # original, scripts/make_zoom_ambience.py ("light sound")
-seconds: 8                               # owner 2026-11-27: "Leave from earth, only sialkot would suffice"
+seconds: 4.6                             # satellite descent onto the Allama Iqbal bust junction
 start: sialkot
-plate: footage/zoom3d                     # Blender/Cycles render from open 3D building data (scripts/blender_zoom.py), owner 2026-11-28
-end_frame: footage/arrival/arrival.mp4   # owner's drive-by (bystanders checked); matched cut
-end_clip_seconds: 2.6
+approach: junction                       # owner 2026-11-28: detail only on Commissioner Road (T35); "easy is first one"
+city: false
+arrival_at: 4.95                         # drive-by (tracked doctors' panels) starts here inside drive.mp4
+clip_labels:
+  - { text: Allama Iqbal bust, sub: "junction · from the CMH side", from: 0.15, to: 1.7 }
+  - { text: Commissioner Road, sub: towards Ahsan Medical Centre, from: 1.85, to: 4.75 }
+end_frame: footage/drive/drive.mp4      # owner's real drive: bust junction → Commissioner Road → Ahsan Medical Centre (hyperlapse + drive-by)
+end_clip_seconds: 7.63
 route_color: "#3FA9FF"                    # owner: "As google navigation" (blue glow; no Google marks)
 landmark: { relation: Opposite, title: Emergency and Trauma Centre, sub: Allama Iqbal Memorial Teaching Hospital }
-chip: "Illustrative 3D · © OpenStreetMap contributors"
+chip: "Illustrative · © OpenStreetMap contributors"
 highlight_doctors:                       # owner 2026-11-27: "Highlight me and dr ayesha usman" (their panels on the building's board)
   - { panel: usman, name: Dr. Usman Ilyas Bhutta, role: Dental Surgeon }
   - { panel: ayesha, name: Dr. Ayesha Sarfraz, role: Dental Surgeon }   # owner: name card says Sarfraz; the glow marks her board panel (painted "Ayesha Usman")

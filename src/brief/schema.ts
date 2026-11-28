@@ -521,16 +521,25 @@ export type PromoBrief = z.infer<typeof promoBrief>;
  */
 export const earthZoomBrief = base.extend({
   type: z.literal("earth-zoom"),
-  seconds: z.number().min(5).max(16).default(12),
+  seconds: z.number().min(3).max(16).default(12),
   /** Pre-rendered frames (Blender, scripts/blender_zoom.py) inside public/, named 0000.png…; overlays follow
    * src/data/zoom3d-overlay.json. Without it the zoom is drawn live with three.js. */
   plate: z.string().regex(/^[\w./-]+$/).optional(),
+  /** Corridor mode (owner T35): the satellite descent ends low over the Commissioner Road junction (Allama Iqbal bust) facing
+   * south, then dissolves into the owner's real drive (end_frame video) down Commissioner Road to the clinic. */
+  approach: z.enum(["clinic", "junction"]).default("clinic"),
+  /** false = no 3D blocks, satellite only. */
+  city: z.boolean().default(true),
+  /** Seconds into the end clip where the drive-by arrival (tracked panels) begins. */
+  arrival_at: z.number().min(0).max(20).default(0),
+  /** Short labels over the end clip, e.g. the junction and the road name (owner-given names only). */
+  clip_labels: z.array(z.object({ text: line(32), sub: line(40).optional(), from: z.number().min(0), to: z.number().min(0) })).max(4).default([]),
   /** Where the move starts: the whole Earth, or high over Sialkot (owner: "Leave from earth, only sialkot would suffice"). */
   start: z.enum(["earth", "sialkot"]).default("earth"),
   /** First frame of the owner's drive-by clip: the zoom lands exactly on it (matched cut). */
   end_frame: publicAsset.optional(),
   /** If end_frame is a video: how much of it plays after the cut (s). */
-  end_clip_seconds: z.number().min(0).max(6).default(2.6),
+  end_clip_seconds: z.number().min(0).max(12).default(2.6),
   route_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default("#3FA9FF"),
   landmark: z.object({ relation: line(16), title: line(28), sub: line(48).optional() }).optional(),
   /** Honesty + licence chip (must credit OpenStreetMap). Data credits for NASA / Copernicus are drawn by the template. */

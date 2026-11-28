@@ -38,6 +38,9 @@ export function sceneCount(b: Brief): number {
   }
 }
 
+/** Earth zoom, junction approach: satellite → real drive dissolve length (s). */
+export const XFADE_S = 0.5;
+
 export function durationSeconds(b: Brief): number {
   return rawSeconds(b) - overlap(b, sceneCount(b));
 }
@@ -57,7 +60,7 @@ function rawSeconds(b: Brief): number {
     case "promo":
       return promoPages(b).reduce((n, p) => n + p.seconds, 0);
     case "earth-zoom":
-      return b.seconds + (b.end_frame && /\.(mp4|mov|webm)$/i.test(b.end_frame) ? b.end_clip_seconds : 0);
+      return b.seconds + (b.end_frame && /\.(mp4|mov|webm)$/i.test(b.end_frame) ? b.end_clip_seconds : 0) - (b.approach === "junction" ? XFADE_S : 0);
     case "sketch":
       return SKETCH_INTRO + b.scenes.length * b.seconds_per_scene + scenes.offer.end;
     case "receipt": {

@@ -12,6 +12,7 @@ import track from "../data/panels-track.json";
 import ov3d from "../data/zoom3d-overlay.json";
 import { ClinicModel, FACADE, RealFacadeBuilding, Traffic, routeGeometry, useFontReady, useTex, windowTex } from "./promo/DroneMap";
 import { Shell, type QcProps } from "./shared/Shell";
+import { XFADE_S } from "../brief/timing";
 
 /**
  * Earth → Dental House in ONE camera move through ONE 3D world (owner T28/T29). Local metres around the clinic pin
@@ -87,6 +88,29 @@ function camAt(s: number) {
   c.updateMatrixWorld();
   return { cam: c, h };
 }
+/** Corridor mode: straight down from ~18 km over Sialkot (screen-up = south) to low over the Commissioner Road junction
+ * ~350 m north of the clinic, pitching up to look south down the road (the direction of the owner's drive). */
+const JUNCTION = { x: 10.7, zN: 350 };
+const jLogH = mono([0, 0.6, 1], [18000, 4200, 1300].map(Math.log10)); // stays above ~1.2 km: 10 m/px satellite stays sharp
+const jPitch = mono([0, 0.6, 1], [-90, -89, -72]);
+const jFov = mono([0, 1], [40, 50]);
+function camJunction(t: number) {
+  const h = 10 ** jLogH(t);
+  const k = smooth(0.15, 0.9, t);
+  const p = jPitch(t) * D2R;
+  // ground point looked at stays near the junction; camera slides north of it as it pitches up
+  const back = h / Math.tan(-p) * (1 - smooth(0.98, 1, -p / (Math.PI / 2)));
+  const gx = JUNCTION.x * k, gz = -JUNCTION.zN * k + 60 * smooth(0.7, 1, t);
+  const pos = new THREE.Vector3(gx, h, gz - Math.min(back, 4000));
+  const c = new THREE.PerspectiveCamera(jFov(t), W / H, Math.max(0.08, h * 0.01), Math.sqrt(2 * R * h) + 30000);
+  c.position.copy(pos);
+  const f = new THREE.Vector3(0, Math.sin(p), Math.cos(p)); // heading south (+z)
+  c.up.set(0, 0, 1).lerp(new THREE.Vector3(0, 1, 0), smooth(-80, -60, jPitch(t))).normalize();
+  c.lookAt(pos.clone().add(f));
+  c.updateProjectionMatrix(); c.updateMatrixWorld();
+  return { cam: c, h };
+}
+
 const Rig: React.FC<{ cam: THREE.PerspectiveCamera }> = ({ cam }) => {
   const camera = useThree((st) => st.camera) as THREE.PerspectiveCamera;
   camera.fov = cam.fov; camera.near = cam.near; camera.far = cam.far;
@@ -284,7 +308,12 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
   const s0 = Math.min(1, frame / (zoomFrames - 1));
   // "sialkot" start = the same single camera path, entered at ~18 km straight above the city (satellite only)
   const s = brief.start === "sialkot" ? 0.43 + 0.57 * s0 : s0;
-  const { cam, h } = camAt(s);
+  const junction = brief.approach === "junction";
+  const { cam, h } = junction ? camJunction(s0) : camAt(s);
+  const XF = junction ? Math.round(XFADE_S * fps) : 0;
+  const clipStart = zoomFrames - XF; // the real drive dissolves in over the last XF frames of the descent
+  const arrivalStart = clipStart + Math.round(brief.arrival_at * fps);
+
   const signs = useFontReady();
   const world = useTex("footage/realmap/world.jpg");
   const lv = geo.pyramid.map((l) => l.src);
@@ -309,29 +338,33 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
   const pinO = interpolate(s, [0.8, 0.83, 0.95, 0.985], [0, 1, 1, 0], clamp);
   const lmP = brief.plate ? ovPt("landmark") : project(cam, new THREE.Vector3(lm.front + 4, lm.h + 2, lm.z + 8));
   const lmO = interpolate(s, [0.78, 0.81, 0.87, 0.9], [0, 1, 1, 0], clamp);
-  const cardO = interpolate(frame, [Math.round(0.91 * zoomFrames), Math.round(0.95 * zoomFrames)], [0, 1], clamp);
+  const cardO = junction ? interpolate(frame, [arrivalStart, arrivalStart + 8], [0, 1], clamp)
+    : interpolate(frame, [Math.round(0.91 * zoomFrames), Math.round(0.95 * zoomFrames)], [0, 1], clamp);
   const creditO = interpolate(s, [0, 0.04, 0.7, 0.76], [0, 1, 1, 0], clamp);
-  const clipStart = zoomFrames;
   // doctors' panels: projected on the 3D front during the approach, tracked in the real clip after the cut
   const polys: Partial<Record<"usman" | "ayesha", Pt[]>> = {};
-  if (frame < clipStart) {
+  if (frame < clipStart && !junction) {
     for (const k of ["usman", "ayesha"] as const)
       polys[k] = brief.plate
         ? ((ovf?.[k] as number[][] | undefined) ?? []).map(([x, y]) => ({ x: x * W, y: y * H }))
         : PANEL_UV[k].map(([u, v]) => project(cam, panelWorld(u, v)));
   } else {
-    const tf = track.frames[Math.min(track.frames.length - 1, frame - clipStart)] as Record<string, unknown>;
+    const ti = frame - arrivalStart;
+    const tf = (ti >= 0 ? track.frames[Math.min(track.frames.length - 1, ti)] : undefined) as Record<string, unknown> | undefined;
     if (tf?.ok) for (const k of ["usman", "ayesha"] as const) polys[k] = (tf[k] as number[][]).map(([x, y]) => ({ x: (x / track.width) * W, y: (y / track.height) * H }));
   }
-  const hlO = interpolate(s, [0.9, 0.95], [0, 1], clamp);
-  const hlLines = frame >= clipStart ? interpolate(frame - clipStart, [40, 60], [1, 0], clamp) : 1;
+  const hlO = junction ? interpolate(frame, [arrivalStart + 6, arrivalStart + 16], [0, 1], clamp) : interpolate(s, [0.9, 0.95], [0, 1], clamp);
+  const hlLines = frame >= arrivalStart ? interpolate(frame - arrivalStart, [40, 60], [1, 0], clamp) : 1;
 
   return (
     <Shell brief={brief} endSeconds={0} chrome="none" backdrop={false} end={<></>} showSafeZones={showSafeZones}>
-      <AbsoluteFill style={{ background: sky }}>
+      <AbsoluteFill style={{ background: sky, ...(junction ? (() => {
+        const k = interpolate(frame, [clipStart - 6, zoomFrames], [0, 1], { ...clamp, easing: (x: number) => x * x });
+        return { transform: `scale(${1 + 1.8 * k})`, filter: `blur(${10 * k}px)` };
+      })() : {}) }}>
         {frame < clipStart && brief.plate ? (
           <Img src={staticFile(`${brief.plate}/${String(Math.min(frame, zoomFrames - 1)).padStart(4, "0")}.png`)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : frame < clipStart ? (
+        ) : frame < zoomFrames ? (
           <ThreeCanvas width={W} height={H} shadows camera={{ fov: 36, near: 1, far: 1e8, position: [0, 2.6e7, 0] }} gl={{ antialias: true }}>
             <color attach="background" args={[sky]} />
             {fogOn ? <fog attach="fog" args={[sky, h * 2 + 400, h * 14 + 4000]} /> : null}
@@ -344,7 +377,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
               shadow-camera-left={-260} shadow-camera-right={260} shadow-camera-top={260} shadow-camera-bottom={-260}
               shadow-camera-near={10} shadow-camera-far={2000} />
             <Ground h={h} sat={sat} world={world} />
-            <City h={h} s={s} time={frame / fps} route={brief.overlays ? route : 0} routeColor={brief.route_color} signs={signs} satCity={t3} facade={facade} />
+            {brief.city ? <City h={h} s={s} time={frame / fps} route={brief.overlays ? route : 0} routeColor={brief.route_color} signs={signs} satCity={t3} facade={facade} /> : null}
           </ThreeCanvas>
         ) : null}
       </AbsoluteFill>
@@ -352,7 +385,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
       {/* matched cut: the owner's real drive-by continues the move */}
       {brief.end_frame ? (
         <Sequence from={clipStart}>
-          <AbsoluteFill>
+          <AbsoluteFill style={{ opacity: XF ? interpolate(frame, [clipStart, clipStart + XF], [0, 1], clamp) : 1 }}>
             {/\.(mp4|mov|webm)$/i.test(brief.end_frame)
               ? <OffthreadVideo src={staticFile(brief.end_frame)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               : <Img src={staticFile(brief.end_frame)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
@@ -361,7 +394,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
       ) : null}
 
       {/* Dental House logo pin over Ahsan Medical Centre */}
-      {brief.overlays && pinO > 0 && pinP.ok ? (
+      {brief.overlays && !junction && pinO > 0 && pinP.ok ? (
         <div style={{ position: "absolute", left: pinP.x, top: pinP.y, opacity: pinO, transform: `translate(-50%, -100%) translateY(${(1 - pinIn) * -140}px) scale(${0.85 + 0.15 * pinIn})`, transformOrigin: "bottom center" }}>
           <svg viewBox="0 0 120 160" style={{ width: 150, height: 200, filter: "drop-shadow(0 12px 14px rgba(0,0,0,0.4))" }}>
             <path d="M60 156 C60 156 112 96 112 56 A52 52 0 0 0 8 56 C8 96 60 156 60 156 Z" fill="#333C39" stroke="#C9AB86" strokeWidth={4} />
@@ -372,7 +405,7 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
       ) : null}
 
       {/* landmark opposite, small (compliance: landmark only) */}
-      {brief.overlays && lmO > 0 && lmP.ok && brief.landmark ? (
+      {brief.overlays && !junction && lmO > 0 && lmP.ok && brief.landmark ? (
         <div style={{ position: "absolute", left: Math.min(Math.max(70, lmP.x - 60), 940 - 440), top: Math.max(300, lmP.y - 140), width: 440, opacity: lmO,
           background: "rgba(255,255,255,0.94)", borderRadius: 16, padding: "12px 20px", boxShadow: "0 8px 20px rgba(0,0,0,0.2)" }}>
           <div style={{ fontFamily: P.headline, fontWeight: 700, fontSize: 24, color: P.bronze, letterSpacing: "0.14em", textTransform: "uppercase" }}>{brief.landmark.relation}</div>
@@ -390,12 +423,23 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
         </div>
       ) : null}
 
+      {brief.overlays ? brief.clip_labels.map((l, i) => {
+        const a = clipStart + Math.round(l.from * fps), b = clipStart + Math.round(l.to * fps);
+        const o = interpolate(frame, [a, a + 6, b - 6, b], [0, 1, 1, 0], clamp);
+        return o > 0 ? (
+          <div key={i} style={{ position: "absolute", left: 70, top: 300, opacity: o, transform: `translateY(${(1 - o) * 16}px)`, background: "rgba(251,247,240,0.94)",
+            borderRadius: 20, padding: "14px 24px 18px", boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>
+            <div style={{ fontFamily: P.headline, fontWeight: 900, fontSize: 64, color: P.ink, lineHeight: 1.02 }}>{l.text}</div>
+            {l.sub ? <div style={{ fontFamily: P.headline, fontWeight: 500, fontSize: 30, color: "#4E5551", marginTop: 6 }}>{l.sub}</div> : null}
+          </div>
+        ) : null;
+      }) : null}
       {brief.overlays ? <Highlights docs={brief.highlight_doctors} polys={polys} o={hlO} lines={hlLines} pulse={0.5 + 0.5 * Math.sin(frame / 5)} /> : null}
 
       {/* licence credits + honesty chip */}
       {brief.overlays ? <div style={{ position: "absolute", left: 70, top: 1470, maxWidth: 840, fontFamily: P.headline, fontWeight: 600, fontSize: 24, lineHeight: 1.3,
         color: P.ink, background: "rgba(255,255,255,0.86)", padding: "8px 16px", borderRadius: 14 }}>
-        {frame < clipStart ? brief.chip : "Real footage"}
+        {frame < clipStart + XF ? brief.chip : "Real footage"}
         {creditO > 0 ? <span style={{ opacity: creditO }}>{brief.plate
           ? " · buildings: Overture Maps (Google Open Buildings, Microsoft) · Contains modified Copernicus Sentinel data (2026)"
           : " · NASA Blue Marble · Contains modified Copernicus Sentinel data (2026)"}</span> : null}
