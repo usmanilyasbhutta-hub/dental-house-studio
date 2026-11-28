@@ -119,3 +119,13 @@ Owner sent a "Real Tokyo in Blender" clip ("Look how he made real map"); it uses
 - Same camera path as the code version (Sialkot start, 8 s), matched cut into the drive-by. 810×1440, 20 samples, ~35–55 s/frame.
 - Overlays (pin, landmark, doctors' panels) exported per frame from the Blender camera → src/data/zoom3d-overlay.json.
 On-screen credit: Overture Maps (Google Open Buildings, Microsoft), © OpenStreetMap contributors, Copernicus Sentinel-2.
+
+## Corridor only (2026-11-28)
+Owner: "i need only commissioner road to ahsan medical centre in detail while other can be sattelite" (T35) and
+"From junction coming from cmh there is allama iqbal bust/statue" / "It begins from bust junction but i dont think i captured it."
+- Geography: the junction (road from the Cantonment/CMH side) is ~350 m NORTH of the clinic (local ≈ (−5, +350)). The owner's
+  54 s windscreen drive starts there and runs SOUTH down Commissioner Road; the clinic is on the right (west); the clip ends turning
+  right into Ahsan Medical Centre. → camera flies south, then turns right to the front (matches the drive-by for the cut).
+- Plan: everything satellite except the corridor; corridor buildings on real footprints textured from the owner's drive via
+  camera tracking (scripts/sfm_drive.py, pycolmap CPU); faces, plates and other shops' text blurred; the bust junction marked
+  with a label only (not captured on camera, no invented statue).
