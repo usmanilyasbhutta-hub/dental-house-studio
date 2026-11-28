@@ -9,6 +9,7 @@ import type { EarthZoomBrief } from "../brief/schema";
 import { SITE, buildRealCity } from "../three/realcity";
 import geo from "../data/realmap.json";
 import track from "../data/panels-track.json";
+import ov3d from "../data/zoom3d-overlay.json";
 import { ClinicModel, FACADE, RealFacadeBuilding, Traffic, routeGeometry, useFontReady, useTex, windowTex } from "./promo/DroneMap";
 import { Shell, type QcProps } from "./shared/Shell";
 
@@ -299,11 +300,14 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
   const route = interpolate(s, [0.55, 0.9], [0, 1], clamp);
   const shadows = h < 900;
 
+  // Blender plate: overlay positions come from the render (normalised x, y down; z = depth, < 0 behind the camera)
+  const ovf = (ov3d.frames as Record<string, Record<string, number[] | number[][]>>)[String(Math.min(frame, zoomFrames - 1))];
+  const ovPt = (k: string) => { const q = ovf?.[k] as number[] | undefined; return q ? { x: q[0] * W, y: q[1] * H, ok: q[2] > 0 } : { x: -999, y: -999, ok: false }; };
   const pinW = new THREE.Vector3(cl.x, cl.h + 4, cl.z);
-  const pinP = project(cam, pinW);
+  const pinP = brief.plate ? ovPt("pin") : project(cam, pinW);
   const pinIn = spring({ frame: frame - Math.round(0.8 * zoomFrames), fps, config: { damping: 10, stiffness: 170 } });
   const pinO = interpolate(s, [0.8, 0.83, 0.95, 0.985], [0, 1, 1, 0], clamp);
-  const lmP = project(cam, new THREE.Vector3(lm.front + 4, lm.h + 2, lm.z + 8));
+  const lmP = brief.plate ? ovPt("landmark") : project(cam, new THREE.Vector3(lm.front + 4, lm.h + 2, lm.z + 8));
   const lmO = interpolate(s, [0.78, 0.81, 0.87, 0.9], [0, 1, 1, 0], clamp);
   const cardO = interpolate(frame, [Math.round(0.91 * zoomFrames), Math.round(0.95 * zoomFrames)], [0, 1], clamp);
   const creditO = interpolate(s, [0, 0.04, 0.7, 0.76], [0, 1, 1, 0], clamp);
@@ -311,7 +315,10 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
   // doctors' panels: projected on the 3D front during the approach, tracked in the real clip after the cut
   const polys: Partial<Record<"usman" | "ayesha", Pt[]>> = {};
   if (frame < clipStart) {
-    for (const k of ["usman", "ayesha"] as const) polys[k] = PANEL_UV[k].map(([u, v]) => project(cam, panelWorld(u, v)));
+    for (const k of ["usman", "ayesha"] as const)
+      polys[k] = brief.plate
+        ? ((ovf?.[k] as number[][] | undefined) ?? []).map(([x, y]) => ({ x: x * W, y: y * H }))
+        : PANEL_UV[k].map(([u, v]) => project(cam, panelWorld(u, v)));
   } else {
     const tf = track.frames[Math.min(track.frames.length - 1, frame - clipStart)] as Record<string, unknown>;
     if (tf?.ok) for (const k of ["usman", "ayesha"] as const) polys[k] = (tf[k] as number[][]).map(([x, y]) => ({ x: (x / track.width) * W, y: (y / track.height) * H }));
@@ -322,7 +329,9 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
   return (
     <Shell brief={brief} endSeconds={0} chrome="none" backdrop={false} end={<></>} showSafeZones={showSafeZones}>
       <AbsoluteFill style={{ background: sky }}>
-        {frame < clipStart ? (
+        {frame < clipStart && brief.plate ? (
+          <Img src={staticFile(`${brief.plate}/${String(Math.min(frame, zoomFrames - 1)).padStart(4, "0")}.png`)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : frame < clipStart ? (
           <ThreeCanvas width={W} height={H} shadows camera={{ fov: 36, near: 1, far: 1e8, position: [0, 2.6e7, 0] }} gl={{ antialias: true }}>
             <color attach="background" args={[sky]} />
             {fogOn ? <fog attach="fog" args={[sky, h * 2 + 400, h * 14 + 4000]} /> : null}
@@ -387,7 +396,9 @@ export const EarthZoom: React.FC<{ brief: EarthZoomBrief } & QcProps> = ({ brief
       {brief.overlays ? <div style={{ position: "absolute", left: 70, top: 1470, maxWidth: 840, fontFamily: P.headline, fontWeight: 600, fontSize: 24, lineHeight: 1.3,
         color: P.ink, background: "rgba(255,255,255,0.86)", padding: "8px 16px", borderRadius: 14 }}>
         {frame < clipStart ? brief.chip : "Real footage"}
-        {creditO > 0 ? <span style={{ opacity: creditO }}> · NASA Blue Marble · Contains modified Copernicus Sentinel data (2026)</span> : null}
+        {creditO > 0 ? <span style={{ opacity: creditO }}>{brief.plate
+          ? " · buildings: Overture Maps (Google Open Buildings, Microsoft) · Contains modified Copernicus Sentinel data (2026)"
+          : " · NASA Blue Marble · Contains modified Copernicus Sentinel data (2026)"}</span> : null}
       </div> : null}
     </Shell>
   );

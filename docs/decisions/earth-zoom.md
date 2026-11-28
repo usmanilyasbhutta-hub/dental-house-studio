@@ -107,3 +107,15 @@ Dental Surgeon Dr. Usman Ilyas; aesthetic physician. Their two panels glow (warm
 then SIFT-tracked through the real drive-by (scripts/track_panels.py → src/data/panels-track.json, 80/80 frames).
 Owner: "Use ayesha sarfraz every where but in this pic highlight the ayesha usman one" → all our text says "Dr. Ayesha Sarfraz" (brand.ts);
 the glow still marks her real board panel, which is painted "Ayesha Usman".
+
+## Real 3D data in Blender (2026-11-28)
+Owner sent a "Real Tokyo in Blender" clip ("Look how he made real map"); it uses a Blender add-on importing Google Photorealistic
+3D Tiles (Google data, not allowed in ads, T26). Owner: "So use 3d data of sialkot from some source and make 3d blender".
+- Data: Overture Maps buildings (bbox 74.530–74.563, 32.492–32.519): 12,619 real footprints (Google Open Buildings CC BY 4.0 9,194,
+  Microsoft ML Buildings 3,385, OSM 40). Heights not available → storeys estimated (size + main-road frontage), illustrative.
+- Blender 5.3 (pip bpy) + Cycles CPU: footprints extruded (radius 1.5 km), roofs coloured from Sentinel-2, procedural windows,
+  trees only where Sentinel sees vegetation (7.5k), OSM roads shifted 6.9 m to sit in front of the real footprints, lane marks,
+  blue navigation route, the owner's straightened front photo on the real Ahsan Medical Centre footprint, sun from ESE.
+- Same camera path as the code version (Sialkot start, 8 s), matched cut into the drive-by. 810×1440, 20 samples, ~35–55 s/frame.
+- Overlays (pin, landmark, doctors' panels) exported per frame from the Blender camera → src/data/zoom3d-overlay.json.
+On-screen credit: Overture Maps (Google Open Buildings, Microsoft), © OpenStreetMap contributors, Copernicus Sentinel-2.

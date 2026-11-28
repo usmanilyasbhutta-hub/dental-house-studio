@@ -13,6 +13,7 @@ fx: { transition: none, sfx: none }
 music: audio/earth-zoom-ambience.mp3     # original, scripts/make_zoom_ambience.py ("light sound")
 seconds: 8                               # owner 2026-11-27: "Leave from earth, only sialkot would suffice"
 start: sialkot
+plate: footage/zoom3d                     # Blender/Cycles render from open 3D building data (scripts/blender_zoom.py), owner 2026-11-28
 end_frame: footage/arrival/arrival.mp4   # owner's drive-by (bystanders checked); matched cut
 end_clip_seconds: 2.6
 route_color: "#3FA9FF"                    # owner: "As google navigation" (blue glow; no Google marks)

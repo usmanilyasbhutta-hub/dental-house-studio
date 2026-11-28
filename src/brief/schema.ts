@@ -522,6 +522,9 @@ export type PromoBrief = z.infer<typeof promoBrief>;
 export const earthZoomBrief = base.extend({
   type: z.literal("earth-zoom"),
   seconds: z.number().min(5).max(16).default(12),
+  /** Pre-rendered frames (Blender, scripts/blender_zoom.py) inside public/, named 0000.png…; overlays follow
+   * src/data/zoom3d-overlay.json. Without it the zoom is drawn live with three.js. */
+  plate: z.string().regex(/^[\w./-]+$/).optional(),
   /** Where the move starts: the whole Earth, or high over Sialkot (owner: "Leave from earth, only sialkot would suffice"). */
   start: z.enum(["earth", "sialkot"]).default("earth"),
   /** First frame of the owner's drive-by clip: the zoom lands exactly on it (matched cut). */
