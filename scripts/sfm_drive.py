@@ -21,8 +21,8 @@ if "--skip-extract" not in sys.argv:
 print("frames", len(list(IMG.glob("*.jpg"))), flush=True)
 db = D / "db.db"
 if db.exists(): db.unlink()
-ro = pycolmap.ImageReaderOptions(); ro.mask_path = str(MSK)
-pycolmap.extract_features(db, IMG, camera_mode=pycolmap.CameraMode.SINGLE, camera_model="SIMPLE_RADIAL", reader_options=ro)
+ro = pycolmap.ImageReaderOptions(); ro.mask_path = str(MSK); ro.camera_model = "SIMPLE_RADIAL"
+pycolmap.extract_features(db, IMG, camera_mode=pycolmap.CameraMode.SINGLE, reader_options=ro)
 print("features done", flush=True)
 mo = pycolmap.SequentialPairingOptions(); mo.overlap = 12; mo.quadratic_overlap = True
 pycolmap.match_sequential(db, pairing_options=mo)
